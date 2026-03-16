@@ -1,0 +1,538 @@
+import json
+
+with open('data.json', 'r', encoding='utf-8') as f:
+    data = json.load(f)
+
+initial_data_js = json.dumps(data['tareas'], ensure_ascii=False, indent=2)
+
+HTML_TEMPLATE = r'''<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calendario de Tareas - Estudio Contable</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f0f2f5;--surface:#ffffff;--surface2:#f8f9fb;--surface-hover:#f1f3f8;
+  --border:#e2e5eb;--border-light:#eef0f4;
+  --text:#1a1d26;--text-secondary:#4a5068;--text-muted:#8b92a5;
+  --accent:#4f46e5;--accent-light:#6366f1;--accent-bg:#eef2ff;
+  --danger:#dc2626;--danger-bg:#fef2f2;--danger-border:#fecaca;
+  --warning:#d97706;--warning-bg:#fffbeb;--warning-border:#fde68a;
+  --success:#059669;--success-bg:#ecfdf5;--success-border:#a7f3d0;
+  --color-casas:#ec4899;--color-vep-mono:#f97316;--color-vep-auto:#eab308;
+  --color-iva:#3b82f6;--color-libro:#10b981;--color-iibb-cm:#8b5cf6;
+  --color-iibb-arba:#a855f7;--color-iibb-agip:#d946ef;--color-lsd:#ef4444;
+  --color-tareas:#64748b;
+  --radius:12px;--radius-sm:8px;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow:0 4px 12px rgba(0,0,0,.08);--shadow-lg:0 12px 40px rgba(0,0,0,.12);
+}
+html{scroll-behavior:smooth}
+body{font-family:'Inter','Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
+
+/* HEADER */
+.header{background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 50%,#6366f1 100%);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 4px 20px rgba(79,70,229,.25)}
+.header-left{display:flex;align-items:center;gap:20px}
+.logo{font-size:20px;font-weight:800;color:white;display:flex;align-items:center;gap:10px;letter-spacing:-.3px}
+.logo svg{width:26px;height:26px;color:rgba(255,255,255,.9)}
+.header-stats{display:flex;gap:10px}
+.stat-pill{display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;backdrop-filter:blur(8px)}
+.stat-pill.pending{background:rgba(255,255,255,.2);color:#fef3c7}
+.stat-pill.overdue{background:rgba(220,38,38,.25);color:#fecaca}
+.stat-pill.done{background:rgba(5,150,105,.25);color:#a7f3d0}
+.stat-pill.finalized{background:rgba(255,255,255,.15);color:#c4b5fd}
+.stat-pill .count{font-size:15px;font-weight:700}
+.header-actions{display:flex;gap:6px}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);cursor:pointer;font-size:13px;font-weight:500;font-family:inherit;transition:all .15s;white-space:nowrap}
+.btn:hover{background:var(--surface-hover);border-color:var(--accent);color:var(--accent);box-shadow:var(--shadow-sm)}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:white}
+.btn-primary:hover{background:var(--accent-light);border-color:var(--accent-light);color:white;box-shadow:0 4px 12px rgba(79,70,229,.3)}
+.btn-header{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:white;backdrop-filter:blur(4px)}
+.btn-header:hover{background:rgba(255,255,255,.25);border-color:rgba(255,255,255,.4);color:white}
+.btn-icon{width:34px;height:34px;padding:0;display:flex;align-items:center;justify-content:center}
+.btn-danger{color:var(--danger);border-color:var(--danger-border)}
+.btn-danger:hover{background:var(--danger-bg);color:var(--danger);border-color:var(--danger)}
+
+/* TOOLBAR */
+.toolbar{padding:12px 28px;display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--surface);border-bottom:1px solid var(--border);flex-wrap:wrap;box-shadow:var(--shadow-sm)}
+.toolbar-left{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.toolbar-right{display:flex;align-items:center;gap:8px}
+.nav-month{display:flex;align-items:center;gap:6px}
+.nav-month .month-label{font-size:17px;font-weight:700;min-width:180px;text-align:center;letter-spacing:-.3px}
+.view-toggle{display:flex;background:var(--bg);border-radius:var(--radius-sm);padding:3px;gap:2px;border:1px solid var(--border)}
+.view-toggle .btn{border:none;background:transparent;padding:5px 14px;border-radius:6px;font-size:12px;font-weight:600;color:var(--text-muted)}
+.view-toggle .btn:hover{background:var(--surface-hover);color:var(--text);box-shadow:none}
+.view-toggle .btn.active{background:var(--accent);color:white;box-shadow:0 2px 6px rgba(79,70,229,.3)}
+.filter-group{display:flex;gap:8px;flex-wrap:wrap}
+.filter-select{padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-size:13px;font-family:inherit;min-width:130px;cursor:pointer;transition:border-color .15s}
+.filter-select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-bg)}
+.search-input{padding:6px 10px 6px 32px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-size:13px;font-family:inherit;width:180px;transition:border-color .15s}
+.search-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-bg)}
+.search-wrapper{position:relative}
+.search-wrapper svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-muted);width:14px;height:14px}
+
+/* CALENDAR GRID */
+.calendar-container{padding:20px 28px;overflow-x:auto}
+.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--border);border-radius:var(--radius);overflow:hidden;min-width:900px;box-shadow:var(--shadow)}
+.day-header{background:var(--surface2);padding:10px;text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-muted)}
+.day-header.weekend{color:var(--danger)}
+.day-cell{background:var(--surface);min-height:120px;padding:8px;position:relative;transition:background .15s}
+.day-cell:hover{background:var(--surface2)}
+.day-cell.other-month{opacity:.3}
+.day-cell.today{background:var(--accent-bg);box-shadow:inset 0 0 0 2px var(--accent)}
+.day-cell.weekend{background:#fafbfd}
+.day-number{font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:5px;display:flex;justify-content:space-between;align-items:center}
+.day-cell.today .day-number{color:var(--accent);font-weight:700}
+.day-number .task-count{font-size:9px;background:var(--accent-bg);color:var(--accent);padding:1px 6px;border-radius:10px;font-weight:700}
+.task-cards{display:flex;flex-direction:column;gap:2px;max-height:180px;overflow-y:auto}
+.task-cards::-webkit-scrollbar{width:2px}
+.task-cards::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+/* TASK CARD */
+.task-card{padding:4px 7px;border-radius:5px;font-size:11px;cursor:pointer;border-left:3px solid;transition:all .12s;display:flex;align-items:center;gap:5px}
+.task-card:hover{transform:translateX(2px);box-shadow:var(--shadow)}
+.task-card .card-text{flex:1;min-width:0}
+.task-card .client-name{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;font-size:10.5px;color:var(--text)}
+.task-card .task-type{font-size:9px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.task-card .card-badge{font-size:8px;padding:1px 4px;border-radius:3px;font-weight:700;flex-shrink:0;letter-spacing:.3px}
+.badge-mechi{background:#fce7f3;color:#be185d}
+.badge-persona{background:#dbeafe;color:#1d4ed8}
+.task-card[data-type="Casas Particulares"]{border-color:var(--color-casas);background:#fdf2f8}
+.task-card[data-type="VEP Monotributo"]{border-color:var(--color-vep-mono);background:#fff7ed}
+.task-card[data-type="VEP Autonomos"]{border-color:var(--color-vep-auto);background:#fefce8}
+.task-card[data-type="IVA"]{border-color:var(--color-iva);background:#eff6ff}
+.task-card[data-type="Libro IVA Digital"]{border-color:var(--color-libro);background:#ecfdf5}
+.task-card[data-type="IIBB CM"]{border-color:var(--color-iibb-cm);background:#f5f3ff}
+.task-card[data-type="IIBB ARBA"]{border-color:var(--color-iibb-arba);background:#faf5ff}
+.task-card[data-type="IIBB AGIP"]{border-color:var(--color-iibb-agip);background:#fdf4ff}
+.task-card[data-type="Liquidación de sueldos"]{border-color:var(--color-lsd);background:#fef2f2}
+.task-card[data-type="Tareas generales"]{border-color:var(--color-tareas);background:#f8fafc}
+.task-card.overdue{box-shadow:0 0 0 1px rgba(220,38,38,.3)}
+.task-card.finalized{opacity:.5;cursor:default}
+.task-card.finalized .client-name,.task-card.finalized .task-type{text-decoration:line-through}
+.week-task-card.finalized{opacity:.5;cursor:default}
+.week-task-card.finalized .client-name,.week-task-card.finalized .task-type{text-decoration:line-through}
+.list-table tbody tr.finalized{opacity:.55}
+.list-table tbody tr.finalized td strong{text-decoration:line-through}
+.fin-tag{display:inline-flex;align-items:center;gap:3px;font-size:8px;padding:1px 5px;border-radius:3px;background:var(--success-bg);color:var(--success);border:1px solid var(--success-border);font-weight:700;white-space:nowrap;letter-spacing:.3px}
+.week-task-card .fin-tag{font-size:9px;padding:2px 6px;margin-top:4px}
+.list-table .fin-tag{font-size:10px;padding:2px 8px}
+.list-table .restore-btn{background:none;border:1px solid var(--border);border-radius:5px;padding:4px 8px;font-size:11px;color:var(--text-muted);cursor:pointer;font-family:inherit;transition:all .12s}
+.list-table .restore-btn:hover{color:var(--accent);border-color:var(--accent);background:var(--accent-bg)}
+
+/* WEEK VIEW */
+.week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--border);border-radius:var(--radius);overflow:hidden;min-width:900px;box-shadow:var(--shadow)}
+.week-day-col{background:var(--surface);min-height:60vh;display:flex;flex-direction:column}
+.week-day-col.today{background:var(--accent-bg)}
+.week-day-header{padding:14px 12px;text-align:center;border-bottom:1px solid var(--border);background:var(--surface2)}
+.week-day-header .wday-name{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-muted);font-weight:700}
+.week-day-header .wday-num{font-size:24px;font-weight:800;margin-top:2px}
+.week-day-col.today .wday-num{color:var(--accent)}
+.week-day-body{padding:8px;flex:1;display:flex;flex-direction:column;gap:5px;overflow-y:auto}
+.week-task-card{padding:8px 10px;border-radius:var(--radius-sm);font-size:12px;cursor:pointer;border-left:4px solid;transition:all .12s}
+.week-task-card:hover{transform:translateX(2px);box-shadow:var(--shadow)}
+.week-task-card .client-name{font-weight:600;margin-bottom:2px;font-size:12px;color:var(--text)}
+.week-task-card .task-type{font-size:10px;color:var(--text-muted);margin-bottom:6px}
+.week-task-card .card-actions{display:flex;gap:4px}
+.week-task-card .action-btn{width:24px;height:24px;border-radius:5px;border:1px solid var(--border);background:var(--surface);color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;transition:all .12s}
+.week-task-card .action-btn.active{border-color:var(--success);color:var(--success);background:var(--success-bg)}
+.week-task-card .action-btn:hover{border-color:var(--accent)}
+.week-task-card .action-btn.finalize-btn{font-size:12px}
+.week-task-card .action-btn.finalize-btn:hover{border-color:var(--success);color:var(--success);background:var(--success-bg)}
+.week-task-card[data-type="Casas Particulares"]{border-color:var(--color-casas);background:#fdf2f8}
+.week-task-card[data-type="VEP Monotributo"]{border-color:var(--color-vep-mono);background:#fff7ed}
+.week-task-card[data-type="VEP Autonomos"]{border-color:var(--color-vep-auto);background:#fefce8}
+.week-task-card[data-type="IVA"]{border-color:var(--color-iva);background:#eff6ff}
+.week-task-card[data-type="Libro IVA Digital"]{border-color:var(--color-libro);background:#ecfdf5}
+.week-task-card[data-type="IIBB CM"]{border-color:var(--color-iibb-cm);background:#f5f3ff}
+.week-task-card[data-type="IIBB ARBA"]{border-color:var(--color-iibb-arba);background:#faf5ff}
+.week-task-card[data-type="IIBB AGIP"]{border-color:var(--color-iibb-agip);background:#fdf4ff}
+.week-task-card[data-type="Liquidación de sueldos"]{border-color:var(--color-lsd);background:#fef2f2}
+.week-task-card[data-type="Tareas generales"]{border-color:var(--color-tareas);background:#f8fafc}
+
+/* LIST VIEW */
+.list-container{padding:20px 28px}
+.list-table{width:100%;border-collapse:separate;border-spacing:0;background:var(--surface);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+.list-table thead th{background:var(--surface2);padding:12px 14px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);font-weight:700;border-bottom:2px solid var(--border);cursor:pointer;user-select:none;transition:color .15s}
+.list-table thead th:hover{color:var(--accent)}
+.list-table thead th .sort-icon{margin-left:4px;opacity:.5}
+.list-table tbody tr{border-bottom:1px solid var(--border-light);transition:background .1s}
+.list-table tbody tr:last-child{border-bottom:none}
+.list-table tbody tr:hover{background:var(--surface2)}
+.list-table tbody td{padding:10px 14px;font-size:13px}
+.list-table .type-badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;white-space:nowrap}
+.list-table .status-checks{display:flex;gap:5px;align-items:center}
+.list-table .check-btn{width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;transition:all .12s}
+.list-table .check-btn.active{border-color:var(--success);color:var(--success);background:var(--success-bg)}
+.list-table .check-btn:hover{border-color:var(--accent)}
+.list-table .check-btn.finalize-btn{font-size:14px}
+.list-table .check-btn.finalize-btn:hover{border-color:var(--success);color:var(--success);background:var(--success-bg)}
+.vto-badge{padding:3px 8px;border-radius:6px;font-size:11px;font-weight:600}
+.vto-badge.overdue{background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger-border)}
+.vto-badge.upcoming{background:var(--accent-bg);color:var(--accent)}
+.vto-badge.future{color:var(--text-muted)}
+
+/* FINALIZED PANEL */
+.finalized-panel{margin:20px 28px;background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;border:1px solid var(--border)}
+.finalized-header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:var(--success-bg);border-bottom:1px solid var(--success-border);cursor:pointer;user-select:none;transition:background .15s}
+.finalized-header:hover{background:#d1fae5}
+.finalized-header h3{font-size:14px;font-weight:700;color:var(--success);display:flex;align-items:center;gap:8px}
+.finalized-header .fin-count{background:var(--success);color:white;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700}
+.finalized-header .toggle-arrow{font-size:14px;color:var(--success);transition:transform .2s}
+.finalized-header.collapsed .toggle-arrow{transform:rotate(-90deg)}
+.finalized-body{max-height:400px;overflow-y:auto}
+.finalized-body.collapsed{display:none}
+.finalized-table{width:100%;border-collapse:separate;border-spacing:0}
+.finalized-table thead th{background:var(--surface2);padding:10px 14px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);font-weight:700;border-bottom:1px solid var(--border);position:sticky;top:0}
+.finalized-table tbody tr{border-bottom:1px solid var(--border-light)}
+.finalized-table tbody tr:last-child{border-bottom:none}
+.finalized-table tbody tr:hover{background:var(--surface2)}
+.finalized-table tbody td{padding:9px 14px;font-size:13px;color:var(--text-secondary)}
+.finalized-table .fin-date{font-size:11px;font-weight:600;color:var(--success);background:var(--success-bg);padding:2px 8px;border-radius:4px}
+.finalized-table .restore-btn{background:none;border:1px solid var(--border);border-radius:5px;padding:4px 8px;font-size:11px;color:var(--text-muted);cursor:pointer;font-family:inherit;transition:all .12s}
+.finalized-table .restore-btn:hover{color:var(--accent);border-color:var(--accent);background:var(--accent-bg)}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
+.modal-overlay.active{display:flex}
+.modal{background:var(--surface);border-radius:16px;padding:28px;width:440px;max-width:95vw;max-height:85vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
+.modal h2{font-size:17px;font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:8px}
+.modal-close{margin-left:auto;background:none;border:none;color:var(--text-muted);font-size:18px;cursor:pointer;padding:4px;border-radius:4px;transition:all .12s}
+.modal-close:hover{color:var(--text);background:var(--bg)}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:11px;color:var(--text-muted);margin-bottom:5px;font-weight:700;text-transform:uppercase;letter-spacing:.8px}
+.form-group select,.form-group input{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-size:14px;font-family:inherit;transition:border-color .15s}
+.form-group select:focus,.form-group input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-bg)}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:22px}
+
+/* LEGEND */
+.legend{padding:8px 28px;display:flex;gap:14px;flex-wrap:wrap;background:var(--surface);border-bottom:1px solid var(--border)}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-muted);font-weight:500}
+.legend-dot{width:10px;height:10px;border-radius:3px}
+
+/* TOAST */
+.toast-container{position:fixed;bottom:20px;right:20px;z-index:300;display:flex;flex-direction:column;gap:8px}
+.toast{padding:12px 20px;border-radius:var(--radius);background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:13px;box-shadow:var(--shadow-lg);animation:slideIn .3s ease;display:flex;align-items:center;gap:8px;font-weight:500}
+.toast.success{border-color:var(--success-border);background:var(--success-bg);color:var(--success)}
+.toast.error{border-color:var(--danger-border);background:var(--danger-bg);color:var(--danger)}
+@keyframes slideIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--text-muted)}
+#importInput{display:none}
+@media(max-width:768px){.header{flex-direction:column;gap:10px;padding:12px 16px}.toolbar{flex-direction:column;align-items:stretch;padding:10px 16px}.header-stats{flex-wrap:wrap}.calendar-container,.list-container{padding:10px}.finalized-panel{margin:10px}}
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="header-left">
+    <div class="logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Calendario de Tareas
+    </div>
+    <div class="header-stats">
+      <span class="stat-pill pending" title="Pendientes">&#x23F3; <span class="count" id="statPending">0</span></span>
+      <span class="stat-pill overdue" title="Vencidas">&#x1F534; <span class="count" id="statOverdue">0</span></span>
+      <span class="stat-pill done" title="Listas para finalizar">&#x2714; <span class="count" id="statDone">0</span></span>
+      <span class="stat-pill finalized" title="Finalizadas">&#x2705; <span class="count" id="statFinalized">0</span></span>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-header" onclick="addTask()">&#xFF0B; Nueva Tarea</button>
+    <button class="btn btn-header" onclick="exportJSON()">&#x1F4E5; Exportar</button>
+    <button class="btn btn-header" onclick="document.getElementById('importInput').click()">&#x1F4E4; Importar</button>
+    <input type="file" id="importInput" accept=".json" onchange="importJSON(event)">
+  </div>
+</header>
+<div class="toolbar">
+  <div class="toolbar-left">
+    <div class="nav-month">
+      <button class="btn btn-icon" onclick="changeMonth(-1)">&#x25C0;</button>
+      <span class="month-label" id="monthLabel">Marzo 2026</span>
+      <button class="btn btn-icon" onclick="changeMonth(1)">&#x25B6;</button>
+      <button class="btn" onclick="goToday()">Hoy</button>
+    </div>
+    <div class="filter-group">
+      <select class="filter-select" id="filterCliente" onchange="render()"><option value="">Todos los clientes</option></select>
+      <select class="filter-select" id="filterTarea" onchange="render()"><option value="">Todas las tareas</option></select>
+      <select class="filter-select" id="filterResponsable" onchange="render()"><option value="">Todos</option></select>
+      <select class="filter-select" id="filterEstado" onchange="render()">
+        <option value="">Todos los estados</option>
+        <option value="pending">Pendientes</option>
+        <option value="overdue">Vencidas</option>
+        <option value="finalized">Finalizadas</option>
+      </select>
+    </div>
+    <div class="search-wrapper">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" class="search-input" id="searchInput" placeholder="Buscar cliente..." oninput="render()">
+    </div>
+  </div>
+  <div class="toolbar-right">
+    <div class="view-toggle">
+      <button class="btn active" data-view="month" onclick="setView('month')">Mes</button>
+      <button class="btn" data-view="week" onclick="setView('week')">Semana</button>
+      <button class="btn" data-view="list" onclick="setView('list')">Lista</button>
+    </div>
+  </div>
+</div>
+<div class="legend" id="legend"></div>
+<div id="viewMonth" class="calendar-container"></div>
+<div id="viewWeek" class="calendar-container" style="display:none"></div>
+<div id="viewList" class="list-container" style="display:none"></div>
+<div class="finalized-panel" id="finalizedPanel" style="display:none">
+  <div class="finalized-header" id="finalizedHeader" onclick="toggleFinalized()">
+    <h3>&#x2705; Tareas Finalizadas <span class="fin-count" id="finCount">0</span></h3>
+    <span class="toggle-arrow">&#x25BC;</span>
+  </div>
+  <div class="finalized-body" id="finalizedBody"></div>
+</div>
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <h2 id="modalTitle">&#x1F4DD; Nueva Tarea <button class="modal-close" onclick="closeModal()">&#x2715;</button></h2>
+    <div class="form-group"><label>Cliente</label><select id="formCliente"></select></div>
+    <div class="form-group"><label>Tipo de Tarea</label><select id="formTarea"></select></div>
+    <div class="form-group"><label>Responsable</label><select id="formResponsable"><option value="PERSONA">PERSONA</option><option value="MECHI">MECHI</option></select></div>
+    <div class="form-group"><label>Fecha de Vencimiento</label><input type="date" id="formVencimiento"></div>
+    <div class="form-group"><label>Semana</label><select id="formSemana"><option value="1ER SEMANA">1ER SEMANA</option><option value="2DA SEMANA">2DA SEMANA</option><option value="3ER SEMANA">3ER SEMANA</option><option value="4TA SEMANA">4TA SEMANA</option></select></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveTask()">Guardar</button>
+      <button class="btn btn-danger" id="btnDelete" style="display:none" onclick="deleteTask()">&#x1F5D1; Eliminar</button>
+      <button class="btn" id="btnFinalize" style="display:none;background:var(--success-bg);color:var(--success);border-color:var(--success-border);font-weight:600" onclick="finalizeFromModal()">&#x2705; Finalizar</button>
+    </div>
+  </div>
+</div>
+<div class="toast-container" id="toastContainer"></div>
+<script>
+const STORAGE_KEY='calendario-tareas-v2',STORAGE_FIN_KEY='calendario-finalizadas-v2';
+const MONTHS_ES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DAYS_FULL=['Domingo','Lunes','Martes','Mi\u00e9rcoles','Jueves','Viernes','S\u00e1bado'];
+const TASK_COLORS={'Casas Particulares':'#ec4899','VEP Monotributo':'#f97316','VEP Autonomos':'#eab308','IVA':'#3b82f6','Libro IVA Digital':'#10b981','IIBB CM':'#8b5cf6','IIBB ARBA':'#a855f7','IIBB AGIP':'#d946ef','Liquidaci\u00f3n de sueldos':'#ef4444','Tareas generales':'#64748b','LSD / F 931':'#ef4444','Boletas sindicales':'#fb7185','VEP Anticipo BP':'#eab308','VEP Anticipo Gcias':'#ca8a04'};
+let state={tareas:[],finalizadas:[],currentView:'month',currentDate:new Date(2026,2,1),weekStart:null,editingId:null,sortCol:'vencimiento',sortDir:1,finalizedCollapsed:false};
+
+function init(){
+  const s=localStorage.getItem(STORAGE_KEY),sf=localStorage.getItem(STORAGE_FIN_KEY);
+  if(s){try{state.tareas=JSON.parse(s)}catch(e){loadInitialData()}}else{loadInitialData()}
+  if(sf){try{state.finalizadas=JSON.parse(sf)}catch(e){state.finalizadas=[]}}
+  const t=new Date();state.currentDate=new Date(t.getFullYear(),t.getMonth(),1);state.weekStart=getWeekStart(t);
+  populateFilters();populateFormSelects();renderLegend();render();
+}
+function loadInitialData(){state.tareas=INITIAL_DATA.map(t=>({...t}));saveToStorage()}
+function saveToStorage(){localStorage.setItem(STORAGE_KEY,JSON.stringify(state.tareas));localStorage.setItem(STORAGE_FIN_KEY,JSON.stringify(state.finalizadas))}
+
+function parseDate(s){if(!s)return null;const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)}
+function formatDate(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+function formatDateShort(s){const d=parseDate(s);if(!d)return'';return`${d.getDate()}/${d.getMonth()+1}`}
+function formatDateFull(s){const d=parseDate(s);if(!d)return'';return`${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`}
+function isToday(d){const t=new Date();return d.getDate()===t.getDate()&&d.getMonth()===t.getMonth()&&d.getFullYear()===t.getFullYear()}
+function getWeekStart(d){const dd=new Date(d);const day=dd.getDay();dd.setDate(dd.getDate()-day+(day===0?-6:1));dd.setHours(0,0,0,0);return dd}
+function getDaysInMonth(y,m){return new Date(y,m+1,0).getDate()}
+function getTaskStatus(task){
+  if(task.completado&&task.revisado&&task.enviado)return'ready';
+  const vto=parseDate(task.vencimiento);if(!vto)return'pending';
+  const today=new Date();today.setHours(0,0,0,0);
+  if(vto<today)return'overdue';return'pending';
+}
+
+function finalizeTask(id){
+  const idx=state.tareas.findIndex(t=>t.id===id);if(idx===-1)return;
+  const task=state.tareas[idx];
+  state.finalizadas.push({...task,fechaFinalizacion:formatDate(new Date()),completado:true,revisado:true,enviado:true});
+  state.tareas.splice(idx,1);saveToStorage();populateFilters();render();
+  showToast(`"${task.cliente} \u2014 ${task.tarea}" finalizada`,'success');
+}
+function restoreTask(id){
+  const idx=state.finalizadas.findIndex(t=>t.id===id);if(idx===-1)return;
+  const task=state.finalizadas[idx];delete task.fechaFinalizacion;
+  task.completado=false;task.revisado=false;task.enviado=false;
+  state.tareas.push(task);state.finalizadas.splice(idx,1);
+  saveToStorage();populateFilters();render();
+  showToast(`"${task.cliente} \u2014 ${task.tarea}" restaurada`,'success');
+}
+function toggleFinalized(){
+  state.finalizedCollapsed=!state.finalizedCollapsed;
+  document.getElementById('finalizedBody').classList.toggle('collapsed',state.finalizedCollapsed);
+  document.getElementById('finalizedHeader').classList.toggle('collapsed',state.finalizedCollapsed);
+}
+
+function getFilteredTasks(){
+  const fC=document.getElementById('filterCliente').value,fT=document.getElementById('filterTarea').value,fR=document.getElementById('filterResponsable').value,fE=document.getElementById('filterEstado').value,search=document.getElementById('searchInput').value.toLowerCase();
+  const combined=[...state.tareas.map(t=>({...t,_finalized:false})),...state.finalizadas.map(t=>({...t,_finalized:true}))];
+  return combined.filter(t=>{
+    if(fC&&t.cliente!==fC)return false;if(fT&&t.tarea!==fT)return false;if(fR&&t.responsable!==fR)return false;
+    if(fE){if(fE==='finalized')return t._finalized;if(t._finalized)return false;const st=getTaskStatus(t);if(fE!==st&&!(fE==='pending'&&st==='ready'))return false}
+    if(search&&!t.cliente.toLowerCase().includes(search)&&!t.tarea.toLowerCase().includes(search))return false;return true;
+  });
+}
+function populateFilters(){
+  const all=[...state.tareas,...state.finalizadas];
+  const sel=(id,items,label)=>{const el=document.getElementById(id);const v=el.value;el.innerHTML=`<option value="">${label}</option>`+items.map(i=>`<option value="${i}">${i}</option>`).join('');el.value=v};
+  sel('filterCliente',[...new Set(all.map(t=>t.cliente))].sort(),'Todos los clientes');
+  sel('filterTarea',[...new Set(all.map(t=>t.tarea))].sort(),'Todas las tareas');
+  sel('filterResponsable',[...new Set(all.map(t=>t.responsable))].sort(),'Todos');
+}
+function populateFormSelects(){
+  const all=[...state.tareas,...state.finalizadas];
+  document.getElementById('formCliente').innerHTML=`<option value="">-- Nuevo cliente --</option>`+[...new Set(all.map(t=>t.cliente))].sort().map(c=>`<option value="${c}">${c}</option>`).join('');
+  document.getElementById('formTarea').innerHTML=[...new Set(all.map(t=>t.tarea))].sort().map(t=>`<option value="${t}">${t}</option>`).join('');
+}
+function renderLegend(){document.getElementById('legend').innerHTML=Object.entries(TASK_COLORS).map(([n,c])=>`<div class="legend-item"><div class="legend-dot" style="background:${c}"></div>${n}</div>`).join('')}
+
+function updateStats(){
+  let pending=0,overdue=0,ready=0;
+  state.tareas.forEach(t=>{const s=getTaskStatus(t);if(s==='overdue')overdue++;else if(s==='ready')ready++;else pending++});
+  document.getElementById('statPending').textContent=pending;
+  document.getElementById('statOverdue').textContent=overdue;
+  document.getElementById('statDone').textContent=ready;
+  document.getElementById('statFinalized').textContent=state.finalizadas.length;
+}
+
+function setView(v){
+  state.currentView=v;
+  document.querySelectorAll('.view-toggle .btn').forEach(b=>b.classList.toggle('active',b.dataset.view===v));
+  document.getElementById('viewMonth').style.display=v==='month'?'':'none';
+  document.getElementById('viewWeek').style.display=v==='week'?'':'none';
+  document.getElementById('viewList').style.display=v==='list'?'':'none';render();
+}
+function changeMonth(delta){if(state.currentView==='week')state.weekStart=new Date(state.weekStart.getTime()+delta*7*86400000);else state.currentDate.setMonth(state.currentDate.getMonth()+delta);render()}
+function goToday(){const t=new Date();state.currentDate=new Date(t.getFullYear(),t.getMonth(),1);state.weekStart=getWeekStart(t);render()}
+
+function renderMonth(){
+  const year=state.currentDate.getFullYear(),month=state.currentDate.getMonth();
+  document.getElementById('monthLabel').textContent=`${MONTHS_ES[month]} ${year}`;
+  const firstDay=new Date(year,month,1).getDay(),startOffset=firstDay===0?6:firstDay-1;
+  const dim=getDaysInMonth(year,month),dimPrev=getDaysInMonth(year,month-1);
+  const tasks=getFilteredTasks();let h='';
+  ['Lun','Mar','Mi\u00e9','Jue','Vie','S\u00e1b','Dom'].forEach((d,i)=>{h+=`<div class="day-header ${i>=5?'weekend':''}">${d}</div>`});
+  const totalCells=Math.ceil((startOffset+dim)/7)*7;
+  for(let i=0;i<totalCells;i++){
+    let dn,dateObj,isOther=false;
+    if(i<startOffset){dn=dimPrev-startOffset+i+1;dateObj=new Date(year,month-1,dn);isOther=true}
+    else if(i>=startOffset+dim){dn=i-startOffset-dim+1;dateObj=new Date(year,month+1,dn);isOther=true}
+    else{dn=i-startOffset+1;dateObj=new Date(year,month,dn)}
+    const isWe=(i%7)>=5,isT=isToday(dateObj),ds=formatDate(dateObj);
+    const dt=tasks.filter(t=>t.vencimiento===ds);
+    h+=`<div class="day-cell ${isOther?'other-month':''} ${isT?'today':''} ${isWe?'weekend':''}">`;
+    h+=`<div class="day-number">${dn}${dt.length?`<span class="task-count">${dt.length}</span>`:''}</div>`;
+    if(dt.length){h+=`<div class="task-cards">`;dt.forEach(t=>{
+      const st=getTaskStatus(t),isFin=t._finalized;
+      h+=`<div class="task-card ${st==='overdue'&&!isFin?'overdue':''} ${isFin?'finalized':''}" data-type="${t.tarea}" ${isFin?'':`onclick="editTask(${t.id})"`} title="${t.cliente} \u2014 ${t.tarea}&#10;${t.responsable} | Vto: ${formatDateShort(t.vencimiento)}${isFin?'&#10;\u2705 Finalizada '+formatDateFull(t.fechaFinalizacion):''}">
+<div class="card-text"><span class="client-name">${t.cliente}</span><span class="task-type">${t.tarea}</span></div>${isFin?`<span class="fin-tag">\u2705</span>`:`<span class="card-badge badge-${t.responsable.toLowerCase()}">${t.responsable==='MECHI'?'M':'P'}</span>`}</div>`;
+    });h+=`</div>`}h+=`</div>`;
+  }
+  document.getElementById('viewMonth').innerHTML=`<div class="calendar-grid">${h}</div>`;
+}
+
+function renderWeek(){
+  const ws=state.weekStart,we=new Date(ws.getTime()+6*86400000);
+  document.getElementById('monthLabel').textContent=`${ws.getDate()}/${ws.getMonth()+1} \u2014 ${we.getDate()}/${we.getMonth()+1}/${we.getFullYear()}`;
+  const tasks=getFilteredTasks();let h='';
+  for(let i=0;i<7;i++){
+    const d=new Date(ws.getTime()+i*86400000),ds=formatDate(d),isT=isToday(d);
+    const dt=tasks.filter(t=>t.vencimiento===ds);
+    h+=`<div class="week-day-col ${isT?'today':''}"><div class="week-day-header"><div class="wday-name">${DAYS_FULL[d.getDay()]}</div><div class="wday-num">${d.getDate()}</div></div><div class="week-day-body">`;
+    dt.forEach(t=>{
+      const isFin=t._finalized;
+      h+=`<div class="week-task-card ${isFin?'finalized':''}" data-type="${t.tarea}" ${isFin?'':`onclick="editTask(${t.id})"`}><div class="client-name">${t.cliente}</div><div class="task-type">${t.tarea}</div>${isFin?`<div class="fin-tag">\u2705 Finalizada ${formatDateShort(t.fechaFinalizacion)}</div>`:`<div class="card-actions" onclick="event.stopPropagation()"><button class="action-btn ${t.completado?'active':''}" onclick="toggleStatus(${t.id},'completado')" title="Completado">\u2714</button><button class="action-btn ${t.revisado?'active':''}" onclick="toggleStatus(${t.id},'revisado')" title="Revisado">\uD83D\uDD0D</button><button class="action-btn ${t.enviado?'active':''}" onclick="toggleStatus(${t.id},'enviado')" title="Enviado">\uD83D\uDCE9</button><button class="action-btn finalize-btn" onclick="finalizeTask(${t.id})" title="Finalizar tarea">\uD83C\uDFC1</button></div>`}</div>`;
+    });h+=`</div></div>`;
+  }
+  document.getElementById('viewWeek').innerHTML=`<div class="week-grid">${h}</div>`;
+}
+
+function renderList(){
+  const year=state.currentDate.getFullYear(),month=state.currentDate.getMonth();
+  document.getElementById('monthLabel').textContent=`${MONTHS_ES[month]} ${year}`;
+  let tasks=getFilteredTasks();
+  tasks.sort((a,b)=>{let va=a[state.sortCol]||'',vb=b[state.sortCol]||'';if(typeof va==='string')va=va.toLowerCase();if(typeof vb==='string')vb=vb.toLowerCase();return va<vb?-state.sortDir:va>vb?state.sortDir:0});
+  const si=c=>c===state.sortCol?(state.sortDir===1?'\u25B2':'\u25BC'):'';
+  let h=`<table class="list-table"><thead><tr><th onclick="sortBy('cliente')">Cliente <span class="sort-icon">${si('cliente')}</span></th><th onclick="sortBy('tarea')">Tarea <span class="sort-icon">${si('tarea')}</span></th><th onclick="sortBy('responsable')">Qui\u00e9n <span class="sort-icon">${si('responsable')}</span></th><th onclick="sortBy('vencimiento')">Vto <span class="sort-icon">${si('vencimiento')}</span></th><th onclick="sortBy('semana')">Sem <span class="sort-icon">${si('semana')}</span></th><th>Estado</th><th></th></tr></thead><tbody>`;
+  tasks.forEach(t=>{
+    const st=getTaskStatus(t),co=TASK_COLORS[t.tarea]||'#64748b',vb=st==='overdue'&&!t._finalized?'overdue':'upcoming',isFin=t._finalized;
+    h+=`<tr class="${isFin?'finalized':''}" ${isFin?'':`ondblclick="editTask(${t.id})"`}><td><strong>${t.cliente}</strong></td><td><span class="type-badge" style="background:${co}15;color:${co}">${t.tarea}</span></td><td><span class="card-badge badge-${t.responsable.toLowerCase()}">${t.responsable}</span></td><td><span class="vto-badge ${vb}">${formatDateShort(t.vencimiento)}</span></td><td style="font-size:11px;color:var(--text-muted)">${t.semana}</td><td>${isFin?`<span class="fin-tag">\u2705 Finalizada ${formatDateFull(t.fechaFinalizacion)}</span>`:`<div class="status-checks"><button class="check-btn ${t.completado?'active':''}" onclick="toggleStatus(${t.id},'completado')" title="Completado">\u2714</button><button class="check-btn ${t.revisado?'active':''}" onclick="toggleStatus(${t.id},'revisado')" title="Revisado">\uD83D\uDD0D</button><button class="check-btn ${t.enviado?'active':''}" onclick="toggleStatus(${t.id},'enviado')" title="Enviado">\uD83D\uDCE9</button></div>`}</td><td>${isFin?`<button class="restore-btn" onclick="restoreTask(${t.id})" title="Restaurar">\u21A9</button>`:`<button class="check-btn finalize-btn" onclick="finalizeTask(${t.id})" title="Finalizar">\uD83C\uDFC1</button>`}</td></tr>`;
+  });
+  h+=`</tbody></table>`;document.getElementById('viewList').innerHTML=h;
+}
+function sortBy(c){if(state.sortCol===c)state.sortDir*=-1;else{state.sortCol=c;state.sortDir=1}render()}
+
+function renderFinalized(){
+  const panel=document.getElementById('finalizedPanel'),body=document.getElementById('finalizedBody'),count=document.getElementById('finCount');
+  if(state.finalizadas.length===0){panel.style.display='none';return}
+  panel.style.display='';count.textContent=state.finalizadas.length;
+  const sorted=[...state.finalizadas].sort((a,b)=>(b.fechaFinalizacion||'').localeCompare(a.fechaFinalizacion||''));
+  let h=`<table class="finalized-table"><thead><tr><th>Cliente</th><th>Tarea</th><th>Qui\u00e9n</th><th>Venc\u00eda</th><th>Finalizada</th><th></th></tr></thead><tbody>`;
+  sorted.forEach(t=>{const co=TASK_COLORS[t.tarea]||'#64748b';
+    h+=`<tr><td>${t.cliente}</td><td><span class="type-badge" style="background:${co}15;color:${co}">${t.tarea}</span></td><td><span class="card-badge badge-${t.responsable.toLowerCase()}">${t.responsable}</span></td><td style="font-size:11px;color:var(--text-muted)">${formatDateShort(t.vencimiento)}</td><td><span class="fin-date">${formatDateFull(t.fechaFinalizacion)}</span></td><td><button class="restore-btn" onclick="restoreTask(${t.id})" title="Restaurar">\u21A9 Restaurar</button></td></tr>`;
+  });h+=`</tbody></table>`;body.innerHTML=h;
+  body.classList.toggle('collapsed',state.finalizedCollapsed);
+  document.getElementById('finalizedHeader').classList.toggle('collapsed',state.finalizedCollapsed);
+}
+
+function render(){updateStats();if(state.currentView==='month')renderMonth();else if(state.currentView==='week')renderWeek();else renderList();renderFinalized()}
+
+function toggleStatus(id,field){const t=state.tareas.find(x=>x.id===id);if(t){t[field]=!t[field];saveToStorage();render()}}
+function addTask(){
+  state.editingId=null;
+  document.getElementById('modalTitle').innerHTML='\uD83D\uDCDD Nueva Tarea <button class="modal-close" onclick="closeModal()">\u2715</button>';
+  document.getElementById('formCliente').value='';
+  document.getElementById('formTarea').value=state.tareas.length>0?[...new Set(state.tareas.map(t=>t.tarea))].sort()[0]:'';
+  document.getElementById('formResponsable').value='PERSONA';document.getElementById('formVencimiento').value='';document.getElementById('formSemana').value='1ER SEMANA';
+  document.getElementById('btnDelete').style.display='none';document.getElementById('btnFinalize').style.display='none';document.getElementById('modalOverlay').classList.add('active');
+}
+function editTask(id){
+  const t=state.tareas.find(x=>x.id===id);if(!t)return;state.editingId=id;
+  document.getElementById('modalTitle').innerHTML='\u270F\uFE0F Editar Tarea <button class="modal-close" onclick="closeModal()">\u2715</button>';
+  document.getElementById('formCliente').value=t.cliente;document.getElementById('formTarea').value=t.tarea;
+  document.getElementById('formResponsable').value=t.responsable;document.getElementById('formVencimiento').value=t.vencimiento;
+  document.getElementById('formSemana').value=t.semana;document.getElementById('btnDelete').style.display='';document.getElementById('btnFinalize').style.display='';
+  document.getElementById('modalOverlay').classList.add('active');
+}
+function saveTask(){
+  const sel=document.getElementById('formCliente');let cliente=sel.value;
+  if(!cliente){cliente=prompt('Ingres\u00e1 el nombre del nuevo cliente:');if(!cliente||!cliente.trim())return;cliente=cliente.trim()}
+  const tarea=document.getElementById('formTarea').value,responsable=document.getElementById('formResponsable').value,vencimiento=document.getElementById('formVencimiento').value,semana=document.getElementById('formSemana').value;
+  if(!tarea||!vencimiento){showToast('Complet\u00e1 todos los campos obligatorios','error');return}
+  if(state.editingId!==null){const t=state.tareas.find(x=>x.id===state.editingId);if(t){t.cliente=cliente;t.tarea=tarea;t.responsable=responsable;t.vencimiento=vencimiento;t.semana=semana}}
+  else{const maxId=[...state.tareas,...state.finalizadas].reduce((m,t)=>Math.max(m,t.id),0);state.tareas.push({id:maxId+1,cliente,tarea,responsable,semana,vencimiento,completado:false,revisado:false,enviado:false})}
+  saveToStorage();populateFilters();populateFormSelects();closeModal();render();
+  showToast(state.editingId!==null?'Tarea actualizada':'Tarea creada','success');
+}
+function deleteTask(){if(state.editingId===null)return;if(!confirm('\u00bfEliminar esta tarea permanentemente?'))return;state.tareas=state.tareas.filter(t=>t.id!==state.editingId);saveToStorage();populateFilters();closeModal();render();showToast('Tarea eliminada','success')}
+function finalizeFromModal(){if(state.editingId===null)return;finalizeTask(state.editingId);closeModal()}
+function closeModal(){document.getElementById('modalOverlay').classList.remove('active');state.editingId=null}
+
+function exportJSON(){
+  const data={tareas:state.tareas,finalizadas:state.finalizadas};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`calendario-${formatDate(new Date())}.json`;a.click();URL.revokeObjectURL(url);showToast('Datos exportados','success');
+}
+function importJSON(event){
+  const file=event.target.files[0];if(!file)return;const reader=new FileReader();
+  reader.onload=(e)=>{try{const data=JSON.parse(e.target.result);if(data.tareas&&data.finalizadas){state.tareas=data.tareas;state.finalizadas=data.finalizadas}else if(Array.isArray(data)){state.tareas=data;state.finalizadas=[]}saveToStorage();populateFilters();populateFormSelects();render();showToast(`Importadas ${state.tareas.length} tareas + ${state.finalizadas.length} finalizadas`,'success')}catch(e){showToast('Error al leer archivo','error')}};
+  reader.readAsText(file);event.target.value='';
+}
+
+function showToast(msg,type='success'){const c=document.getElementById('toastContainer');const t=document.createElement('div');t.className=`toast ${type}`;t.innerHTML=`${type==='success'?'\u2705':'\u274C'} ${msg}`;c.appendChild(t);setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.remove(),300)},3000)}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();if(e.key==='n'&&e.ctrlKey){e.preventDefault();addTask()}if(e.key==='ArrowLeft'&&!document.querySelector('.modal-overlay.active'))changeMonth(-1);if(e.key==='ArrowRight'&&!document.querySelector('.modal-overlay.active'))changeMonth(1)});
+
+const INITIAL_DATA = %%INITIAL_DATA%%;
+init();
+</script>
+</body>
+</html>'''
+
+# Replace placeholder with actual data
+html = HTML_TEMPLATE.replace('%%INITIAL_DATA%%', initial_data_js)
+
+with open('index.html', 'w', encoding='utf-8') as f:
+    f.write(html)
+
+print(f'Generated index.html with {len(data["tareas"])} tasks')
+print(f'File size: {len(html)} bytes')

@@ -1,0 +1,1602 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calendario de Tareas - Estudio Contable</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<style>
+/* =================== BASE =================== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f0f2f5;--surface:#ffffff;--surface2:#f8f9fb;--surface-hover:#f1f3f8;
+  --border:#e2e5eb;--border-light:#eef0f4;
+  --text:#1a1d26;--text-secondary:#4a5068;--text-muted:#8b92a5;
+  --accent:#4f46e5;--accent-light:#6366f1;--accent-bg:#eef2ff;
+  --danger:#dc2626;--danger-bg:#fef2f2;--danger-border:#fecaca;
+  --warning:#d97706;--warning-bg:#fffbeb;--warning-border:#fde68a;
+  --success:#059669;--success-bg:#ecfdf5;--success-border:#a7f3d0;
+  --color-casas:#ec4899;--color-vep-mono:#f97316;--color-vep-auto:#eab308;
+  --color-iva:#3b82f6;--color-libro:#10b981;--color-iibb-cm:#8b5cf6;
+  --color-iibb-arba:#a855f7;--color-iibb-agip:#d946ef;--color-lsd:#ef4444;
+  --color-tareas:#64748b;
+  --radius:12px;--radius-sm:8px;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow:0 4px 12px rgba(0,0,0,.08);--shadow-lg:0 12px 40px rgba(0,0,0,.12);
+}
+html{scroll-behavior:smooth}
+body{font-family:'Inter','Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
+
+/* =================== LOGIN SCREEN =================== */
+.login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 50%,#a855f7 100%)}
+.login-card{background:white;border-radius:20px;padding:48px 40px;text-align:center;box-shadow:0 25px 80px rgba(0,0,0,.2);max-width:420px;width:90%}
+.login-card .logo-big{font-size:48px;margin-bottom:16px}
+.login-card h1{font-size:24px;font-weight:800;margin-bottom:8px;color:var(--text)}
+.login-card p{color:var(--text-muted);font-size:14px;margin-bottom:32px;line-height:1.5}
+.btn-google{display:inline-flex;align-items:center;gap:10px;padding:12px 28px;border:2px solid var(--border);border-radius:var(--radius);background:white;color:var(--text);font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .2s}
+.btn-google:hover{border-color:var(--accent);box-shadow:var(--shadow);transform:translateY(-1px)}
+.btn-google img{width:20px;height:20px}
+.login-error{margin-top:16px;padding:10px;border-radius:8px;background:var(--danger-bg);color:var(--danger);font-size:13px;display:none}
+
+/* =================== SETUP SCREEN =================== */
+.setup-screen{display:none;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 50%,#a855f7 100%)}
+.setup-card{background:white;border-radius:20px;padding:40px;max-width:520px;width:90%;box-shadow:0 25px 80px rgba(0,0,0,.2)}
+.setup-card h2{font-size:20px;font-weight:800;margin-bottom:20px;display:flex;align-items:center;gap:10px}
+.setup-card .step{margin-bottom:16px;padding:14px;background:var(--surface2);border-radius:var(--radius-sm);border-left:3px solid var(--accent)}
+.setup-card .step h4{font-size:13px;font-weight:700;color:var(--accent);margin-bottom:6px}
+.setup-card .step p{font-size:12px;color:var(--text-secondary);line-height:1.6}
+.setup-card .step code{background:var(--bg);padding:2px 6px;border-radius:4px;font-size:11px}
+.setup-card a{color:var(--accent);text-decoration:none;font-weight:600}
+.setup-card a:hover{text-decoration:underline}
+
+/* =================== PROFILE SETUP =================== */
+.profile-setup-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:500;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
+.profile-setup-overlay.active{display:flex}
+.profile-setup-card{background:white;border-radius:16px;padding:32px;max-width:400px;width:90%;box-shadow:var(--shadow-lg)}
+.profile-setup-card h2{font-size:18px;font-weight:700;margin-bottom:8px}
+.profile-setup-card p{font-size:13px;color:var(--text-muted);margin-bottom:20px}
+.profile-setup-card .form-group{margin-bottom:16px}
+.profile-setup-card .form-group label{display:block;font-size:11px;color:var(--text-muted);margin-bottom:5px;font-weight:700;text-transform:uppercase;letter-spacing:.8px}
+.profile-setup-card .form-group input,.profile-setup-card .form-group select{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:inherit}
+.profile-setup-card .form-group input:focus,.profile-setup-card .form-group select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-bg)}
+
+/* =================== HEADER =================== */
+.header{background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 50%,#6366f1 100%);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 4px 20px rgba(79,70,229,.25)}
+.header-left{display:flex;align-items:center;gap:20px}
+.logo{font-size:20px;font-weight:800;color:white;display:flex;align-items:center;gap:10px;letter-spacing:-.3px}
+.logo svg{width:26px;height:26px;color:rgba(255,255,255,.9)}
+.header-stats{display:flex;gap:10px}
+.stat-pill{display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;backdrop-filter:blur(8px)}
+.stat-pill.pending{background:rgba(255,255,255,.2);color:#fef3c7}
+.stat-pill.overdue{background:rgba(220,38,38,.25);color:#fecaca}
+.stat-pill.done{background:rgba(5,150,105,.25);color:#a7f3d0}
+.stat-pill.finalized{background:rgba(255,255,255,.15);color:#c4b5fd}
+.stat-pill .count{font-size:15px;font-weight:700}
+.header-actions{display:flex;gap:6px;align-items:center}
+
+/* User Menu */
+.user-menu{position:relative}
+.user-btn{display:flex;align-items:center;gap:8px;padding:5px 12px;border-radius:20px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:white;cursor:pointer;font-family:inherit;font-size:13px;font-weight:500;transition:all .15s}
+.user-btn:hover{background:rgba(255,255,255,.25)}
+.user-btn img{width:26px;height:26px;border-radius:50%;border:2px solid rgba(255,255,255,.4)}
+.user-btn .user-name{max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.user-dropdown{display:none;position:absolute;right:0;top:100%;margin-top:6px;background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow-lg);min-width:200px;border:1px solid var(--border);overflow:hidden;z-index:200}
+.user-dropdown.open{display:block}
+.user-dropdown-header{padding:14px 16px;border-bottom:1px solid var(--border);background:var(--surface2)}
+.user-dropdown-header .ud-name{font-size:14px;font-weight:700}
+.user-dropdown-header .ud-email{font-size:11px;color:var(--text-muted)}
+.user-dropdown-header .ud-role{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--accent);margin-top:4px}
+.user-dropdown-item{display:flex;align-items:center;gap:8px;padding:10px 16px;font-size:13px;color:var(--text);cursor:pointer;transition:background .1s;border:none;background:none;width:100%;text-align:left;font-family:inherit}
+.user-dropdown-item:hover{background:var(--surface-hover)}
+.user-dropdown-item.danger{color:var(--danger)}
+
+/* =================== BUTTONS =================== */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);cursor:pointer;font-size:13px;font-weight:500;font-family:inherit;transition:all .15s;white-space:nowrap}
+.btn:hover{background:var(--surface-hover);border-color:var(--accent);color:var(--accent);box-shadow:var(--shadow-sm)}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:white}
+.btn-primary:hover{background:var(--accent-light);border-color:var(--accent-light);color:white;box-shadow:0 4px 12px rgba(79,70,229,.3)}
+.btn-header{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:white;backdrop-filter:blur(4px)}
+.btn-header:hover{background:rgba(255,255,255,.25);border-color:rgba(255,255,255,.4);color:white}
+.btn-icon{width:34px;height:34px;padding:0;display:flex;align-items:center;justify-content:center}
+.btn-danger{color:var(--danger);border-color:var(--danger-border)}
+.btn-danger:hover{background:var(--danger-bg);color:var(--danger);border-color:var(--danger)}
+.btn-success{background:var(--success-bg);color:var(--success);border-color:var(--success-border);font-weight:600}
+.btn-success:hover{background:#d1fae5;border-color:var(--success)}
+
+/* =================== TOOLBAR =================== */
+.toolbar{padding:12px 28px;display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--surface);border-bottom:1px solid var(--border);flex-wrap:wrap;box-shadow:var(--shadow-sm)}
+.toolbar-left{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.toolbar-right{display:flex;align-items:center;gap:8px}
+.nav-month{display:flex;align-items:center;gap:6px}
+.nav-month .month-label{font-size:17px;font-weight:700;min-width:180px;text-align:center;letter-spacing:-.3px}
+.view-toggle{display:flex;background:var(--bg);border-radius:var(--radius-sm);padding:3px;gap:2px;border:1px solid var(--border)}
+.view-toggle .btn{border:none;background:transparent;padding:5px 14px;border-radius:6px;font-size:12px;font-weight:600;color:var(--text-muted)}
+.view-toggle .btn:hover{background:var(--surface-hover);color:var(--text);box-shadow:none}
+.view-toggle .btn.active{background:var(--accent);color:white;box-shadow:0 2px 6px rgba(79,70,229,.3)}
+.filter-group{display:flex;gap:8px;flex-wrap:wrap}
+.filter-select{padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-size:13px;font-family:inherit;min-width:130px;cursor:pointer;transition:border-color .15s}
+.filter-select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-bg)}
+.search-input{padding:6px 10px 6px 32px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-size:13px;font-family:inherit;width:180px;transition:border-color .15s}
+.search-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-bg)}
+.search-wrapper{position:relative}
+.search-wrapper svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-muted);width:14px;height:14px}
+
+/* =================== CALENDAR GRID =================== */
+.calendar-container{padding:20px 28px;overflow-x:auto}
+.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--border);border-radius:var(--radius);overflow:hidden;min-width:900px;box-shadow:var(--shadow)}
+.day-header{background:var(--surface2);padding:10px;text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-muted)}
+.day-header.weekend{color:var(--danger)}
+.day-cell{background:var(--surface);min-height:120px;padding:8px;position:relative;transition:background .15s}
+.day-cell:hover{background:var(--surface2)}
+.day-cell.other-month{opacity:.3}
+.day-cell.today{background:var(--accent-bg);box-shadow:inset 0 0 0 2px var(--accent)}
+.day-cell.weekend{background:#fafbfd}
+.day-number{font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:5px;display:flex;justify-content:space-between;align-items:center}
+.day-cell.today .day-number{color:var(--accent);font-weight:700}
+.day-number .task-count{font-size:9px;background:var(--accent-bg);color:var(--accent);padding:1px 6px;border-radius:10px;font-weight:700}
+.task-cards{display:flex;flex-direction:column;gap:2px;max-height:180px;overflow-y:auto}
+.task-cards::-webkit-scrollbar{width:2px}
+.task-cards::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+/* =================== TASK CARD =================== */
+.task-card{padding:4px 7px;border-radius:5px;font-size:11px;cursor:pointer;border-left:3px solid;transition:all .12s;display:flex;align-items:center;gap:5px}
+.task-card:hover{transform:translateX(2px);box-shadow:var(--shadow)}
+.task-card .card-text{flex:1;min-width:0}
+.task-card .client-name{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;font-size:10.5px;color:var(--text)}
+.task-card .task-type{font-size:9px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.task-card .card-badge{font-size:8px;padding:1px 4px;border-radius:3px;font-weight:700;flex-shrink:0;letter-spacing:.3px}
+.badge-mechi{background:#fce7f3;color:#be185d}
+.badge-persona{background:#dbeafe;color:#1d4ed8}
+.task-card.finalized{opacity:.5;cursor:default}
+.task-card.finalized .client-name,.task-card.finalized .task-type{text-decoration:line-through}
+.task-card.overdue{box-shadow:0 0 0 1px rgba(220,38,38,.3)}
+.task-card[data-type="Casas Particulares"]{border-color:var(--color-casas);background:#fdf2f8}
+.task-card[data-type="VEP Monotributo"]{border-color:var(--color-vep-mono);background:#fff7ed}
+.task-card[data-type="VEP Autonomos"]{border-color:var(--color-vep-auto);background:#fefce8}
+.task-card[data-type="IVA"]{border-color:var(--color-iva);background:#eff6ff}
+.task-card[data-type="Libro IVA Digital"]{border-color:var(--color-libro);background:#ecfdf5}
+.task-card[data-type="IIBB CM"]{border-color:var(--color-iibb-cm);background:#f5f3ff}
+.task-card[data-type="IIBB ARBA"]{border-color:var(--color-iibb-arba);background:#faf5ff}
+.task-card[data-type="IIBB AGIP"]{border-color:var(--color-iibb-agip);background:#fdf4ff}
+.task-card[data-type="Liquidación de sueldos"]{border-color:var(--color-lsd);background:#fef2f2}
+.task-card[data-type="Tareas generales"]{border-color:var(--color-tareas);background:#f8fafc}
+
+/* =================== FIN TAG =================== */
+.fin-tag{display:inline-flex;align-items:center;gap:3px;font-size:8px;padding:1px 5px;border-radius:3px;background:var(--success-bg);color:var(--success);border:1px solid var(--success-border);font-weight:700;white-space:nowrap;letter-spacing:.3px}
+.week-task-card .fin-tag{font-size:9px;padding:2px 6px;margin-top:4px}
+.list-table .fin-tag{font-size:10px;padding:2px 8px}
+
+/* =================== WEEK VIEW =================== */
+.week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--border);border-radius:var(--radius);overflow:hidden;min-width:900px;box-shadow:var(--shadow)}
+.week-day-col{background:var(--surface);min-height:60vh;display:flex;flex-direction:column}
+.week-day-col.today{background:var(--accent-bg)}
+.week-day-header{padding:14px 12px;text-align:center;border-bottom:1px solid var(--border);background:var(--surface2)}
+.week-day-header .wday-name{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-muted);font-weight:700}
+.week-day-header .wday-num{font-size:24px;font-weight:800;margin-top:2px}
+.week-day-col.today .wday-num{color:var(--accent)}
+.week-day-body{padding:8px;flex:1;display:flex;flex-direction:column;gap:5px;overflow-y:auto}
+.week-task-card{padding:8px 10px;border-radius:var(--radius-sm);font-size:12px;cursor:pointer;border-left:4px solid;transition:all .12s}
+.week-task-card:hover{transform:translateX(2px);box-shadow:var(--shadow)}
+.week-task-card .client-name{font-weight:600;margin-bottom:2px;font-size:12px;color:var(--text)}
+.week-task-card .task-type{font-size:10px;color:var(--text-muted);margin-bottom:6px}
+.week-task-card .card-actions{display:flex;gap:4px;flex-wrap:wrap}
+.week-task-card .action-btn{width:24px;height:24px;border-radius:5px;border:1px solid var(--border);background:var(--surface);color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;transition:all .12s}
+.week-task-card .action-btn.active{border-color:var(--success);color:var(--success);background:var(--success-bg)}
+.week-task-card .action-btn:hover{border-color:var(--accent)}
+.week-task-card .action-btn.finalize-btn{font-size:12px}
+.week-task-card .action-btn.finalize-btn:hover{border-color:var(--success);color:var(--success);background:var(--success-bg)}
+.week-task-card.finalized{opacity:.5;cursor:default}
+.week-task-card.finalized .client-name,.week-task-card.finalized .task-type{text-decoration:line-through}
+.week-task-card[data-type="Casas Particulares"]{border-color:var(--color-casas);background:#fdf2f8}
+.week-task-card[data-type="VEP Monotributo"]{border-color:var(--color-vep-mono);background:#fff7ed}
+.week-task-card[data-type="VEP Autonomos"]{border-color:var(--color-vep-auto);background:#fefce8}
+.week-task-card[data-type="IVA"]{border-color:var(--color-iva);background:#eff6ff}
+.week-task-card[data-type="Libro IVA Digital"]{border-color:var(--color-libro);background:#ecfdf5}
+.week-task-card[data-type="IIBB CM"]{border-color:var(--color-iibb-cm);background:#f5f3ff}
+.week-task-card[data-type="IIBB ARBA"]{border-color:var(--color-iibb-arba);background:#faf5ff}
+.week-task-card[data-type="IIBB AGIP"]{border-color:var(--color-iibb-agip);background:#fdf4ff}
+.week-task-card[data-type="Liquidación de sueldos"]{border-color:var(--color-lsd);background:#fef2f2}
+.week-task-card[data-type="Tareas generales"]{border-color:var(--color-tareas);background:#f8fafc}
+
+/* =================== LIST VIEW =================== */
+.list-container{padding:20px 28px}
+.list-table{width:100%;border-collapse:separate;border-spacing:0;background:var(--surface);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+.list-table thead th{background:var(--surface2);padding:12px 14px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);font-weight:700;border-bottom:2px solid var(--border);cursor:pointer;user-select:none;transition:color .15s}
+.list-table thead th:hover{color:var(--accent)}
+.list-table thead th .sort-icon{margin-left:4px;opacity:.5}
+.list-table tbody tr{border-bottom:1px solid var(--border-light);transition:background .1s}
+.list-table tbody tr:last-child{border-bottom:none}
+.list-table tbody tr:hover{background:var(--surface2)}
+.list-table tbody td{padding:10px 14px;font-size:13px}
+.list-table tbody tr.finalized{opacity:.55}
+.list-table tbody tr.finalized td strong{text-decoration:line-through}
+.list-table .type-badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;white-space:nowrap}
+.list-table .status-checks{display:flex;gap:5px;align-items:center}
+.list-table .check-btn{width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;transition:all .12s}
+.list-table .check-btn.active{border-color:var(--success);color:var(--success);background:var(--success-bg)}
+.list-table .check-btn:hover{border-color:var(--accent)}
+.list-table .check-btn.finalize-btn{font-size:14px}
+.list-table .check-btn.finalize-btn:hover{border-color:var(--success);color:var(--success);background:var(--success-bg)}
+.list-table .restore-btn{background:none;border:1px solid var(--border);border-radius:5px;padding:4px 8px;font-size:11px;color:var(--text-muted);cursor:pointer;font-family:inherit;transition:all .12s}
+.list-table .restore-btn:hover{color:var(--accent);border-color:var(--accent);background:var(--accent-bg)}
+.vto-badge{padding:3px 8px;border-radius:6px;font-size:11px;font-weight:600}
+.vto-badge.overdue{background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger-border)}
+.vto-badge.upcoming{background:var(--accent-bg);color:var(--accent)}
+.vto-badge.future{color:var(--text-muted)}
+
+/* =================== MY CALENDAR =================== */
+.my-cal-container{padding:20px 28px}
+.my-cal-layout{display:grid;grid-template-columns:300px 1fr;gap:16px;min-height:70vh}
+.my-cal-sidebar{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;border:1px solid var(--border)}
+.sidebar-header{padding:14px 16px;background:var(--accent-bg);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.sidebar-header h3{font-size:14px;font-weight:700;color:var(--accent);display:flex;align-items:center;gap:6px}
+.sidebar-count{background:var(--accent);color:white;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700}
+.sidebar-tasks{padding:8px;display:flex;flex-direction:column;gap:6px;overflow-y:auto;flex:1}
+.sidebar-task{padding:10px 12px;border-radius:var(--radius-sm);border-left:4px solid;cursor:grab;transition:all .15s;position:relative}
+.sidebar-task:active{cursor:grabbing}
+.sidebar-task:hover{transform:translateX(3px);box-shadow:var(--shadow)}
+.sidebar-task.dragging{opacity:.4;transform:scale(.95)}
+.sidebar-task .st-client{font-size:12px;font-weight:600;color:var(--text);margin-bottom:2px}
+.sidebar-task .st-type{font-size:10px;color:var(--text-muted);margin-bottom:6px}
+.sidebar-task .st-meta{display:flex;gap:6px;align-items:center}
+.deadline-badge{padding:2px 6px;border-radius:4px;font-size:9px;font-weight:700;display:inline-flex;align-items:center;gap:3px}
+.deadline-badge.dl-overdue{background:#fef2f2;color:#dc2626;border:1px solid #fecaca}
+.deadline-badge.dl-urgent{background:#fffbeb;color:#d97706;border:1px solid #fde68a}
+.deadline-badge.dl-soon{background:#fefce8;color:#ca8a04;border:1px solid #fef08a}
+.deadline-badge.dl-ok{background:#ecfdf5;color:#059669;border:1px solid #a7f3d0}
+.sidebar-task[data-type="Casas Particulares"]{border-color:var(--color-casas);background:#fdf2f8}
+.sidebar-task[data-type="VEP Monotributo"]{border-color:var(--color-vep-mono);background:#fff7ed}
+.sidebar-task[data-type="VEP Autonomos"]{border-color:var(--color-vep-auto);background:#fefce8}
+.sidebar-task[data-type="IVA"]{border-color:var(--color-iva);background:#eff6ff}
+.sidebar-task[data-type="Libro IVA Digital"]{border-color:var(--color-libro);background:#ecfdf5}
+.sidebar-task[data-type="IIBB CM"]{border-color:var(--color-iibb-cm);background:#f5f3ff}
+.sidebar-task[data-type="IIBB ARBA"]{border-color:var(--color-iibb-arba);background:#faf5ff}
+.sidebar-task[data-type="IIBB AGIP"]{border-color:var(--color-iibb-agip);background:#fdf4ff}
+.sidebar-task[data-type="Liquidación de sueldos"]{border-color:var(--color-lsd);background:#fef2f2}
+.sidebar-task[data-type="Tareas generales"]{border-color:var(--color-tareas);background:#f8fafc}
+
+.my-cal-grid-container{overflow-x:auto}
+.my-cal-week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--border);border-radius:var(--radius);overflow:hidden;min-width:700px;box-shadow:var(--shadow)}
+.my-day-col{background:var(--surface);min-height:60vh;display:flex;flex-direction:column}
+.my-day-col.today{background:var(--accent-bg)}
+.my-day-col.drag-over{background:#eef2ff;box-shadow:inset 0 0 0 2px var(--accent)}
+.my-day-header{padding:14px 12px;text-align:center;border-bottom:1px solid var(--border);background:var(--surface2)}
+.my-day-header .wday-name{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-muted);font-weight:700}
+.my-day-header .wday-num{font-size:24px;font-weight:800;margin-top:2px}
+.my-day-col.today .wday-num{color:var(--accent)}
+.my-day-body{padding:8px;flex:1;display:flex;flex-direction:column;gap:5px;overflow-y:auto;min-height:100px}
+.my-sched-card{padding:8px 10px;border-radius:var(--radius-sm);font-size:12px;border-left:4px solid;transition:all .12s;position:relative;cursor:grab}
+.my-sched-card:active{cursor:grabbing}
+.my-sched-card:hover{box-shadow:var(--shadow)}
+.my-sched-card .sc-client{font-weight:600;margin-bottom:2px;font-size:12px}
+.my-sched-card .sc-type{font-size:10px;color:var(--text-muted);margin-bottom:4px}
+.my-sched-card .sc-meta{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+.my-sched-card .sc-remove{position:absolute;top:4px;right:4px;width:18px;height:18px;border-radius:50%;border:none;background:var(--bg);color:var(--text-muted);font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s}
+.my-sched-card:hover .sc-remove{opacity:1}
+.my-sched-card .sc-remove:hover{background:var(--danger-bg);color:var(--danger)}
+.my-sched-card .sc-finalize{padding:2px 6px;border-radius:4px;border:1px solid var(--success-border);background:var(--success-bg);color:var(--success);font-size:9px;font-weight:700;cursor:pointer;transition:all .12s}
+.my-sched-card .sc-finalize:hover{background:var(--success);color:white}
+.my-sched-card.finalized{opacity:.5}
+.my-sched-card.finalized .sc-client,.my-sched-card.finalized .sc-type{text-decoration:line-through}
+.my-sched-card[data-type="Casas Particulares"]{border-color:var(--color-casas);background:#fdf2f8}
+.my-sched-card[data-type="VEP Monotributo"]{border-color:var(--color-vep-mono);background:#fff7ed}
+.my-sched-card[data-type="VEP Autonomos"]{border-color:var(--color-vep-auto);background:#fefce8}
+.my-sched-card[data-type="IVA"]{border-color:var(--color-iva);background:#eff6ff}
+.my-sched-card[data-type="Libro IVA Digital"]{border-color:var(--color-libro);background:#ecfdf5}
+.my-sched-card[data-type="IIBB CM"]{border-color:var(--color-iibb-cm);background:#f5f3ff}
+.my-sched-card[data-type="IIBB ARBA"]{border-color:var(--color-iibb-arba);background:#faf5ff}
+.my-sched-card[data-type="IIBB AGIP"]{border-color:var(--color-iibb-agip);background:#fdf4ff}
+.my-sched-card[data-type="Liquidación de sueldos"]{border-color:var(--color-lsd);background:#fef2f2}
+.my-sched-card[data-type="Tareas generales"]{border-color:var(--color-tareas);background:#f8fafc}
+
+/* =================== USERS VIEW =================== */
+.users-container{padding:20px 28px}
+.users-table{width:100%;border-collapse:separate;border-spacing:0;background:var(--surface);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);max-width:800px}
+.users-table thead th{background:var(--surface2);padding:12px 14px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);font-weight:700;border-bottom:2px solid var(--border)}
+.users-table tbody tr{border-bottom:1px solid var(--border-light)}
+.users-table tbody tr:last-child{border-bottom:none}
+.users-table tbody tr:hover{background:var(--surface2)}
+.users-table tbody td{padding:10px 14px;font-size:13px}
+.users-table .user-avatar{width:28px;height:28px;border-radius:50%;vertical-align:middle;margin-right:8px}
+.users-table select{padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;font-family:inherit;background:var(--surface)}
+.users-table input{padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;font-family:inherit;width:120px}
+
+/* =================== FINALIZED PANEL =================== */
+.finalized-panel{margin:20px 28px;background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;border:1px solid var(--border)}
+.finalized-header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:var(--success-bg);border-bottom:1px solid var(--success-border);cursor:pointer;user-select:none;transition:background .15s}
+.finalized-header:hover{background:#d1fae5}
+.finalized-header h3{font-size:14px;font-weight:700;color:var(--success);display:flex;align-items:center;gap:8px}
+.finalized-header .fin-count{background:var(--success);color:white;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700}
+.finalized-header .toggle-arrow{font-size:14px;color:var(--success);transition:transform .2s}
+.finalized-header.collapsed .toggle-arrow{transform:rotate(-90deg)}
+.finalized-body{max-height:400px;overflow-y:auto}
+.finalized-body.collapsed{display:none}
+.finalized-table{width:100%;border-collapse:separate;border-spacing:0}
+.finalized-table thead th{background:var(--surface2);padding:10px 14px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);font-weight:700;border-bottom:1px solid var(--border);position:sticky;top:0}
+.finalized-table tbody tr{border-bottom:1px solid var(--border-light)}
+.finalized-table tbody tr:last-child{border-bottom:none}
+.finalized-table tbody tr:hover{background:var(--surface2)}
+.finalized-table tbody td{padding:9px 14px;font-size:13px;color:var(--text-secondary)}
+.finalized-table .fin-date{font-size:11px;font-weight:600;color:var(--success);background:var(--success-bg);padding:2px 8px;border-radius:4px}
+.finalized-table .restore-btn{background:none;border:1px solid var(--border);border-radius:5px;padding:4px 8px;font-size:11px;color:var(--text-muted);cursor:pointer;font-family:inherit;transition:all .12s}
+.finalized-table .restore-btn:hover{color:var(--accent);border-color:var(--accent);background:var(--accent-bg)}
+
+/* =================== MODAL =================== */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
+.modal-overlay.active{display:flex}
+.modal{background:var(--surface);border-radius:16px;padding:28px;width:440px;max-width:95vw;max-height:85vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
+.modal h2{font-size:17px;font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:8px}
+.modal-close{margin-left:auto;background:none;border:none;color:var(--text-muted);font-size:18px;cursor:pointer;padding:4px;border-radius:4px;transition:all .12s}
+.modal-close:hover{color:var(--text);background:var(--bg)}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:11px;color:var(--text-muted);margin-bottom:5px;font-weight:700;text-transform:uppercase;letter-spacing:.8px}
+.form-group select,.form-group input{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-size:14px;font-family:inherit;transition:border-color .15s}
+.form-group select:focus,.form-group input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-bg)}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:22px;flex-wrap:wrap}
+
+/* =================== LEGEND =================== */
+.legend{padding:8px 28px;display:flex;gap:14px;flex-wrap:wrap;background:var(--surface);border-bottom:1px solid var(--border)}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-muted);font-weight:500}
+.legend-dot{width:10px;height:10px;border-radius:3px}
+
+/* =================== TOAST =================== */
+.toast-container{position:fixed;bottom:20px;right:20px;z-index:300;display:flex;flex-direction:column;gap:8px}
+.toast{padding:12px 20px;border-radius:var(--radius);background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:13px;box-shadow:var(--shadow-lg);animation:slideIn .3s ease;display:flex;align-items:center;gap:8px;font-weight:500}
+.toast.success{border-color:var(--success-border);background:var(--success-bg);color:var(--success)}
+.toast.error{border-color:var(--danger-border);background:var(--danger-bg);color:var(--danger)}
+@keyframes slideIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+/* =================== LOADING =================== */
+.loading-overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg);z-index:1000}
+.loading-spinner{width:40px;height:40px;border:3px solid var(--border);border-top:3px solid var(--accent);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* =================== SCROLLBAR =================== */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--text-muted)}
+
+/* =================== RESPONSIVE =================== */
+@media(max-width:768px){
+  .header{flex-direction:column;gap:10px;padding:12px 16px}
+  .toolbar{flex-direction:column;align-items:stretch;padding:10px 16px}
+  .header-stats{flex-wrap:wrap}
+  .calendar-container,.list-container,.my-cal-container,.users-container{padding:10px}
+  .finalized-panel{margin:10px}
+  .my-cal-layout{grid-template-columns:1fr;grid-template-rows:auto 1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== LOADING ===== -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-spinner"></div>
+</div>
+
+<!-- ===== SETUP SCREEN (Firebase not configured) ===== -->
+<div class="setup-screen" id="setupScreen">
+  <div class="setup-card">
+    <h2>🔧 Configuración Inicial</h2>
+    <p style="color:var(--text-muted);font-size:13px;margin-bottom:20px">
+      Para usar la app necesitás configurar Firebase Authentication.
+    </p>
+    <div class="step">
+      <h4>Paso 1: Crear proyecto Firebase</h4>
+      <p>Andá a <a href="https://console.firebase.google.com/" target="_blank">Firebase Console</a> → "Agregar proyecto" → Ponele un nombre (ej: "calendario-tareas")</p>
+    </div>
+    <div class="step">
+      <h4>Paso 2: Activar Google Sign-In</h4>
+      <p>En tu proyecto → Authentication → Sign-in method → Habilitar <strong>Google</strong></p>
+    </div>
+    <div class="step">
+      <h4>Paso 3: Obtener config web</h4>
+      <p>Project Settings → General → "Your apps" → Web (</>) → Registrar app → Copiar el objeto <code>firebaseConfig</code></p>
+    </div>
+    <div class="step">
+      <h4>Paso 4: Pegar config en la app</h4>
+      <p>Abrí <code>static/index.html</code> y reemplazá los valores <code>YOUR_...</code> en <code>FIREBASE_CONFIG</code> (línea ~4 del script)</p>
+    </div>
+    <div class="step">
+      <h4>Paso 5: Service Account (backend)</h4>
+      <p>Project Settings → Service accounts → "Generate new private key" → Guardalo como <code>firebase-sa.json</code> en la raíz del proyecto</p>
+    </div>
+    <div style="margin-top:20px;padding:14px;background:var(--warning-bg);border-radius:8px;border:1px solid var(--warning-border)">
+      <p style="font-size:12px;color:var(--warning)">⚠️ Después de configurar, recargá la página. Si estás en modo desarrollo sin Firebase, la app funciona igual con auth deshabilitada.</p>
+    </div>
+    <div style="margin-top:16px;text-align:center">
+      <button class="btn btn-primary" onclick="skipSetup()">Continuar sin login (modo dev)</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== LOGIN SCREEN ===== -->
+<div class="login-screen" id="loginScreen" style="display:none">
+  <div class="login-card">
+    <div class="logo-big">📅</div>
+    <h1>Calendario de Tareas</h1>
+    <p>Estudio Contable — Organización y seguimiento de tareas impositivas</p>
+    <button class="btn-google" onclick="login()">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+      Iniciar sesión con Google
+    </button>
+    <div class="login-error" id="loginError"></div>
+  </div>
+</div>
+
+<!-- ===== PROFILE SETUP (first login) ===== -->
+<div class="profile-setup-overlay" id="profileSetup">
+  <div class="profile-setup-card">
+    <h2>👋 ¡Bienvenido!</h2>
+    <p>Configurá tu perfil para ver tus tareas asignadas en "Mi Calendario".</p>
+    <div class="form-group">
+      <label>Tu nombre de responsable</label>
+      <input type="text" id="setupResponsable" placeholder="Ej: MECHI, PERSONA, JUAN..." list="responsableOptions">
+      <datalist id="responsableOptions"></datalist>
+    </div>
+    <p style="font-size:11px;color:var(--text-muted);margin-bottom:16px">
+      Usá el mismo nombre que aparece en las tareas asignadas a vos. Si sos nuevo, creá uno.
+    </p>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn" onclick="skipProfile()">Omitir</button>
+      <button class="btn btn-primary" onclick="saveProfile()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MAIN APP ===== -->
+<div id="app" style="display:none">
+  <header class="header">
+    <div class="header-left">
+      <div class="logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Calendario de Tareas
+      </div>
+      <div class="header-stats">
+        <span class="stat-pill pending" title="Pendientes">⏳ <span class="count" id="statPending">0</span></span>
+        <span class="stat-pill overdue" title="Vencidas">🔴 <span class="count" id="statOverdue">0</span></span>
+        <span class="stat-pill done" title="Listas">✔ <span class="count" id="statDone">0</span></span>
+        <span class="stat-pill finalized" title="Finalizadas">✅ <span class="count" id="statFinalized">0</span></span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-header" onclick="addTask()">＋ Nueva Tarea</button>
+      <button class="btn btn-header" onclick="exportJSON()">📥 Exportar</button>
+      <button class="btn btn-header" onclick="document.getElementById('importInput').click()">📤 Importar</button>
+      <input type="file" id="importInput" accept=".json" onchange="importJSON(event)" style="display:none">
+      <div class="user-menu" id="userMenu">
+        <button class="user-btn" onclick="toggleUserMenu()">
+          <img id="userAvatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='8' r='4' fill='%23ccc'/%3E%3Cpath d='M4 20c0-4 4-7 8-7s8 3 8 7' fill='%23ccc'/%3E%3C/svg%3E" alt="">
+          <span class="user-name" id="userName">Usuario</span>
+          ▾
+        </button>
+        <div class="user-dropdown" id="userDropdown">
+          <div class="user-dropdown-header">
+            <div class="ud-name" id="udName"></div>
+            <div class="ud-email" id="udEmail"></div>
+            <div class="ud-role" id="udRole"></div>
+          </div>
+          <button class="user-dropdown-item" onclick="showProfileEdit()">⚙️ Mi perfil</button>
+          <button class="user-dropdown-item" id="btnUsersView" onclick="setView('users')" style="display:none">👥 Gestionar usuarios</button>
+          <button class="user-dropdown-item danger" onclick="logout()">🚪 Cerrar sesión</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <div class="nav-month">
+        <button class="btn btn-icon" onclick="changeMonth(-1)">◀</button>
+        <span class="month-label" id="monthLabel">Marzo 2026</span>
+        <button class="btn btn-icon" onclick="changeMonth(1)">▶</button>
+        <button class="btn" onclick="goToday()">Hoy</button>
+      </div>
+      <div class="filter-group" id="filterGroup">
+        <select class="filter-select" id="filterCliente" onchange="render()"><option value="">Todos los clientes</option></select>
+        <select class="filter-select" id="filterTarea" onchange="render()"><option value="">Todas las tareas</option></select>
+        <select class="filter-select" id="filterResponsable" onchange="render()"><option value="">Todos</option></select>
+        <select class="filter-select" id="filterEstado" onchange="render()">
+          <option value="">Todos los estados</option>
+          <option value="pending">Pendientes</option>
+          <option value="overdue">Vencidas</option>
+          <option value="finalized">Finalizadas</option>
+        </select>
+      </div>
+      <div class="search-wrapper">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" class="search-input" id="searchInput" placeholder="Buscar cliente..." oninput="render()">
+      </div>
+    </div>
+    <div class="toolbar-right">
+      <div class="view-toggle">
+        <button class="btn active" data-view="month" onclick="setView('month')">Mes</button>
+        <button class="btn" data-view="week" onclick="setView('week')">Semana</button>
+        <button class="btn" data-view="list" onclick="setView('list')">Lista</button>
+        <button class="btn" data-view="mycal" onclick="setView('mycal')">📋 Mi Cal</button>
+        <button class="btn" data-view="users" id="btnUsersTab" onclick="setView('users')" style="display:none">👥</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="legend" id="legend"></div>
+
+  <div id="viewMonth" class="calendar-container"></div>
+  <div id="viewWeek" class="calendar-container" style="display:none"></div>
+  <div id="viewList" class="list-container" style="display:none"></div>
+  <div id="viewMyCal" class="my-cal-container" style="display:none"></div>
+  <div id="viewUsers" class="users-container" style="display:none"></div>
+
+  <div class="finalized-panel" id="finalizedPanel" style="display:none">
+    <div class="finalized-header" id="finalizedHeader" onclick="toggleFinalized()">
+      <h3>✅ Tareas Finalizadas <span class="fin-count" id="finCount">0</span></h3>
+      <span class="toggle-arrow">▼</span>
+    </div>
+    <div class="finalized-body" id="finalizedBody"></div>
+  </div>
+
+  <!-- Task Modal -->
+  <div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <h2 id="modalTitle">📝 Nueva Tarea <button class="modal-close" onclick="closeModal()">✕</button></h2>
+      <div class="form-group"><label>Cliente</label><select id="formCliente"></select></div>
+      <div class="form-group"><label>Tipo de Tarea</label><select id="formTarea"></select></div>
+      <div class="form-group"><label>Responsable</label><select id="formResponsable"></select></div>
+      <div class="form-group"><label>Fecha de Vencimiento</label><input type="date" id="formVencimiento"></div>
+      <div class="form-group"><label>Semana</label>
+        <select id="formSemana">
+          <option value="1ER SEMANA">1ER SEMANA</option>
+          <option value="2DA SEMANA">2DA SEMANA</option>
+          <option value="3ER SEMANA">3ER SEMANA</option>
+          <option value="4TA SEMANA">4TA SEMANA</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button class="btn" onclick="closeModal()">Cancelar</button>
+        <button class="btn btn-primary" onclick="saveTask()">Guardar</button>
+        <button class="btn btn-danger" id="btnDelete" style="display:none" onclick="deleteTask()">🗑 Eliminar</button>
+        <button class="btn btn-success" id="btnFinalize" style="display:none" onclick="finalizeFromModal()">✅ Finalizar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// =================== CONFIGURATION ===================
+// ⚠️ REEMPLAZÁ estos valores con tu Firebase config
+// (Firebase Console → Project Settings → General → Your apps → Web)
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDfNeplVVobuyV8eB7Mv02jCTvBgcXxZoY",
+  authDomain: "mis-tareas-app.firebaseapp.com",
+  projectId: "mis-tareas-app",
+  storageBucket: "mis-tareas-app.firebasestorage.app",
+  messagingSenderId: "688295032350",
+  appId: "1:688295032350:web:db7fc98e82e41b6c68200f"
+};
+
+// =================== CONSTANTS ===================
+const MONTHS_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DAYS_FULL = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+const TASK_COLORS = {
+  'Casas Particulares':'#ec4899','VEP Monotributo':'#f97316','VEP Autonomos':'#eab308',
+  'IVA':'#3b82f6','Libro IVA Digital':'#10b981','IIBB CM':'#8b5cf6',
+  'IIBB ARBA':'#a855f7','IIBB AGIP':'#d946ef','Liquidación de sueldos':'#ef4444',
+  'Tareas generales':'#64748b','LSD / F 931':'#ef4444','Boletas sindicales':'#fb7185',
+  'VEP Anticipo BP':'#eab308','VEP Anticipo Gcias':'#ca8a04'
+};
+
+// =================== STATE ===================
+const state = {
+  tasks: [],
+  users: [],
+  schedule: [],
+  currentUser: null,
+  firebaseUser: null,
+  currentView: 'month',
+  currentDate: new Date(),
+  weekStart: null,
+  myCalWeekStart: null,
+  editingId: null,
+  sortCol: 'vencimiento',
+  sortDir: 1,
+  finalizedCollapsed: false,
+  devMode: false,
+};
+
+let authToken = null;
+
+// =================== API LAYER ===================
+async function api(method, path, body = null) {
+  if (state.firebaseUser) {
+    authToken = await state.firebaseUser.getIdToken();
+  }
+  const opts = {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+  };
+  if (authToken) opts.headers['Authorization'] = `Bearer ${authToken}`;
+  if (body) opts.body = JSON.stringify(body);
+
+  const res = await fetch(path, opts);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Error del servidor' }));
+    throw new Error(err.detail || `Error ${res.status}`);
+  }
+  return res.json();
+}
+
+async function loadAllData() {
+  try {
+    const [tasks, users] = await Promise.all([
+      api('GET', '/api/tasks'),
+      api('GET', '/api/users'),
+    ]);
+    state.tasks = tasks;
+    state.users = users;
+
+    if (state.currentUser) {
+      state.schedule = await api('GET', '/api/schedule');
+    }
+  } catch (e) {
+    console.error('Error loading data:', e);
+    showToast('Error cargando datos: ' + e.message, 'error');
+  }
+}
+
+// =================== FIREBASE AUTH ===================
+function initFirebase() {
+  const isConfigured = FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.apiKey !== 'YOUR_API_KEY';
+
+  if (!isConfigured) {
+    // Check if backend is in dev mode (no Firebase SA)
+    checkDevMode();
+    return;
+  }
+
+  firebase.initializeApp(FIREBASE_CONFIG);
+  firebase.auth().onAuthStateChanged(handleAuthState);
+  hideLoading();
+}
+
+async function checkDevMode() {
+  try {
+    const me = await api('GET', '/api/me');
+    // If we get here, backend is in dev mode (no auth required)
+    state.devMode = true;
+    state.currentUser = me;
+    hideLoading();
+    await loadAllData();
+    showApp();
+  } catch (e) {
+    // Backend requires auth, show setup screen
+    hideLoading();
+    showSetup();
+  }
+}
+
+async function handleAuthState(firebaseUser) {
+  if (firebaseUser) {
+    state.firebaseUser = firebaseUser;
+    authToken = await firebaseUser.getIdToken();
+
+    try {
+      state.currentUser = await api('GET', '/api/me');
+
+      if (!state.currentUser.responsableName) {
+        await loadAllData();
+        showProfileSetup();
+      } else {
+        await loadAllData();
+        showApp();
+      }
+    } catch (e) {
+      showLoginError('Error al iniciar sesión: ' + e.message);
+      showLogin();
+    }
+  } else {
+    state.firebaseUser = null;
+    state.currentUser = null;
+    authToken = null;
+    showLogin();
+  }
+}
+
+function login() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  firebase.auth().signInWithPopup(provider).catch(e => {
+    showLoginError(e.message);
+  });
+}
+
+function logout() {
+  closeUserMenu();
+  if (state.devMode) {
+    showSetup();
+    document.getElementById('app').style.display = 'none';
+    return;
+  }
+  firebase.auth().signOut();
+}
+
+// =================== SCREEN MANAGEMENT ===================
+function hideLoading() { document.getElementById('loadingOverlay').style.display = 'none'; }
+function showSetup() {
+  document.getElementById('setupScreen').style.display = 'flex';
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'none';
+}
+function showLogin() {
+  document.getElementById('setupScreen').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+}
+function showLoginError(msg) {
+  const el = document.getElementById('loginError');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+function skipSetup() {
+  // Try dev mode
+  checkDevMode();
+}
+
+function showProfileSetup() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('setupScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+
+  // Populate responsable name suggestions from existing tasks
+  const names = [...new Set(state.tasks.map(t => t.responsable))].sort();
+  const dl = document.getElementById('responsableOptions');
+  dl.innerHTML = names.map(n => `<option value="${n}">`).join('');
+
+  document.getElementById('profileSetup').classList.add('active');
+  populateFilters();
+  populateFormSelects();
+  renderLegend();
+  updateUserMenu();
+  render();
+}
+
+async function saveProfile() {
+  const name = document.getElementById('setupResponsable').value.trim();
+  if (!name) { showToast('Ingresá un nombre', 'error'); return; }
+
+  try {
+    state.currentUser = await api('PUT', `/api/users/${encodeURIComponent(state.currentUser.email)}`, {
+      responsableName: name,
+    });
+    document.getElementById('profileSetup').classList.remove('active');
+    showToast('Perfil guardado', 'success');
+    updateUserMenu();
+  } catch (e) {
+    showToast('Error: ' + e.message, 'error');
+  }
+}
+
+function skipProfile() {
+  document.getElementById('profileSetup').classList.remove('active');
+}
+
+function showProfileEdit() {
+  closeUserMenu();
+  const name = prompt('Tu nombre de responsable:', state.currentUser?.responsableName || '');
+  if (name !== null && name.trim()) {
+    api('PUT', `/api/users/${encodeURIComponent(state.currentUser.email)}`, {
+      responsableName: name.trim(),
+    }).then(u => {
+      state.currentUser = u;
+      updateUserMenu();
+      showToast('Perfil actualizado', 'success');
+      render();
+    }).catch(e => showToast('Error: ' + e.message, 'error'));
+  }
+}
+
+function showApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('setupScreen').style.display = 'none';
+  document.getElementById('profileSetup').classList.remove('active');
+  document.getElementById('app').style.display = 'block';
+
+  const t = new Date();
+  state.currentDate = new Date(t.getFullYear(), t.getMonth(), 1);
+  state.weekStart = getWeekStart(t);
+  state.myCalWeekStart = getWeekStart(t);
+
+  populateFilters();
+  populateFormSelects();
+  renderLegend();
+  updateUserMenu();
+  render();
+}
+
+// =================== USER MENU ===================
+function updateUserMenu() {
+  const u = state.currentUser;
+  if (!u) return;
+
+  document.getElementById('userName').textContent = u.displayName || u.email.split('@')[0];
+  if (u.photoURL) {
+    document.getElementById('userAvatar').src = u.photoURL;
+  }
+  document.getElementById('udName').textContent = u.displayName || '';
+  document.getElementById('udEmail').textContent = u.email;
+  document.getElementById('udRole').textContent = u.role === 'admin' ? '🛡️ Administrador' : '👤 Usuario';
+
+  // Show admin features
+  const isAdmin = u.role === 'admin';
+  document.getElementById('btnUsersView').style.display = isAdmin ? '' : 'none';
+  document.getElementById('btnUsersTab').style.display = isAdmin ? '' : 'none';
+}
+
+function toggleUserMenu() {
+  document.getElementById('userDropdown').classList.toggle('open');
+}
+function closeUserMenu() {
+  document.getElementById('userDropdown').classList.remove('open');
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('.user-menu')) closeUserMenu();
+});
+
+// =================== DATE HELPERS ===================
+function parseDate(s) { if (!s) return null; const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); }
+function formatDate(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function formatDateShort(s) { const d = parseDate(s); if (!d) return ''; return `${d.getDate()}/${d.getMonth()+1}`; }
+function formatDateFull(s) { const d = parseDate(s); if (!d) return ''; return `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`; }
+function isToday(d) { const t = new Date(); return d.getDate()===t.getDate() && d.getMonth()===t.getMonth() && d.getFullYear()===t.getFullYear(); }
+function getWeekStart(d) { const dd = new Date(d); const day = dd.getDay(); dd.setDate(dd.getDate() - day + (day===0 ? -6 : 1)); dd.setHours(0,0,0,0); return dd; }
+function getDaysInMonth(y,m) { return new Date(y, m+1, 0).getDate(); }
+
+function getTaskStatus(task) {
+  if (task.finalizada) return 'finalized';
+  if (task.completado && task.revisado && task.enviado) return 'ready';
+  const vto = parseDate(task.vencimiento);
+  if (!vto) return 'pending';
+  const today = new Date(); today.setHours(0,0,0,0);
+  if (vto < today) return 'overdue';
+  return 'pending';
+}
+
+function getDeadlineClass(vencimiento) {
+  if (!vencimiento) return 'dl-ok';
+  const vto = parseDate(vencimiento);
+  const today = new Date(); today.setHours(0,0,0,0);
+  const diff = Math.floor((vto - today) / 86400000);
+  if (diff < 0) return 'dl-overdue';
+  if (diff <= 1) return 'dl-urgent';
+  if (diff <= 3) return 'dl-soon';
+  return 'dl-ok';
+}
+
+function getDeadlineText(vencimiento) {
+  if (!vencimiento) return 'Sin fecha';
+  const vto = parseDate(vencimiento);
+  const today = new Date(); today.setHours(0,0,0,0);
+  const diff = Math.floor((vto - today) / 86400000);
+  if (diff < 0) return `Vencida hace ${-diff}d`;
+  if (diff === 0) return 'Vence HOY';
+  if (diff === 1) return 'Vence mañana';
+  return `Vence en ${diff}d`;
+}
+
+// =================== FILTERS ===================
+function getFilteredTasks() {
+  const fC = document.getElementById('filterCliente').value;
+  const fT = document.getElementById('filterTarea').value;
+  const fR = document.getElementById('filterResponsable').value;
+  const fE = document.getElementById('filterEstado').value;
+  const search = document.getElementById('searchInput').value.toLowerCase();
+
+  return state.tasks.filter(t => {
+    if (fC && t.cliente !== fC) return false;
+    if (fT && t.tarea !== fT) return false;
+    if (fR && t.responsable !== fR) return false;
+    if (fE) {
+      if (fE === 'finalized' && !t.finalizada) return false;
+      if (fE === 'pending') {
+        if (t.finalizada) return false;
+        const st = getTaskStatus(t);
+        if (st === 'overdue') return false;
+      }
+      if (fE === 'overdue') {
+        if (t.finalizada) return false;
+        if (getTaskStatus(t) !== 'overdue') return false;
+      }
+    }
+    if (search && !t.cliente.toLowerCase().includes(search) && !t.tarea.toLowerCase().includes(search)) return false;
+    return true;
+  });
+}
+
+function populateFilters() {
+  const all = state.tasks;
+  const sel = (id, items, label) => {
+    const el = document.getElementById(id);
+    const v = el.value;
+    el.innerHTML = `<option value="">${label}</option>` + items.map(i => `<option value="${i}">${i}</option>`).join('');
+    el.value = v;
+  };
+  sel('filterCliente', [...new Set(all.map(t => t.cliente))].sort(), 'Todos los clientes');
+  sel('filterTarea', [...new Set(all.map(t => t.tarea))].sort(), 'Todas las tareas');
+  sel('filterResponsable', [...new Set(all.map(t => t.responsable))].sort(), 'Todos');
+}
+
+function populateFormSelects() {
+  document.getElementById('formCliente').innerHTML =
+    `<option value="">-- Nuevo cliente --</option>` +
+    [...new Set(state.tasks.map(t => t.cliente))].sort().map(c => `<option value="${c}">${c}</option>`).join('');
+  document.getElementById('formTarea').innerHTML =
+    [...new Set(state.tasks.map(t => t.tarea))].sort().map(t => `<option value="${t}">${t}</option>`).join('');
+
+  // Responsable: show registered users + legacy names
+  const userNames = state.users.filter(u => u.responsableName).map(u => u.responsableName);
+  const taskNames = [...new Set(state.tasks.map(t => t.responsable))];
+  const allNames = [...new Set([...userNames, ...taskNames])].sort();
+  document.getElementById('formResponsable').innerHTML =
+    allNames.map(n => `<option value="${n}">${n}</option>`).join('');
+}
+
+function renderLegend() {
+  document.getElementById('legend').innerHTML =
+    Object.entries(TASK_COLORS).map(([n,c]) =>
+      `<div class="legend-item"><div class="legend-dot" style="background:${c}"></div>${n}</div>`
+    ).join('');
+}
+
+// =================== STATS ===================
+function updateStats() {
+  let pending = 0, overdue = 0, ready = 0, finalized = 0;
+  state.tasks.forEach(t => {
+    const s = getTaskStatus(t);
+    if (s === 'finalized') finalized++;
+    else if (s === 'overdue') overdue++;
+    else if (s === 'ready') ready++;
+    else pending++;
+  });
+  document.getElementById('statPending').textContent = pending;
+  document.getElementById('statOverdue').textContent = overdue;
+  document.getElementById('statDone').textContent = ready;
+  document.getElementById('statFinalized').textContent = finalized;
+}
+
+// =================== VIEW MANAGEMENT ===================
+function setView(v) {
+  state.currentView = v;
+  document.querySelectorAll('.view-toggle .btn').forEach(b => b.classList.toggle('active', b.dataset.view === v));
+
+  const views = { month: 'viewMonth', week: 'viewWeek', list: 'viewList', mycal: 'viewMyCal', users: 'viewUsers' };
+  for (const [key, id] of Object.entries(views)) {
+    document.getElementById(id).style.display = key === v ? '' : 'none';
+  }
+
+  // Show/hide filters for users view
+  document.getElementById('filterGroup').style.display = v === 'users' ? 'none' : '';
+  document.getElementById('legend').style.display = (v === 'users' || v === 'mycal') ? 'none' : '';
+
+  render();
+}
+
+function changeMonth(delta) {
+  if (state.currentView === 'week') {
+    state.weekStart = new Date(state.weekStart.getTime() + delta * 7 * 86400000);
+  } else if (state.currentView === 'mycal') {
+    state.myCalWeekStart = new Date(state.myCalWeekStart.getTime() + delta * 7 * 86400000);
+  } else {
+    state.currentDate.setMonth(state.currentDate.getMonth() + delta);
+  }
+  render();
+}
+
+function goToday() {
+  const t = new Date();
+  state.currentDate = new Date(t.getFullYear(), t.getMonth(), 1);
+  state.weekStart = getWeekStart(t);
+  state.myCalWeekStart = getWeekStart(t);
+  render();
+}
+
+// =================== RENDER: MONTH ===================
+function renderMonth() {
+  const year = state.currentDate.getFullYear(), month = state.currentDate.getMonth();
+  document.getElementById('monthLabel').textContent = `${MONTHS_ES[month]} ${year}`;
+
+  const firstDay = new Date(year, month, 1).getDay();
+  const startOffset = firstDay === 0 ? 6 : firstDay - 1;
+  const dim = getDaysInMonth(year, month);
+  const dimPrev = getDaysInMonth(year, month - 1);
+  const tasks = getFilteredTasks();
+  let h = '';
+
+  ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'].forEach((d, i) => {
+    h += `<div class="day-header ${i >= 5 ? 'weekend' : ''}">${d}</div>`;
+  });
+
+  const totalCells = Math.ceil((startOffset + dim) / 7) * 7;
+  for (let i = 0; i < totalCells; i++) {
+    let dn, dateObj, isOther = false;
+    if (i < startOffset) { dn = dimPrev - startOffset + i + 1; dateObj = new Date(year, month-1, dn); isOther = true; }
+    else if (i >= startOffset + dim) { dn = i - startOffset - dim + 1; dateObj = new Date(year, month+1, dn); isOther = true; }
+    else { dn = i - startOffset + 1; dateObj = new Date(year, month, dn); }
+
+    const isWe = (i % 7) >= 5, isT = isToday(dateObj), ds = formatDate(dateObj);
+    const dt = tasks.filter(t => t.vencimiento === ds);
+
+    h += `<div class="day-cell ${isOther?'other-month':''} ${isT?'today':''} ${isWe?'weekend':''}">`;
+    h += `<div class="day-number">${dn}${dt.length ? `<span class="task-count">${dt.length}</span>` : ''}</div>`;
+    if (dt.length) {
+      h += `<div class="task-cards">`;
+      dt.forEach(t => {
+        const isFin = t.finalizada;
+        const st = getTaskStatus(t);
+        h += `<div class="task-card ${st==='overdue'&&!isFin?'overdue':''} ${isFin?'finalized':''}" data-type="${t.tarea}" ${isFin?'':`onclick="editTask(${t.taskId})"`} title="${t.cliente} — ${t.tarea}&#10;${t.responsable} | Vto: ${formatDateShort(t.vencimiento)}${isFin?'&#10;✅ Finalizada '+formatDateFull(t.fechaFinalizacion):''}">`;
+        h += `<div class="card-text"><span class="client-name">${t.cliente}</span><span class="task-type">${t.tarea}</span></div>`;
+        h += isFin ? `<span class="fin-tag">✅</span>` : `<span class="card-badge badge-${(t.responsable||'').toLowerCase()}">${(t.responsable||'')[0]||'?'}</span>`;
+        h += `</div>`;
+      });
+      h += `</div>`;
+    }
+    h += `</div>`;
+  }
+  document.getElementById('viewMonth').innerHTML = `<div class="calendar-grid">${h}</div>`;
+}
+
+// =================== RENDER: WEEK ===================
+function renderWeek() {
+  const ws = state.weekStart;
+  const we = new Date(ws.getTime() + 6 * 86400000);
+  document.getElementById('monthLabel').textContent = `${ws.getDate()}/${ws.getMonth()+1} — ${we.getDate()}/${we.getMonth()+1}/${we.getFullYear()}`;
+
+  const tasks = getFilteredTasks();
+  let h = '';
+
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(ws.getTime() + i * 86400000);
+    const ds = formatDate(d), isT = isToday(d);
+    const dt = tasks.filter(t => t.vencimiento === ds);
+
+    h += `<div class="week-day-col ${isT?'today':''}">`;
+    h += `<div class="week-day-header"><div class="wday-name">${DAYS_FULL[d.getDay()]}</div><div class="wday-num">${d.getDate()}</div></div>`;
+    h += `<div class="week-day-body">`;
+
+    dt.forEach(t => {
+      const isFin = t.finalizada;
+      h += `<div class="week-task-card ${isFin?'finalized':''}" data-type="${t.tarea}" ${isFin?'':`onclick="editTask(${t.taskId})"`}>`;
+      h += `<div class="client-name">${t.cliente}</div><div class="task-type">${t.tarea}</div>`;
+      if (isFin) {
+        h += `<div class="fin-tag">✅ Finalizada ${formatDateShort(t.fechaFinalizacion)}</div>`;
+      } else {
+        h += `<div class="card-actions" onclick="event.stopPropagation()">`;
+        h += `<button class="action-btn ${t.completado?'active':''}" onclick="toggleStatus(${t.taskId},'completado')" title="Completado">✔</button>`;
+        h += `<button class="action-btn ${t.revisado?'active':''}" onclick="toggleStatus(${t.taskId},'revisado')" title="Revisado">🔍</button>`;
+        h += `<button class="action-btn ${t.enviado?'active':''}" onclick="toggleStatus(${t.taskId},'enviado')" title="Enviado">📩</button>`;
+        h += `<button class="action-btn finalize-btn" onclick="finalizeTask(${t.taskId})" title="Finalizar">🏁</button>`;
+        h += `</div>`;
+      }
+      h += `</div>`;
+    });
+
+    h += `</div></div>`;
+  }
+  document.getElementById('viewWeek').innerHTML = `<div class="week-grid">${h}</div>`;
+}
+
+// =================== RENDER: LIST ===================
+function renderList() {
+  const year = state.currentDate.getFullYear(), month = state.currentDate.getMonth();
+  document.getElementById('monthLabel').textContent = `${MONTHS_ES[month]} ${year}`;
+
+  let tasks = getFilteredTasks();
+  tasks.sort((a, b) => {
+    let va = a[state.sortCol] || '', vb = b[state.sortCol] || '';
+    if (typeof va === 'string') va = va.toLowerCase();
+    if (typeof vb === 'string') vb = vb.toLowerCase();
+    return va < vb ? -state.sortDir : va > vb ? state.sortDir : 0;
+  });
+
+  const si = c => c === state.sortCol ? (state.sortDir === 1 ? '▲' : '▼') : '';
+  let h = `<table class="list-table"><thead><tr>`;
+  h += `<th onclick="sortBy('cliente')">Cliente <span class="sort-icon">${si('cliente')}</span></th>`;
+  h += `<th onclick="sortBy('tarea')">Tarea <span class="sort-icon">${si('tarea')}</span></th>`;
+  h += `<th onclick="sortBy('responsable')">Quién <span class="sort-icon">${si('responsable')}</span></th>`;
+  h += `<th onclick="sortBy('vencimiento')">Vto <span class="sort-icon">${si('vencimiento')}</span></th>`;
+  h += `<th onclick="sortBy('semana')">Sem <span class="sort-icon">${si('semana')}</span></th>`;
+  h += `<th>Estado</th><th></th>`;
+  h += `</tr></thead><tbody>`;
+
+  tasks.forEach(t => {
+    const st = getTaskStatus(t);
+    const co = TASK_COLORS[t.tarea] || '#64748b';
+    const vb = st === 'overdue' ? 'overdue' : 'upcoming';
+    const isFin = t.finalizada;
+
+    h += `<tr class="${isFin?'finalized':''}" ${isFin?'':`ondblclick="editTask(${t.taskId})"`}>`;
+    h += `<td><strong>${t.cliente}</strong></td>`;
+    h += `<td><span class="type-badge" style="background:${co}15;color:${co}">${t.tarea}</span></td>`;
+    h += `<td><span class="card-badge badge-${(t.responsable||'').toLowerCase()}">${t.responsable}</span></td>`;
+    h += `<td><span class="vto-badge ${vb}">${formatDateShort(t.vencimiento)}</span></td>`;
+    h += `<td style="font-size:11px;color:var(--text-muted)">${t.semana}</td>`;
+
+    if (isFin) {
+      h += `<td><span class="fin-tag">✅ Finalizada ${formatDateFull(t.fechaFinalizacion)}</span></td>`;
+      h += `<td><button class="restore-btn" onclick="restoreTask(${t.taskId})" title="Restaurar">↩</button></td>`;
+    } else {
+      h += `<td><div class="status-checks">`;
+      h += `<button class="check-btn ${t.completado?'active':''}" onclick="toggleStatus(${t.taskId},'completado')" title="Completado">✔</button>`;
+      h += `<button class="check-btn ${t.revisado?'active':''}" onclick="toggleStatus(${t.taskId},'revisado')" title="Revisado">🔍</button>`;
+      h += `<button class="check-btn ${t.enviado?'active':''}" onclick="toggleStatus(${t.taskId},'enviado')" title="Enviado">📩</button>`;
+      h += `</div></td>`;
+      h += `<td><button class="check-btn finalize-btn" onclick="finalizeTask(${t.taskId})" title="Finalizar">🏁</button></td>`;
+    }
+    h += `</tr>`;
+  });
+
+  h += `</tbody></table>`;
+  document.getElementById('viewList').innerHTML = h;
+}
+
+function sortBy(c) {
+  if (state.sortCol === c) state.sortDir *= -1;
+  else { state.sortCol = c; state.sortDir = 1; }
+  render();
+}
+
+// =================== RENDER: MY CALENDAR ===================
+function renderMyCalendar() {
+  if (!state.currentUser) return;
+
+  const ws = state.myCalWeekStart;
+  const we = new Date(ws.getTime() + 6 * 86400000);
+  document.getElementById('monthLabel').textContent =
+    `Mi Calendario — ${ws.getDate()}/${ws.getMonth()+1} — ${we.getDate()}/${we.getMonth()+1}/${we.getFullYear()}`;
+
+  const myName = state.currentUser.responsableName || '';
+  const myEmail = state.currentUser.email;
+
+  // My tasks: assigned to me (by responsable name or assignedTo email)
+  const myTasks = state.tasks.filter(t =>
+    (myName && t.responsable === myName) ||
+    (t.assignedTo && t.assignedTo === myEmail)
+  );
+
+  // Scheduled task IDs
+  const scheduledIds = new Set(state.schedule.map(s => s.taskId));
+
+  // Unscheduled tasks (not finalized, not scheduled)
+  const unscheduled = myTasks.filter(t => !t.finalizada && !scheduledIds.has(t.taskId));
+
+  // Build sidebar
+  let sideH = '';
+  if (unscheduled.length === 0) {
+    sideH = '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px">🎉 ¡Sin tareas pendientes!</div>';
+  }
+  unscheduled.sort((a, b) => (a.vencimiento || '').localeCompare(b.vencimiento || ''));
+  unscheduled.forEach(t => {
+    const dlClass = getDeadlineClass(t.vencimiento);
+    const dlText = getDeadlineText(t.vencimiento);
+    sideH += `<div class="sidebar-task" data-type="${t.tarea}" draggable="true" ondragstart="onDragStart(event, ${t.taskId})" ondragend="onDragEnd(event)">`;
+    sideH += `<div class="st-client">${t.cliente}</div>`;
+    sideH += `<div class="st-type">${t.tarea}</div>`;
+    sideH += `<div class="st-meta"><span class="deadline-badge ${dlClass}">📅 ${dlText} (${formatDateShort(t.vencimiento)})</span></div>`;
+    sideH += `</div>`;
+  });
+
+  // Build week grid
+  let gridH = '';
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(ws.getTime() + i * 86400000);
+    const ds = formatDate(d), isT = isToday(d);
+
+    // Tasks scheduled for this day
+    const daySchedules = state.schedule.filter(s => s.scheduledDate === ds);
+    const dayTasks = daySchedules.map(s => {
+      const task = state.tasks.find(t => t.taskId === s.taskId);
+      return task ? { ...task, _scheduleNotes: s.notes } : null;
+    }).filter(Boolean);
+
+    // Also show tasks due this day (even if not scheduled)
+    const dueTasks = myTasks.filter(t => t.vencimiento === ds && !daySchedules.some(s => s.taskId === t.taskId));
+
+    gridH += `<div class="my-day-col ${isT?'today':''}" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event, '${ds}')">`;
+    gridH += `<div class="my-day-header"><div class="wday-name">${DAYS_FULL[d.getDay()]}</div><div class="wday-num">${d.getDate()}</div></div>`;
+    gridH += `<div class="my-day-body">`;
+
+    // Scheduled tasks
+    dayTasks.forEach(t => {
+      const dlClass = getDeadlineClass(t.vencimiento);
+      const isFin = t.finalizada;
+      gridH += `<div class="my-sched-card ${isFin?'finalized':''}" data-type="${t.tarea}" draggable="${!isFin}" ${!isFin?`ondragstart="onDragStart(event, ${t.taskId})" ondragend="onDragEnd(event)"`:''}>`;
+      gridH += `<button class="sc-remove" onclick="removeSchedule(${t.taskId})" title="Quitar">✕</button>`;
+      gridH += `<div class="sc-client">${t.cliente}</div>`;
+      gridH += `<div class="sc-type">${t.tarea}</div>`;
+      gridH += `<div class="sc-meta">`;
+      gridH += `<span class="deadline-badge ${dlClass}">Vto: ${formatDateShort(t.vencimiento)}</span>`;
+      if (!isFin) {
+        gridH += `<button class="sc-finalize" onclick="finalizeTask(${t.taskId})">✅ Finalizar</button>`;
+      } else {
+        gridH += `<span class="fin-tag">✅ ${formatDateShort(t.fechaFinalizacion)}</span>`;
+      }
+      gridH += `</div></div>`;
+    });
+
+    // Due tasks (not scheduled, shown as ghost)
+    dueTasks.forEach(t => {
+      if (t.finalizada) return;
+      const dlClass = getDeadlineClass(t.vencimiento);
+      gridH += `<div class="my-sched-card" data-type="${t.tarea}" style="opacity:.6;border-style:dashed" draggable="true" ondragstart="onDragStart(event, ${t.taskId})" ondragend="onDragEnd(event)">`;
+      gridH += `<div class="sc-client">${t.cliente}</div>`;
+      gridH += `<div class="sc-type">${t.tarea} <small style="color:var(--warning)">(vence hoy)</small></div>`;
+      gridH += `<div class="sc-meta"><span class="deadline-badge ${dlClass}">Vto: ${formatDateShort(t.vencimiento)}</span></div>`;
+      gridH += `</div>`;
+    });
+
+    gridH += `</div></div>`;
+  }
+
+  document.getElementById('viewMyCal').innerHTML =
+    `<div class="my-cal-layout">
+      <div class="my-cal-sidebar">
+        <div class="sidebar-header">
+          <h3>📋 Sin agendar</h3>
+          <span class="sidebar-count">${unscheduled.length}</span>
+        </div>
+        <div class="sidebar-tasks">${sideH}</div>
+      </div>
+      <div class="my-cal-grid-container">
+        <div class="my-cal-week-grid">${gridH}</div>
+      </div>
+    </div>`;
+}
+
+// =================== DRAG & DROP ===================
+function onDragStart(e, taskId) {
+  e.dataTransfer.setData('text/plain', taskId.toString());
+  e.dataTransfer.effectAllowed = 'move';
+  e.target.classList.add('dragging');
+}
+
+function onDragEnd(e) {
+  e.target.classList.remove('dragging');
+  document.querySelectorAll('.my-day-body').forEach(el => el.classList.remove('drag-over'));
+}
+
+function onDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  const body = e.currentTarget.querySelector('.my-day-body') || e.currentTarget;
+  body.classList.add('drag-over');
+}
+
+function onDragLeave(e) {
+  const body = e.currentTarget.querySelector('.my-day-body') || e.currentTarget;
+  body.classList.remove('drag-over');
+}
+
+async function onDrop(e, dateStr) {
+  e.preventDefault();
+  const body = e.currentTarget.querySelector('.my-day-body') || e.currentTarget;
+  body.classList.remove('drag-over');
+
+  const taskId = parseInt(e.dataTransfer.getData('text/plain'));
+  if (isNaN(taskId)) return;
+
+  try {
+    await api('POST', '/api/schedule', { taskId, scheduledDate: dateStr });
+    // Update local state
+    const existing = state.schedule.findIndex(s => s.taskId === taskId);
+    if (existing >= 0) {
+      state.schedule[existing].scheduledDate = dateStr;
+    } else {
+      state.schedule.push({ taskId, scheduledDate: dateStr, userEmail: state.currentUser.email, notes: '' });
+    }
+    renderMyCalendar();
+    showToast('Tarea agendada', 'success');
+  } catch (err) {
+    showToast('Error: ' + err.message, 'error');
+  }
+}
+
+async function removeSchedule(taskId) {
+  try {
+    await api('DELETE', `/api/schedule/${taskId}`);
+    state.schedule = state.schedule.filter(s => s.taskId !== taskId);
+    renderMyCalendar();
+    showToast('Tarea desagendada', 'success');
+  } catch (err) {
+    showToast('Error: ' + err.message, 'error');
+  }
+}
+
+// =================== RENDER: USERS (admin) ===================
+function renderUsers() {
+  document.getElementById('monthLabel').textContent = 'Gestión de Usuarios';
+
+  let h = `<table class="users-table"><thead><tr>
+    <th>Usuario</th><th>Email</th><th>Nombre Responsable</th><th>Rol</th><th>Registrado</th>
+  </tr></thead><tbody>`;
+
+  state.users.forEach(u => {
+    const isMe = u.email === state.currentUser?.email;
+    h += `<tr>`;
+    h += `<td>${u.photoURL ? `<img class="user-avatar" src="${u.photoURL}">` : ''}${u.displayName || '-'}</td>`;
+    h += `<td style="font-size:12px;color:var(--text-muted)">${u.email}</td>`;
+    h += `<td><input value="${u.responsableName || ''}" onchange="updateUserResponsable('${u.email}', this.value)" placeholder="Sin asignar" style="width:140px"></td>`;
+    h += `<td><select onchange="updateUserRole('${u.email}', this.value)" ${isMe?'disabled':''}><option value="user" ${u.role==='user'?'selected':''}>Usuario</option><option value="admin" ${u.role==='admin'?'selected':''}>Admin</option></select></td>`;
+    h += `<td style="font-size:11px;color:var(--text-muted)">${u.createdAt ? formatDateFull(u.createdAt.split('T')[0]) : '-'}</td>`;
+    h += `</tr>`;
+  });
+
+  h += `</tbody></table>`;
+  document.getElementById('viewUsers').innerHTML = h;
+}
+
+async function updateUserRole(email, role) {
+  try {
+    await api('PUT', `/api/users/${encodeURIComponent(email)}`, { role });
+    const u = state.users.find(x => x.email === email);
+    if (u) u.role = role;
+    showToast('Rol actualizado', 'success');
+  } catch (e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+async function updateUserResponsable(email, name) {
+  try {
+    await api('PUT', `/api/users/${encodeURIComponent(email)}`, { responsableName: name });
+    const u = state.users.find(x => x.email === email);
+    if (u) u.responsableName = name;
+    if (email === state.currentUser?.email) state.currentUser.responsableName = name;
+    showToast('Nombre actualizado', 'success');
+  } catch (e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+// =================== RENDER: FINALIZED PANEL ===================
+function renderFinalized() {
+  const finalized = state.tasks.filter(t => t.finalizada);
+  const panel = document.getElementById('finalizedPanel');
+  const body = document.getElementById('finalizedBody');
+  const count = document.getElementById('finCount');
+
+  if (finalized.length === 0) { panel.style.display = 'none'; return; }
+  if (state.currentView === 'users' || state.currentView === 'mycal') { panel.style.display = 'none'; return; }
+
+  panel.style.display = '';
+  count.textContent = finalized.length;
+
+  const sorted = [...finalized].sort((a, b) => (b.fechaFinalizacion || '').localeCompare(a.fechaFinalizacion || ''));
+  let h = `<table class="finalized-table"><thead><tr><th>Cliente</th><th>Tarea</th><th>Quién</th><th>Vencía</th><th>Finalizada</th><th></th></tr></thead><tbody>`;
+  sorted.forEach(t => {
+    const co = TASK_COLORS[t.tarea] || '#64748b';
+    h += `<tr>`;
+    h += `<td>${t.cliente}</td>`;
+    h += `<td><span class="type-badge" style="background:${co}15;color:${co}">${t.tarea}</span></td>`;
+    h += `<td><span class="card-badge badge-${(t.responsable||'').toLowerCase()}">${t.responsable}</span></td>`;
+    h += `<td style="font-size:11px;color:var(--text-muted)">${formatDateShort(t.vencimiento)}</td>`;
+    h += `<td><span class="fin-date">${formatDateFull(t.fechaFinalizacion)}</span></td>`;
+    h += `<td><button class="restore-btn" onclick="restoreTask(${t.taskId})" title="Restaurar">↩ Restaurar</button></td>`;
+    h += `</tr>`;
+  });
+  h += `</tbody></table>`;
+  body.innerHTML = h;
+  body.classList.toggle('collapsed', state.finalizedCollapsed);
+  document.getElementById('finalizedHeader').classList.toggle('collapsed', state.finalizedCollapsed);
+}
+
+function toggleFinalized() {
+  state.finalizedCollapsed = !state.finalizedCollapsed;
+  document.getElementById('finalizedBody').classList.toggle('collapsed', state.finalizedCollapsed);
+  document.getElementById('finalizedHeader').classList.toggle('collapsed', state.finalizedCollapsed);
+}
+
+// =================== MAIN RENDER ===================
+function render() {
+  updateStats();
+  if (state.currentView === 'month') renderMonth();
+  else if (state.currentView === 'week') renderWeek();
+  else if (state.currentView === 'list') renderList();
+  else if (state.currentView === 'mycal') renderMyCalendar();
+  else if (state.currentView === 'users') renderUsers();
+  renderFinalized();
+}
+
+// =================== TASK ACTIONS ===================
+async function toggleStatus(id, field) {
+  try {
+    const updated = await api('PUT', `/api/tasks/${id}/status`, { field });
+    const idx = state.tasks.findIndex(t => t.taskId === id);
+    if (idx >= 0) state.tasks[idx] = updated;
+    render();
+  } catch (e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+async function finalizeTask(id) {
+  try {
+    const updated = await api('PUT', `/api/tasks/${id}/finalize`);
+    const idx = state.tasks.findIndex(t => t.taskId === id);
+    if (idx >= 0) state.tasks[idx] = updated;
+    const task = state.tasks[idx];
+    render();
+    showToast(`"${task.cliente} — ${task.tarea}" finalizada`, 'success');
+  } catch (e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+async function restoreTask(id) {
+  try {
+    const updated = await api('PUT', `/api/tasks/${id}/restore`);
+    const idx = state.tasks.findIndex(t => t.taskId === id);
+    if (idx >= 0) state.tasks[idx] = updated;
+    render();
+    showToast('Tarea restaurada', 'success');
+  } catch (e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+function finalizeFromModal() {
+  if (state.editingId === null) return;
+  finalizeTask(state.editingId);
+  closeModal();
+}
+
+// =================== TASK CRUD ===================
+function addTask() {
+  state.editingId = null;
+  document.getElementById('modalTitle').innerHTML = '📝 Nueva Tarea <button class="modal-close" onclick="closeModal()">✕</button>';
+  document.getElementById('formCliente').value = '';
+  document.getElementById('formTarea').value = state.tasks.length > 0 ? [...new Set(state.tasks.map(t => t.tarea))].sort()[0] : '';
+  document.getElementById('formResponsable').value = state.currentUser?.responsableName || 'PERSONA';
+  document.getElementById('formVencimiento').value = '';
+  document.getElementById('formSemana').value = '1ER SEMANA';
+  document.getElementById('btnDelete').style.display = 'none';
+  document.getElementById('btnFinalize').style.display = 'none';
+  document.getElementById('modalOverlay').classList.add('active');
+}
+
+function editTask(id) {
+  const t = state.tasks.find(x => x.taskId === id);
+  if (!t) return;
+  state.editingId = id;
+  document.getElementById('modalTitle').innerHTML = '✏️ Editar Tarea <button class="modal-close" onclick="closeModal()">✕</button>';
+  document.getElementById('formCliente').value = t.cliente;
+  document.getElementById('formTarea').value = t.tarea;
+  document.getElementById('formResponsable').value = t.responsable;
+  document.getElementById('formVencimiento').value = t.vencimiento;
+  document.getElementById('formSemana').value = t.semana;
+  document.getElementById('btnDelete').style.display = '';
+  document.getElementById('btnFinalize').style.display = '';
+  document.getElementById('modalOverlay').classList.add('active');
+}
+
+async function saveTask() {
+  const sel = document.getElementById('formCliente');
+  let cliente = sel.value;
+  if (!cliente) {
+    cliente = prompt('Ingresá el nombre del nuevo cliente:');
+    if (!cliente || !cliente.trim()) return;
+    cliente = cliente.trim();
+  }
+  const tarea = document.getElementById('formTarea').value;
+  const responsable = document.getElementById('formResponsable').value;
+  const vencimiento = document.getElementById('formVencimiento').value;
+  const semana = document.getElementById('formSemana').value;
+
+  if (!tarea || !vencimiento) { showToast('Completá todos los campos obligatorios', 'error'); return; }
+
+  // Find assignedTo email based on responsable name
+  const matchUser = state.users.find(u => u.responsableName === responsable);
+  const assignedTo = matchUser ? matchUser.email : null;
+
+  try {
+    if (state.editingId !== null) {
+      const updated = await api('PUT', `/api/tasks/${state.editingId}`, { cliente, tarea, responsable, assignedTo, vencimiento, semana });
+      const idx = state.tasks.findIndex(t => t.taskId === state.editingId);
+      if (idx >= 0) state.tasks[idx] = updated;
+      showToast('Tarea actualizada', 'success');
+    } else {
+      const created = await api('POST', '/api/tasks', { cliente, tarea, responsable, assignedTo, vencimiento, semana });
+      state.tasks.push(created);
+      showToast('Tarea creada', 'success');
+    }
+    populateFilters();
+    populateFormSelects();
+    closeModal();
+    render();
+  } catch (e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+async function deleteTask() {
+  if (state.editingId === null) return;
+  if (!confirm('¿Eliminar esta tarea permanentemente?')) return;
+  try {
+    await api('DELETE', `/api/tasks/${state.editingId}`);
+    state.tasks = state.tasks.filter(t => t.taskId !== state.editingId);
+    populateFilters();
+    closeModal();
+    render();
+    showToast('Tarea eliminada', 'success');
+  } catch (e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('active');
+  state.editingId = null;
+}
+
+// =================== EXPORT / IMPORT ===================
+function exportJSON() {
+  const data = { tasks: state.tasks, exportDate: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `calendario-${formatDate(new Date())}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Datos exportados', 'success');
+}
+
+async function importJSON(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      const tasks = data.tasks || data.tareas || (Array.isArray(data) ? data : []);
+      if (!tasks.length) { showToast('No se encontraron tareas', 'error'); return; }
+
+      // Upload tasks via API
+      let imported = 0;
+      for (const t of tasks) {
+        try {
+          await api('POST', '/api/tasks', {
+            cliente: t.cliente,
+            tarea: t.tarea,
+            responsable: t.responsable,
+            assignedTo: t.assignedTo || null,
+            semana: t.semana,
+            vencimiento: t.vencimiento,
+          });
+          imported++;
+        } catch (err) { /* skip duplicates */ }
+      }
+
+      await loadAllData();
+      populateFilters();
+      populateFormSelects();
+      render();
+      showToast(`Importadas ${imported} tareas`, 'success');
+    } catch (e) { showToast('Error al leer archivo', 'error'); }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+// =================== TOAST ===================
+function showToast(msg, type = 'success') {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `${type === 'success' ? '✅' : '❌'} ${msg}`;
+  c.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3000);
+}
+
+// =================== KEYBOARD SHORTCUTS ===================
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+  if (e.key === 'n' && e.ctrlKey) { e.preventDefault(); addTask(); }
+  if (!document.querySelector('.modal-overlay.active')) {
+    if (e.key === 'ArrowLeft') changeMonth(-1);
+    if (e.key === 'ArrowRight') changeMonth(1);
+  }
+});
+
+// =================== INIT ===================
+initFirebase();
+</script>
+</body>
+</html>
