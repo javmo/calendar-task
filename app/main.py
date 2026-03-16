@@ -46,13 +46,25 @@ async def lifespan(app: FastAPI):
     )
 
     # Firebase Admin SDK
-    if os.path.exists(FIREBASE_SA_PATH):
+    firebase_sa_json = os.getenv("FIREBASE_SA_JSON", "")
+    if firebase_sa_json:
+        try:
+            import json as _json
+            from firebase_admin import credentials, initialize_app
+            sa_dict = _json.loads(firebase_sa_json)
+            cred = credentials.Certificate(sa_dict)
+            initialize_app(cred)
+            firebase_initialized = True
+            print("✅ Firebase Admin SDK initialized (from env var)")
+        except Exception as e:
+            print(f"⚠️ Firebase init error (env): {e}")
+    elif os.path.exists(FIREBASE_SA_PATH):
         try:
             from firebase_admin import credentials, initialize_app
             cred = credentials.Certificate(FIREBASE_SA_PATH)
             initialize_app(cred)
             firebase_initialized = True
-            print("✅ Firebase Admin SDK initialized")
+            print("✅ Firebase Admin SDK initialized (from file)")
         except Exception as e:
             print(f"⚠️ Firebase init error: {e}")
     else:
