@@ -359,12 +359,94 @@ body{font-family:'Inter','Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
 ::-webkit-scrollbar-thumb:hover{background:var(--text-muted)}
 
+/* =================== CLIENTS VIEW =================== */
+.clients-container{padding:20px 28px}
+.clients-toolbar{display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.clients-toolbar .search-wrapper{flex:1;min-width:200px}
+.clients-toolbar .search-wrapper input{width:100%}
+.clients-count{font-size:13px;color:var(--text-muted);font-weight:600}
+.clients-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
+.client-card{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow-sm);border:1px solid var(--border);padding:20px;transition:all .2s;cursor:pointer;position:relative;overflow:hidden}
+.client-card:hover{box-shadow:var(--shadow);transform:translateY(-2px);border-color:var(--accent)}
+.client-card .cc-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
+.client-card .cc-name{font-size:15px;font-weight:700;color:var(--text)}
+.client-card .cc-cuit{font-size:12px;color:var(--text-muted);font-weight:500;margin-top:2px}
+.client-card .cc-tasks-count{background:var(--accent-bg);color:var(--accent);padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;white-space:nowrap}
+.client-card .cc-claves{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.client-card .cc-clave{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:6px;font-size:10px;font-weight:600;background:var(--surface2);color:var(--text-secondary);border:1px solid var(--border-light)}
+.client-card .cc-clave.has-value{background:#ecfdf5;color:#059669;border-color:#a7f3d0}
+.client-card .cc-clave.no-value{background:var(--surface2);color:var(--text-muted);opacity:.5}
+.client-card .cc-pago{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:600;background:#f0f0ff;color:#4f46e5;border:1px solid #e0e0ff}
+.client-card .cc-pago.no-pago{background:var(--surface2);color:var(--text-muted);border-color:var(--border-light)}
+
+/* =================== VENCIMIENTOS VIEW =================== */
+.vtos-container{padding:20px 28px}
+.vtos-header{display:flex;align-items:center;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+.vtos-header h2{font-size:18px;font-weight:800;color:var(--text);margin:0}
+.vtos-periodo-select{padding:8px 14px;border:2px solid var(--accent);border-radius:var(--radius-sm);background:var(--accent-bg);color:var(--accent);font-size:14px;font-weight:700;font-family:inherit;cursor:pointer}
+.vtos-periodo-select:focus{outline:none;box-shadow:0 0 0 3px rgba(79,70,229,.2)}
+.vtos-actions{display:flex;gap:8px;margin-left:auto}
+.vtos-table-wrap{overflow-x:auto;border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--border)}
+.vtos-table{width:100%;border-collapse:collapse;min-width:900px}
+.vtos-table thead th{background:linear-gradient(135deg,#4f46e5,#6366f1);color:white;padding:12px 10px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;text-align:center;position:sticky;top:0;white-space:nowrap}
+.vtos-table thead th:first-child{background:linear-gradient(135deg,#334155,#475569);min-width:80px}
+.vtos-table tbody tr{border-bottom:1px solid var(--border-light);transition:background .1s}
+.vtos-table tbody tr:hover{background:var(--accent-bg)}
+.vtos-table tbody tr:nth-child(even){background:var(--surface2)}
+.vtos-table tbody tr:nth-child(even):hover{background:var(--accent-bg)}
+.vtos-table tbody td{padding:6px 4px;text-align:center;font-size:13px}
+.vtos-table tbody td:first-child{background:var(--surface2);font-weight:800;font-size:16px;color:var(--accent);min-width:60px}
+.vtos-table tbody td input[type=date]{width:130px;padding:5px 6px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;background:var(--surface);color:var(--text);text-align:center;transition:border-color .15s}
+.vtos-table tbody td input[type=date]:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-bg)}
+.vtos-table tbody td input[type=date].has-value{border-color:var(--success-border);background:var(--success-bg)}
+.vtos-info{margin-top:16px;padding:14px 20px;background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);display:flex;align-items:center;gap:12px}
+.vtos-info .info-icon{font-size:20px}
+.vtos-info .info-text{font-size:13px;color:var(--text-secondary);line-height:1.5}
+.vtos-info .info-text strong{color:var(--text)}
+.vtos-result{margin-top:12px;padding:12px 20px;border-radius:var(--radius);font-size:13px;font-weight:600}
+.vtos-result.success{background:var(--success-bg);color:var(--success);border:1px solid var(--success-border)}
+.vtos-result.error{background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger-border)}
+
+/* Client Detail Modal */
+.client-detail-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
+.client-detail-overlay.active{display:flex}
+.client-detail{background:var(--surface);border-radius:16px;width:600px;max-width:95vw;max-height:85vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
+.cd-header{padding:24px 28px 16px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between}
+.cd-header h2{font-size:20px;font-weight:800;display:flex;align-items:center;gap:10px}
+.cd-header .cd-close{background:none;border:none;color:var(--text-muted);font-size:18px;cursor:pointer;padding:4px 8px;border-radius:6px}
+.cd-header .cd-close:hover{background:var(--bg);color:var(--text)}
+.cd-body{padding:20px 28px}
+.cd-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.cd-info-item{padding:10px 14px;background:var(--surface2);border-radius:var(--radius-sm);border:1px solid var(--border-light)}
+.cd-info-item label{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--text-muted);font-weight:700;margin-bottom:4px}
+.cd-info-item .cd-val{font-size:13px;font-weight:600;color:var(--text);word-break:break-all}
+.cd-info-item .cd-val.masked{filter:blur(4px);transition:filter .2s;cursor:pointer}
+.cd-info-item .cd-val.masked:hover{filter:blur(0)}
+.cd-info-item .cd-val.empty{color:var(--text-muted);font-style:italic;font-weight:400}
+.cd-tasks-section{margin-top:16px}
+.cd-tasks-section h3{font-size:14px;font-weight:700;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.cd-tasks-list{display:flex;flex-direction:column;gap:6px;max-height:300px;overflow-y:auto}
+.cd-task-row{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface2);border-radius:var(--radius-sm);border-left:3px solid;font-size:13px}
+.cd-task-row .cdt-tarea{font-weight:600;flex:1}
+.cd-task-row .cdt-vto{font-size:11px;color:var(--text-muted)}
+.cd-task-row .cdt-mes{font-size:10px;padding:2px 8px;background:var(--accent-bg);color:var(--accent);border-radius:10px;font-weight:600}
+.cd-task-row .cdt-status{font-size:11px}
+.cd-actions{padding:16px 28px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
+
+/* Edit client modal */
+.client-edit-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:250;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
+.client-edit-overlay.active{display:flex}
+.client-edit-modal{background:var(--surface);border-radius:16px;padding:28px;width:480px;max-width:95vw;max-height:85vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
+.client-edit-modal h2{font-size:17px;font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:8px}
+
 /* =================== RESPONSIVE =================== */
 @media(max-width:768px){
   .header{flex-direction:column;gap:10px;padding:12px 16px}
   .toolbar{flex-direction:column;align-items:stretch;padding:10px 16px}
   .header-stats{flex-wrap:wrap}
-  .calendar-container,.list-container,.my-cal-container,.users-container{padding:10px}
+  .calendar-container,.list-container,.my-cal-container,.users-container,.clients-container{padding:10px}
+  .clients-grid{grid-template-columns:1fr}
+  .cd-info-grid{grid-template-columns:1fr}
   .finalized-panel{margin:10px}
   .my-cal-layout{grid-template-columns:1fr;grid-template-rows:auto 1fr}
 }
@@ -517,6 +599,8 @@ body{font-family:'Inter','Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;
         <button class="btn" data-view="week" onclick="setView('week')">Semana</button>
         <button class="btn" data-view="list" onclick="setView('list')">Lista</button>
         <button class="btn" data-view="mycal" onclick="setView('mycal')">📋 Mi Cal</button>
+        <button class="btn" data-view="clientes" onclick="setView('clientes')">👤 Clientes</button>
+        <button class="btn" data-view="vtos" id="btnVtosTab" onclick="setView('vtos')" style="display:none">📅 Vtos</button>
         <button class="btn" data-view="users" id="btnUsersTab" onclick="setView('users')" style="display:none">👥</button>
       </div>
     </div>
@@ -529,6 +613,8 @@ body{font-family:'Inter','Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;
   <div id="viewList" class="list-container" style="display:none"></div>
   <div id="viewMyCal" class="my-cal-container" style="display:none"></div>
   <div id="viewUsers" class="users-container" style="display:none"></div>
+  <div id="viewClientes" class="clients-container" style="display:none"></div>
+  <div id="viewVtos" class="vtos-container" style="display:none"></div>
 
   <div class="finalized-panel" id="finalizedPanel" style="display:none">
     <div class="finalized-header" id="finalizedHeader" onclick="toggleFinalized()">
@@ -564,6 +650,49 @@ body{font-family:'Inter','Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;
   </div>
 </div>
 
+  <!-- Client Detail Modal -->
+  <div class="client-detail-overlay" id="clientDetailOverlay" onclick="if(event.target===this)closeClientDetail()">
+    <div class="client-detail">
+      <div class="cd-header">
+        <h2 id="cdTitle">👤 Cliente</h2>
+        <button class="cd-close" onclick="closeClientDetail()">✕</button>
+      </div>
+      <div class="cd-body" id="cdBody"></div>
+      <div class="cd-actions">
+        <button class="btn" onclick="closeClientDetail()">Cerrar</button>
+        <button class="btn btn-primary" id="cdEditBtn" onclick="editClientFromDetail()">✏️ Editar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Client Edit Modal -->
+  <div class="client-edit-overlay" id="clientEditOverlay" onclick="if(event.target===this)closeClientEdit()">
+    <div class="client-edit-modal">
+      <h2 id="clientEditTitle">✏️ Editar Cliente <button class="modal-close" onclick="closeClientEdit()">✕</button></h2>
+      <div class="form-group"><label>Nombre</label><input type="text" id="ceNombre"></div>
+      <div class="form-group"><label>CUIT</label><input type="text" id="ceCuit"></div>
+      <div class="form-group"><label>Clave ARCA</label><input type="text" id="ceClaveArca"></div>
+      <div class="form-group"><label>Clave AGIP</label><input type="text" id="ceClaveAgip"></div>
+      <div class="form-group"><label>Clave ARBA</label><input type="text" id="ceClaveArba"></div>
+      <div class="form-group"><label>Otra Clave</label><input type="text" id="ceOtraClave"></div>
+      <div class="form-group"><label>Forma de Pago</label>
+        <select id="ceFormaPago">
+          <option value="">Sin especificar</option>
+          <option value="Pago mis cuentas">Pago mis cuentas</option>
+          <option value="Red Link">Red Link</option>
+          <option value="QR">QR</option>
+          <option value="-">-</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button class="btn" onclick="closeClientEdit()">Cancelar</button>
+        <button class="btn btn-primary" onclick="saveClientEdit()">Guardar</button>
+        <button class="btn btn-danger" id="ceDeleteBtn" style="display:none" onclick="deleteClient()">🗑 Eliminar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="toast-container" id="toastContainer"></div>
 
 <script>
@@ -594,6 +723,9 @@ const TASK_COLORS = {
 const state = {
   tasks: [],
   users: [],
+  clientes: [],
+  vencimientos: {},
+  vtoPeriodo: '',
   schedule: [],
   currentUser: null,
   firebaseUser: null,
@@ -602,10 +734,12 @@ const state = {
   weekStart: null,
   myCalWeekStart: null,
   editingId: null,
+  editingClientId: null,
   sortCol: 'vencimiento',
   sortDir: 1,
   finalizedCollapsed: false,
   devMode: false,
+  clientSearch: '',
 };
 
 let authToken = null;
@@ -632,12 +766,21 @@ async function api(method, path, body = null) {
 
 async function loadAllData() {
   try {
-    const [tasks, users] = await Promise.all([
+    const [tasks, users, clientes] = await Promise.all([
       api('GET', '/api/tasks'),
       api('GET', '/api/users'),
+      api('GET', '/api/clientes'),
     ]);
     state.tasks = tasks;
     state.users = users;
+    state.clientes = clientes;
+
+    // Load vencimientos list
+    try {
+      const vtosList = await api('GET', '/api/vencimientos');
+      state.vencimientos = {};
+      vtosList.forEach(v => { state.vencimientos[v.periodo] = v; });
+    } catch(e) { console.warn('Vtos load:', e); }
 
     if (state.currentUser) {
       state.schedule = await api('GET', '/api/schedule');
@@ -833,6 +976,7 @@ function updateUserMenu() {
   const isAdmin = u.role === 'admin';
   document.getElementById('btnUsersView').style.display = isAdmin ? '' : 'none';
   document.getElementById('btnUsersTab').style.display = isAdmin ? '' : 'none';
+  document.getElementById('btnVtosTab').style.display = isAdmin ? '' : 'none';
 }
 
 function toggleUserMenu() {
@@ -971,14 +1115,14 @@ function setView(v) {
   state.currentView = v;
   document.querySelectorAll('.view-toggle .btn').forEach(b => b.classList.toggle('active', b.dataset.view === v));
 
-  const views = { month: 'viewMonth', week: 'viewWeek', list: 'viewList', mycal: 'viewMyCal', users: 'viewUsers' };
-  for (const [key, id] of Object.entries(views)) {
-    document.getElementById(id).style.display = key === v ? '' : 'none';
-  }
+const views = { month: 'viewMonth', week: 'viewWeek', list: 'viewList', mycal: 'viewMyCal', users: 'viewUsers', clientes: 'viewClientes', vtos: 'viewVtos' };
+    for (const [key, id] of Object.entries(views)) {
+      document.getElementById(id).style.display = key === v ? '' : 'none';
+    }
 
-  // Show/hide filters for users view
-  document.getElementById('filterGroup').style.display = v === 'users' ? 'none' : '';
-  document.getElementById('legend').style.display = (v === 'users' || v === 'mycal') ? 'none' : '';
+    // Show/hide filters for special views
+    document.getElementById('filterGroup').style.display = (v === 'users' || v === 'clientes' || v === 'vtos') ? 'none' : '';
+    document.getElementById('legend').style.display = (v === 'users' || v === 'mycal' || v === 'clientes' || v === 'vtos') ? 'none' : '';
 
   render();
 }
@@ -1355,6 +1499,336 @@ async function updateUserResponsable(email, name) {
   } catch (e) { showToast('Error: ' + e.message, 'error'); }
 }
 
+// =================== RENDER: CLIENTES ===================
+function renderClientes() {
+  document.getElementById('monthLabel').textContent = 'Base de Clientes';
+
+  const search = state.clientSearch.toLowerCase();
+  const filtered = state.clientes.filter(c =>
+    !search || c.nombre.toLowerCase().includes(search) || (c.cuit && c.cuit.includes(search))
+  );
+
+  // Count tasks per client
+  const taskCounts = {};
+  state.tasks.forEach(t => {
+    taskCounts[t.cliente] = (taskCounts[t.cliente] || 0) + 1;
+  });
+
+  let h = `<div class="clients-toolbar">
+    <div class="search-wrapper" style="max-width:300px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" class="search-input" placeholder="Buscar cliente o CUIT..." value="${state.clientSearch}" oninput="state.clientSearch=this.value;renderClientes()">
+    </div>
+    <span class="clients-count">${filtered.length} cliente${filtered.length!==1?'s':''}</span>
+    <button class="btn btn-primary" onclick="addClient()">＋ Nuevo Cliente</button>
+  </div>`;
+
+  h += `<div class="clients-grid">`;
+  filtered.forEach(c => {
+    const tc = taskCounts[c.nombre] || 0;
+    const claves = [
+      { label: 'ARCA', val: c.claveArca },
+      { label: 'AGIP', val: c.claveAgip },
+      { label: 'ARBA', val: c.claveArba },
+    ];
+    h += `<div class="client-card" onclick="showClientDetail(${c.clienteId})">`;
+    h += `<div class="cc-header">`;
+    h += `<div><div class="cc-name">${c.nombre}</div><div class="cc-cuit">CUIT: ${c.cuit || '-'}</div></div>`;
+    h += `<span class="cc-tasks-count">${tc} tarea${tc!==1?'s':''}</span>`;
+    h += `</div>`;
+    h += `<div class="cc-claves">`;
+    claves.forEach(cl => {
+      const has = cl.val && cl.val !== '-' && cl.val !== '';
+      h += `<span class="cc-clave ${has?'has-value':'no-value'}">${cl.label}: ${has?'✓':'✗'}</span>`;
+    });
+    h += `</div>`;
+    const pago = c.formaPago && c.formaPago !== '-' && c.formaPago !== '';
+    h += `<span class="cc-pago ${pago?'':'no-pago'}">${pago ? '💳 '+c.formaPago : 'Sin forma de pago'}</span>`;
+    h += `</div>`;
+  });
+  h += `</div>`;
+
+  document.getElementById('viewClientes').innerHTML = h;
+}
+
+function showClientDetail(clienteId) {
+  const c = state.clientes.find(x => x.clienteId === clienteId);
+  if (!c) return;
+  state.editingClientId = clienteId;
+
+  document.getElementById('cdTitle').textContent = '👤 ' + c.nombre;
+
+  const clientTasks = state.tasks.filter(t => t.cliente === c.nombre);
+
+  // Group tasks by mes
+  const byMes = {};
+  clientTasks.forEach(t => {
+    const m = t.mes || 'Sin mes';
+    if (!byMes[m]) byMes[m] = [];
+    byMes[m].push(t);
+  });
+
+  const maskVal = (v) => {
+    if (!v || v === '-' || v === '') return '<span class="cd-val empty">—</span>';
+    return `<span class="cd-val masked" title="Click para ver" onclick="this.classList.toggle('masked')">${v}</span>`;
+  };
+  const plainVal = (v) => {
+    if (!v || v === '-' || v === '') return '<span class="cd-val empty">—</span>';
+    return `<span class="cd-val">${v}</span>`;
+  };
+
+  let h = `<div class="cd-info-grid">`;
+  h += `<div class="cd-info-item"><label>CUIT</label>${plainVal(c.cuit)}</div>`;
+  h += `<div class="cd-info-item"><label>Forma de Pago</label>${plainVal(c.formaPago)}</div>`;
+  h += `<div class="cd-info-item"><label>Clave ARCA</label>${maskVal(c.claveArca)}</div>`;
+  h += `<div class="cd-info-item"><label>Clave AGIP</label>${maskVal(c.claveAgip)}</div>`;
+  h += `<div class="cd-info-item"><label>Clave ARBA</label>${maskVal(c.claveArba)}</div>`;
+  h += `<div class="cd-info-item"><label>Otra Clave</label>${maskVal(c.otraClave)}</div>`;
+  h += `</div>`;
+
+  h += `<div class="cd-tasks-section">`;
+  h += `<h3>📋 Tareas asignadas <span style="font-size:12px;color:var(--text-muted);font-weight:400">(${clientTasks.length})</span></h3>`;
+  h += `<div class="cd-tasks-list">`;
+
+  if (clientTasks.length === 0) {
+    h += `<div style="padding:16px;text-align:center;color:var(--text-muted);font-size:13px">No tiene tareas asignadas</div>`;
+  } else {
+    const mesOrder = ['Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    mesOrder.forEach(mes => {
+      const tasks = byMes[mes];
+      if (!tasks) return;
+      h += `<div style="font-size:11px;font-weight:700;color:var(--accent);margin:8px 0 4px;text-transform:uppercase;letter-spacing:.5px">${mes}</div>`;
+      tasks.forEach(t => {
+        const co = TASK_COLORS[t.tarea] || '#64748b';
+        const st = getTaskStatus(t);
+        const isFin = t.finalizada;
+        h += `<div class="cd-task-row" style="border-color:${co}">`;
+        h += `<span class="cdt-tarea">${t.tarea}</span>`;
+        h += `<span class="cdt-vto">${formatDateShort(t.vencimiento)}</span>`;
+        h += `<span style="font-size:10px;color:var(--text-muted)">${t.semana}</span>`;
+        h += `<span class="cdt-status">${isFin?'✅':''}${st==='overdue'?'🔴':''}${st==='ready'?'✔️':''}${st==='pending'&&!isFin?'⏳':''}</span>`;
+        h += `</div>`;
+      });
+    });
+  }
+  h += `</div></div>`;
+
+  document.getElementById('cdBody').innerHTML = h;
+  document.getElementById('clientDetailOverlay').classList.add('active');
+}
+
+function closeClientDetail() {
+  document.getElementById('clientDetailOverlay').classList.remove('active');
+}
+
+function addClient() {
+  state.editingClientId = null;
+  document.getElementById('clientEditTitle').innerHTML = '➕ Nuevo Cliente <button class="modal-close" onclick="closeClientEdit()">✕</button>';
+  document.getElementById('ceNombre').value = '';
+  document.getElementById('ceCuit').value = '';
+  document.getElementById('ceClaveArca').value = '';
+  document.getElementById('ceClaveAgip').value = '';
+  document.getElementById('ceClaveArba').value = '';
+  document.getElementById('ceOtraClave').value = '';
+  document.getElementById('ceFormaPago').value = '';
+  document.getElementById('ceDeleteBtn').style.display = 'none';
+  document.getElementById('clientEditOverlay').classList.add('active');
+}
+
+function editClientFromDetail() {
+  const c = state.clientes.find(x => x.clienteId === state.editingClientId);
+  if (!c) return;
+  closeClientDetail();
+
+  document.getElementById('clientEditTitle').innerHTML = '✏️ Editar Cliente <button class="modal-close" onclick="closeClientEdit()">✕</button>';
+  document.getElementById('ceNombre').value = c.nombre;
+  document.getElementById('ceCuit').value = c.cuit || '';
+  document.getElementById('ceClaveArca').value = c.claveArca || '';
+  document.getElementById('ceClaveAgip').value = c.claveAgip || '';
+  document.getElementById('ceClaveArba').value = c.claveArba || '';
+  document.getElementById('ceOtraClave').value = c.otraClave || '';
+  document.getElementById('ceFormaPago').value = c.formaPago || '';
+  document.getElementById('ceDeleteBtn').style.display = '';
+  document.getElementById('clientEditOverlay').classList.add('active');
+}
+
+async function saveClientEdit() {
+  const nombre = document.getElementById('ceNombre').value.trim();
+  if (!nombre) { showToast('El nombre es obligatorio', 'error'); return; }
+
+  const data = {
+    nombre,
+    cuit: document.getElementById('ceCuit').value.trim(),
+    claveArca: document.getElementById('ceClaveArca').value.trim(),
+    claveAgip: document.getElementById('ceClaveAgip').value.trim(),
+    claveArba: document.getElementById('ceClaveArba').value.trim(),
+    otraClave: document.getElementById('ceOtraClave').value.trim(),
+    formaPago: document.getElementById('ceFormaPago').value,
+  };
+
+  try {
+    if (state.editingClientId !== null) {
+      const updated = await api('PUT', `/api/clientes/${state.editingClientId}`, data);
+      const idx = state.clientes.findIndex(c => c.clienteId === state.editingClientId);
+      if (idx >= 0) state.clientes[idx] = updated;
+      // Reload tasks in case name changed
+      state.tasks = await api('GET', '/api/tasks');
+      showToast('Cliente actualizado', 'success');
+    } else {
+      const created = await api('POST', '/api/clientes', data);
+      state.clientes.push(created);
+      showToast('Cliente creado', 'success');
+    }
+    closeClientEdit();
+    populateFilters();
+    populateFormSelects();
+    render();
+  } catch (e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+async function deleteClient() {
+  if (state.editingClientId === null) return;
+  const c = state.clientes.find(x => x.clienteId === state.editingClientId);
+  if (!confirm(`¿Eliminar al cliente "${c?.nombre}"? Esto NO eliminará sus tareas.`)) return;
+  try {
+    await api('DELETE', `/api/clientes/${state.editingClientId}`);
+    state.clientes = state.clientes.filter(x => x.clienteId !== state.editingClientId);
+    closeClientEdit();
+    render();
+    showToast('Cliente eliminado', 'success');
+  } catch (e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+function closeClientEdit() {
+  document.getElementById('clientEditOverlay').classList.remove('active');
+}
+
+// =================== RENDER: VENCIMIENTOS ===================
+const VTO_TASK_TYPES = [
+  'Casas Particulares', 'VEP Monotributo', 'VEP Autonomos',
+  'IIBB CM', 'IIBB ARBA', 'IIBB AGIP', 'IVA', 'Libro IVA Digital',
+];
+
+function renderVencimientos() {
+  document.getElementById('monthLabel').textContent = 'Tabla de Vencimientos';
+
+  // Default to current or next month
+  if (!state.vtoPeriodo) {
+    const now = new Date();
+    state.vtoPeriodo = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  }
+
+  // Build periodo selector (2026-01 to 2026-12)
+  const periodos = [];
+  for (let m = 1; m <= 12; m++) {
+    periodos.push(`2026-${String(m).padStart(2, '0')}`);
+  }
+
+  const vtoData = state.vencimientos[state.vtoPeriodo];
+  const tabla = vtoData ? vtoData.tabla : null;
+
+  let h = `<div class="vtos-header">`;
+  h += `<h2>\ud83d\udcc5 Vencimientos por D\u00edgito CUIT</h2>`;
+  h += `<select class="vtos-periodo-select" onchange="state.vtoPeriodo=this.value;loadVtoPeriodo()">`;
+  periodos.forEach(p => {
+    const [y, m] = p.split('-');
+    const label = MONTHS_ES[parseInt(m) - 1] + ' ' + y;
+    h += `<option value="${p}" ${p === state.vtoPeriodo ? 'selected' : ''}>${label}</option>`;
+  });
+  h += `</select>`;
+  h += `<div class="vtos-actions">`;
+  h += `<button class="btn btn-primary" onclick="saveVencimientos()">\ud83d\udcbe Guardar</button>`;
+  h += `<button class="btn btn-success" onclick="aplicarVencimientos()">\u2705 Aplicar a Tareas</button>`;
+  h += `</div></div>`;
+
+  // Table
+  h += `<div class="vtos-table-wrap"><table class="vtos-table"><thead><tr>`;
+  h += `<th>D\u00edgito</th>`;
+  VTO_TASK_TYPES.forEach(t => {
+    h += `<th>${t}</th>`;
+  });
+  h += `</tr></thead><tbody>`;
+
+  for (let d = 0; d <= 9; d++) {
+    h += `<tr><td>${d}</td>`;
+    VTO_TASK_TYPES.forEach(tipo => {
+      const val = tabla && tabla[tipo] ? (tabla[tipo][String(d)] || '') : '';
+      const hasVal = val && val.length > 0;
+      h += `<td><input type="date" id="vto_${tipo.replace(/\s/g,'_')}_${d}" value="${val}" class="${hasVal ? 'has-value' : ''}" onchange="this.classList.toggle('has-value', !!this.value)"></td>`;
+    });
+    h += `</tr>`;
+  }
+
+  h += `</tbody></table></div>`;
+
+  h += `<div class="vtos-info">`;
+  h += `<span class="info-icon">\ud83d\udca1</span>`;
+  h += `<div class="info-text">`;
+  h += `<strong>\u00bfC\u00f3mo funciona?</strong> Cada tipo de tarea tiene un vencimiento diferente seg\u00fan el <strong>\u00faltimo d\u00edgito del CUIT</strong> del cliente. `;
+  h += `Carg\u00e1 las fechas para cada mes y puls\u00e1 <strong>"Aplicar a Tareas"</strong> para actualizar autom\u00e1ticamente los vencimientos de todas las tareas del mes.`;
+  h += `</div></div>`;
+
+  h += `<div id="vtosResult"></div>`;
+
+  document.getElementById('viewVtos').innerHTML = h;
+}
+
+async function loadVtoPeriodo() {
+  try {
+    const data = await api('GET', `/api/vencimientos/${state.vtoPeriodo}`);
+    state.vencimientos[state.vtoPeriodo] = data;
+  } catch(e) {
+    console.warn('Load vto periodo:', e);
+  }
+  renderVencimientos();
+}
+
+function collectVtosFromForm() {
+  const tabla = {};
+  VTO_TASK_TYPES.forEach(tipo => {
+    tabla[tipo] = {};
+    for (let d = 0; d <= 9; d++) {
+      const input = document.getElementById(`vto_${tipo.replace(/\s/g,'_')}_${d}`);
+      tabla[tipo][String(d)] = input && input.value ? input.value : null;
+    }
+  });
+  return tabla;
+}
+
+async function saveVencimientos() {
+  const tabla = collectVtosFromForm();
+  try {
+    await api('PUT', `/api/vencimientos/${state.vtoPeriodo}`, { tabla });
+    state.vencimientos[state.vtoPeriodo] = { periodo: state.vtoPeriodo, tabla };
+    showToast('Vencimientos guardados', 'success');
+    document.getElementById('vtosResult').innerHTML = '';
+  } catch(e) {
+    showToast('Error: ' + e.message, 'error');
+  }
+}
+
+async function aplicarVencimientos() {
+  // Save first
+  const tabla = collectVtosFromForm();
+  try {
+    await api('PUT', `/api/vencimientos/${state.vtoPeriodo}`, { tabla });
+    state.vencimientos[state.vtoPeriodo] = { periodo: state.vtoPeriodo, tabla };
+
+    const result = await api('POST', `/api/vencimientos/${state.vtoPeriodo}/aplicar`);
+
+    document.getElementById('vtosResult').innerHTML =
+      `<div class="vtos-result success">\u2705 ${result.tareasActualizadas} tareas actualizadas de ${result.totalTareas} en ${result.mes}.</div>`;
+
+    // Reload tasks
+    state.tasks = await api('GET', '/api/tasks');
+    showToast(`Vencimientos aplicados: ${result.tareasActualizadas} tareas actualizadas`, 'success');
+  } catch (e) {
+    document.getElementById('vtosResult').innerHTML =
+      `<div class="vtos-result error">\u274c Error: ${e.message}</div>`;
+    showToast('Error: ' + e.message, 'error');
+  }
+}
+
 // =================== RENDER: FINALIZED PANEL ===================
 function renderFinalized() {
   const finalized = state.tasks.filter(t => t.finalizada);
@@ -1363,7 +1837,7 @@ function renderFinalized() {
   const count = document.getElementById('finCount');
 
   if (finalized.length === 0) { panel.style.display = 'none'; return; }
-  if (state.currentView === 'users' || state.currentView === 'mycal') { panel.style.display = 'none'; return; }
+  if (state.currentView === 'users' || state.currentView === 'mycal' || state.currentView === 'clientes' || state.currentView === 'vtos') { panel.style.display = 'none'; return; }
 
   panel.style.display = '';
   count.textContent = finalized.length;
@@ -1401,6 +1875,8 @@ function render() {
   else if (state.currentView === 'list') renderList();
   else if (state.currentView === 'mycal') renderMyCalendar();
   else if (state.currentView === 'users') renderUsers();
+  else if (state.currentView === 'clientes') renderClientes();
+  else if (state.currentView === 'vtos') renderVencimientos();
   renderFinalized();
 }
 
@@ -1587,7 +2063,7 @@ function showToast(msg, type = 'success') {
 
 // =================== KEYBOARD SHORTCUTS ===================
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') closeModal();
+  if (e.key === 'Escape') { closeModal(); closeClientDetail(); closeClientEdit(); }
   if (e.key === 'n' && e.ctrlKey) { e.preventDefault(); addTask(); }
   if (!document.querySelector('.modal-overlay.active')) {
     if (e.key === 'ArrowLeft') changeMonth(-1);

@@ -5,7 +5,7 @@ MongoDB + Firebase Auth
 import os
 from contextlib import asynccontextmanager
 from datetime import date, datetime
-from typing import Optional
+from typing import Optional, Dict
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, Depends, HTTPException, Header
@@ -44,6 +44,10 @@ async def lifespan(app: FastAPI):
     await db.schedules.create_index(
         [("userEmail", 1), ("taskId", 1)], unique=True
     )
+    await db.clientes.create_index("clienteId", unique=True)
+    await db.clientes.create_index("nombre", unique=True)
+    await db.clientes.create_index("cuit")
+    await db.vencimientos.create_index("periodo", unique=True)
 
     # Firebase Admin SDK
     firebase_sa_json = os.getenv("FIREBASE_SA_JSON", "")
@@ -128,9 +132,33 @@ class ScheduleIn(BaseModel):
     notes: Optional[str] = ""
 
 
+class ClienteIn(BaseModel):
+    nombre: str
+    cuit: Optional[str] = ""
+    claveArca: Optional[str] = ""
+    claveAgip: Optional[str] = ""
+    claveArba: Optional[str] = ""
+    otraClave: Optional[str] = ""
+    formaPago: Optional[str] = ""
+
+
+class ClienteUpdate(BaseModel):
+    nombre: Optional[str] = None
+    cuit: Optional[str] = None
+    claveArca: Optional[str] = None
+    claveAgip: Optional[str] = None
+    claveArba: Optional[str] = None
+    otraClave: Optional[str] = None
+    formaPago: Optional[str] = None
+
+
 class UserUpdate(BaseModel):
     role: Optional[str] = None
     responsableName: Optional[str] = None
+
+
+class VencimientosUpdate(BaseModel):
+    tabla: Dict[str, Dict[str, Optional[str]]]  # {tipo: {digito: fecha}}
 
 
 # =============== API Routes ===============
@@ -333,6 +361,200 @@ async def delete_schedule(task_id: int, user=Depends(get_current_user)):
         {"userEmail": user["email"], "taskId": task_id}
     )
     return {"ok": True}
+
+
+# --- Clientes ---
+@app.get("/api/clientes")
+async def get_clientes(user=Depends(get_current_user)):
+    clientes = await db.clientes.find(
+        {}, {"_id": 0}
+    ).sort("nombre", 1).to_list(500)
+    return clientes
+
+
+@app.get("/api/clientes/{cliente_id}")
+async def get_cliente(cliente_id: int, user=Depends(get_current_user)):
+    cliente = await db.clientes.find_one(
+        {"clienteId": cliente_id}, {"_id": 0}
+    )
+    if not cliente:
+        raise HTTPException(404, "Cliente no encontrado")
+    return cliente
+
+
+@app.post("/api/clientes")
+async def create_cliente(cliente: ClienteIn, user=Depends(get_current_user)):
+    last = await db.clientes.find_one(
+        sort=[("clienteId", -1)], projection={"clienteId": 1}
+    )
+    new_id = (last["clienteId"] + 1) if last else 1
+
+    doc = cliente.model_dump()
+    doc["clienteId"] = new_id
+    doc["createdAt"] = datetime.utcnow().isoformat()
+
+    await db.clientes.insert_one(doc)
+    doc.pop("_id", None)
+    return doc
+
+
+@app.put("/api/clientes/{cliente_id}")
+async def update_cliente(
+    cliente_id: int, body: ClienteUpdate, user=Depends(get_current_user)
+):
+    update_data = {k: v for k, v in body.model_dump().items() if v is not None}
+    if not update_data:
+        raise HTTPException(400, "Nada que actualizar")
+
+    # If nombre changed, also update tasks
+    old = await db.clientes.find_one({"clienteId": cliente_id})
+    if not old:
+        raise HTTPException(404, "Cliente no encontrado")
+
+    result = await db.clientes.update_one(
+        {"clienteId": cliente_id}, {"$set": update_data}
+    )
+
+    if "nombre" in update_data and update_data["nombre"] != old["nombre"]:
+        await db.tasks.update_many(
+            {"cliente": old["nombre"]},
+            {"$set": {"cliente": update_data["nombre"]}},
+        )
+
+    updated = await db.clientes.find_one(
+        {"clienteId": cliente_id}, {"_id": 0}
+    )
+    return updated
+
+
+@app.delete("/api/clientes/{cliente_id}")
+async def delete_cliente(cliente_id: int, user=Depends(get_current_user)):
+    cliente = await db.clientes.find_one({"clienteId": cliente_id})
+    if not cliente:
+        raise HTTPException(404, "Cliente no encontrado")
+    await db.clientes.delete_one({"clienteId": cliente_id})
+    return {"ok": True}
+
+
+@app.get("/api/clientes/{cliente_id}/tasks")
+async def get_cliente_tasks(
+    cliente_id: int, user=Depends(get_current_user)
+):
+    cliente = await db.clientes.find_one(
+        {"clienteId": cliente_id}, {"_id": 0}
+    )
+    if not cliente:
+        raise HTTPException(404, "Cliente no encontrado")
+    tasks = await db.tasks.find(
+        {"cliente": cliente["nombre"]}, {"_id": 0}
+    ).sort("vencimiento", 1).to_list(5000)
+    return tasks
+
+
+# --- Vencimientos ---
+MES_MAP = {
+    "01": "Enero", "02": "Febrero", "03": "Marzo", "04": "Abril",
+    "05": "Mayo", "06": "Junio", "07": "Julio", "08": "Agosto",
+    "09": "Septiembre", "10": "Octubre", "11": "Noviembre", "12": "Diciembre",
+}
+
+TASK_TYPES_CON_VTO = [
+    "Casas Particulares", "VEP Monotributo", "VEP Autonomos",
+    "IIBB CM", "IIBB ARBA", "IIBB AGIP", "IVA", "Libro IVA Digital",
+]
+
+
+@app.get("/api/vencimientos")
+async def list_vencimientos(user=Depends(get_current_user)):
+    docs = await db.vencimientos.find(
+        {}, {"_id": 0}
+    ).sort("periodo", 1).to_list(24)
+    return docs
+
+
+@app.get("/api/vencimientos/{periodo}")
+async def get_vencimientos(periodo: str, user=Depends(get_current_user)):
+    doc = await db.vencimientos.find_one({"periodo": periodo}, {"_id": 0})
+    if not doc:
+        # Return empty template
+        tabla = {}
+        for tipo in TASK_TYPES_CON_VTO:
+            tabla[tipo] = {str(d): None for d in range(10)}
+        return {"periodo": periodo, "tabla": tabla}
+    return doc
+
+
+@app.put("/api/vencimientos/{periodo}")
+async def update_vencimientos(
+    periodo: str, body: VencimientosUpdate, user=Depends(get_current_user)
+):
+    now = datetime.utcnow().isoformat()
+    await db.vencimientos.update_one(
+        {"periodo": periodo},
+        {
+            "$set": {"tabla": body.tabla, "updatedAt": now},
+            "$setOnInsert": {"createdAt": now},
+        },
+        upsert=True,
+    )
+    return {"ok": True, "periodo": periodo}
+
+
+@app.post("/api/vencimientos/{periodo}/aplicar")
+async def apply_vencimientos(
+    periodo: str, user=Depends(get_current_user)
+):
+    """Recalculate task vencimientos based on CUIT last digit."""
+    doc = await db.vencimientos.find_one({"periodo": periodo})
+    if not doc:
+        raise HTTPException(404, "No hay vencimientos para ese periodo")
+
+    tabla = doc["tabla"]
+    mes_num = periodo.split("-")[1]
+    mes_nombre = MES_MAP.get(mes_num, "")
+
+    if not mes_nombre:
+        raise HTTPException(400, "Periodo inv\u00e1lido")
+
+    # Build CUIT last digit map
+    clientes = await db.clientes.find(
+        {}, {"nombre": 1, "cuit": 1}
+    ).to_list(500)
+    cuit_map = {}
+    for c in clientes:
+        cuit = str(c.get("cuit", "")).replace(".", "").strip()
+        if cuit:
+            cuit_map[c["nombre"]] = cuit[-1]
+
+    # Update tasks for this month
+    tasks = await db.tasks.find({"mes": mes_nombre}).to_list(5000)
+    updated = 0
+    for task in tasks:
+        cliente = task.get("cliente", "")
+        tarea = task.get("tarea", "")
+
+        if cliente not in cuit_map:
+            continue
+        if tarea not in tabla:
+            continue
+
+        digit = cuit_map[cliente]
+        new_vto = tabla[tarea].get(digit)
+
+        if new_vto and new_vto != task.get("vencimiento"):
+            await db.tasks.update_one(
+                {"_id": task["_id"]},
+                {"$set": {"vencimiento": new_vto}},
+            )
+            updated += 1
+
+    return {
+        "ok": True,
+        "periodo": periodo,
+        "mes": mes_nombre,
+        "tareasActualizadas": updated,
+        "totalTareas": len(tasks),
+    }
 
 
 # --------------- Serve Frontend ---------------

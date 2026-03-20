@@ -7,3 +7,10 @@ firebase-sa.json
 node_modules/
 .DS_Store
 mongo_data/
+
+# Temp analysis files
+read_excel.py
+read_excel2.py
+excel_output.txt
+excel_output2.txt
+vtos_output.txt
