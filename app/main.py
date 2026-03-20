@@ -14,6 +14,8 @@ from fastapi.responses import FileResponse
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel
 
+from app.sugerencias_vto import generar_sugerencias
+
 load_dotenv()
 
 # --------------- Configuration ---------------
@@ -498,6 +500,12 @@ async def update_vencimientos(
         upsert=True,
     )
     return {"ok": True, "periodo": periodo}
+
+
+@app.get("/api/vencimientos/{periodo}/sugerencias")
+async def get_sugerencias_vencimientos(periodo: str, user=Depends(get_current_user)):
+    """Devuelve sugerencias de vencimientos basadas en calendarios oficiales."""
+    return generar_sugerencias(periodo)
 
 
 @app.post("/api/vencimientos/{periodo}/aplicar")

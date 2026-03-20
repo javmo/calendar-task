@@ -407,6 +407,43 @@ body{font-family:'Inter','Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;
 .vtos-result.success{background:var(--success-bg);color:var(--success);border:1px solid var(--success-border)}
 .vtos-result.error{background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger-border)}
 
+/* Suggestion styles */
+.btn-outline-sug{background:transparent;color:#f59e0b;border:2px solid #f59e0b;padding:7px 16px;border-radius:var(--radius-sm);font-weight:700;font-size:13px;cursor:pointer;transition:all .15s}
+.btn-outline-sug:hover{background:#f59e0b;color:white}
+
+.vtos-sug-banner{margin-bottom:16px;padding:14px 20px;background:linear-gradient(135deg,#fffbeb,#fef3c7);border-radius:var(--radius);border:1px solid #fcd34d;animation:sugBannerIn .3s ease}
+@keyframes sugBannerIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.sug-banner-content{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.sug-banner-icon{font-size:22px}
+.sug-banner-text{flex:1;font-size:13px;color:#92400e;line-height:1.5}
+.sug-banner-text strong{color:#78350f}
+.sug-banner-text small{opacity:.8}
+.sug-banner-actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn-sug-accept{background:#059669;color:white;border:none;padding:6px 14px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;transition:background .15s}
+.btn-sug-accept:hover{background:#047857}
+.btn-sug-fill{background:#4f46e5;color:white;border:none;padding:6px 14px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;transition:background .15s}
+.btn-sug-fill:hover{background:#4338ca}
+.btn-sug-dismiss{background:transparent;color:#92400e;border:1px solid #d97706;padding:6px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
+.btn-sug-dismiss:hover{background:#fef3c7}
+
+.vto-cell{position:relative;display:inline-block}
+.td-has-sug{position:relative}
+.sug-hint{position:absolute;bottom:-2px;left:50%;transform:translateX(-50%);background:#f59e0b;color:white;padding:1px 8px;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .15s;opacity:.85;z-index:1}
+.sug-hint:hover{opacity:1;transform:translateX(-50%) scale(1.05);background:#d97706}
+.sug-date{letter-spacing:.3px}
+
+.vtos-table tbody td input[type=date].has-sug{border-color:#fcd34d;background:#fffbeb}
+.vtos-table tbody td input[type=date].sug-match{border-color:#059669;background:#ecfdf5}
+
+.th-fuente{display:block;font-weight:400;font-size:9px;opacity:.8;letter-spacing:.2px;margin-top:2px;text-transform:none}
+
+.vtos-fuentes{margin-top:12px;padding:14px 20px;background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);font-size:12px;color:var(--text-secondary)}
+.vtos-fuentes strong{color:var(--text)}
+.fuentes-grid{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:8px}
+.fuente-item{font-size:11px;color:var(--text-muted)}
+.fuente-item strong{color:var(--text-secondary);font-weight:600}
+.fuentes-disclaimer{margin-top:10px;font-size:11px;color:var(--text-muted);font-style:italic;margin-bottom:0}
+
 /* Client Detail Modal */
 .client-detail-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
 .client-detail-overlay.active{display:flex}
@@ -1709,16 +1746,17 @@ const VTO_TASK_TYPES = [
   'IIBB CM', 'IIBB ARBA', 'IIBB AGIP', 'IVA', 'Libro IVA Digital',
 ];
 
+// Cache de sugerencias por período
+state.vtoSugerencias = {};
+
 function renderVencimientos() {
   document.getElementById('monthLabel').textContent = 'Tabla de Vencimientos';
 
-  // Default to current or next month
   if (!state.vtoPeriodo) {
     const now = new Date();
     state.vtoPeriodo = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   }
 
-  // Build periodo selector (2026-01 to 2026-12)
   const periodos = [];
   for (let m = 1; m <= 12; m++) {
     periodos.push(`2026-${String(m).padStart(2, '0')}`);
@@ -1726,6 +1764,8 @@ function renderVencimientos() {
 
   const vtoData = state.vencimientos[state.vtoPeriodo];
   const tabla = vtoData ? vtoData.tabla : null;
+  const sugerencias = state.vtoSugerencias[state.vtoPeriodo];
+  const tablaSug = sugerencias ? sugerencias.tabla : null;
 
   let h = `<div class="vtos-header">`;
   h += `<h2>\ud83d\udcc5 Vencimientos por D\u00edgito CUIT</h2>`;
@@ -1737,15 +1777,35 @@ function renderVencimientos() {
   });
   h += `</select>`;
   h += `<div class="vtos-actions">`;
+  h += `<button class="btn btn-outline-sug" onclick="cargarSugerencias()" title="Traer fechas sugeridas desde calendarios oficiales">\ud83d\udca1 Sugerencias</button>`;
   h += `<button class="btn btn-primary" onclick="saveVencimientos()">\ud83d\udcbe Guardar</button>`;
   h += `<button class="btn btn-success" onclick="aplicarVencimientos()">\u2705 Aplicar a Tareas</button>`;
   h += `</div></div>`;
+
+  // Suggestion banner
+  if (tablaSug) {
+    const countEmpty = countEmptyCells(tabla);
+    const countSug = countSugerenciasDisponibles(tabla, tablaSug);
+    h += `<div class="vtos-sug-banner">`;
+    h += `<div class="sug-banner-content">`;
+    h += `<span class="sug-banner-icon">\ud83d\udca1</span>`;
+    h += `<div class="sug-banner-text">`;
+    h += `<strong>Sugerencias cargadas</strong> \u2014 ${countSug} fechas sugeridas disponibles para completar.`;
+    if (sugerencias.nota) h += `<br><small>${sugerencias.nota}</small>`;
+    h += `</div>`;
+    h += `<div class="sug-banner-actions">`;
+    h += `<button class="btn btn-sug-accept" onclick="aceptarTodasSugerencias()">Aceptar todas</button>`;
+    h += `<button class="btn btn-sug-fill" onclick="aceptarSugerenciasVacias()">Solo vac\u00edas</button>`;
+    h += `<button class="btn btn-sug-dismiss" onclick="descartarSugerencias()">Descartar</button>`;
+    h += `</div></div></div>`;
+  }
 
   // Table
   h += `<div class="vtos-table-wrap"><table class="vtos-table"><thead><tr>`;
   h += `<th>D\u00edgito</th>`;
   VTO_TASK_TYPES.forEach(t => {
-    h += `<th>${t}</th>`;
+    const fuente = sugerencias && sugerencias.fuentes ? sugerencias.fuentes[t] : '';
+    h += `<th>${t}${fuente ? `<br><small class="th-fuente">${fuente}</small>` : ''}</th>`;
   });
   h += `</tr></thead><tbody>`;
 
@@ -1753,24 +1813,196 @@ function renderVencimientos() {
     h += `<tr><td>${d}</td>`;
     VTO_TASK_TYPES.forEach(tipo => {
       const val = tabla && tabla[tipo] ? (tabla[tipo][String(d)] || '') : '';
+      const sug = tablaSug && tablaSug[tipo] ? (tablaSug[tipo][String(d)] || '') : '';
       const hasVal = val && val.length > 0;
-      h += `<td><input type="date" id="vto_${tipo.replace(/\s/g,'_')}_${d}" value="${val}" class="${hasVal ? 'has-value' : ''}" onchange="this.classList.toggle('has-value', !!this.value)"></td>`;
+      const hasSug = sug && sug.length > 0 && !hasVal;
+      const sugMatch = hasVal && sug && val === sug;
+      const inputId = `vto_${tipo.replace(/\s/g,'_')}_${d}`;
+
+      let cls = '';
+      if (hasVal && sugMatch) cls = 'has-value sug-match';
+      else if (hasVal) cls = 'has-value';
+      else if (hasSug) cls = 'has-sug';
+
+      h += `<td class="${hasSug ? 'td-has-sug' : ''}">`;
+      h += `<div class="vto-cell">`;
+      h += `<input type="date" id="${inputId}" value="${val}" class="${cls}" `;
+      h += `onchange="onVtoInputChange(this, '${tipo}', ${d})">`;
+
+      if (hasSug) {
+        const sugDate = new Date(sug + 'T12:00:00');
+        const sugLabel = sugDate.getDate() + '/' + (sugDate.getMonth() + 1);
+        h += `<div class="sug-hint" onclick="aceptarSugerencia('${tipo}', ${d})" title="Click para aceptar sugerencia: ${sug}">`;
+        h += `<span class="sug-date">${sugLabel}</span>`;
+        h += `</div>`;
+      }
+      h += `</div></td>`;
     });
     h += `</tr>`;
   }
 
   h += `</tbody></table></div>`;
 
+  // Info box
   h += `<div class="vtos-info">`;
   h += `<span class="info-icon">\ud83d\udca1</span>`;
   h += `<div class="info-text">`;
-  h += `<strong>\u00bfC\u00f3mo funciona?</strong> Cada tipo de tarea tiene un vencimiento diferente seg\u00fan el <strong>\u00faltimo d\u00edgito del CUIT</strong> del cliente. `;
-  h += `Carg\u00e1 las fechas para cada mes y puls\u00e1 <strong>"Aplicar a Tareas"</strong> para actualizar autom\u00e1ticamente los vencimientos de todas las tareas del mes.`;
+  h += `<strong>\u00bfC\u00f3mo funciona?</strong> Carg\u00e1 las fechas manualmente o us\u00e1 <strong>"Sugerencias"</strong> para pre-cargar fechas basadas en los calendarios oficiales de ARCA, COMARB, ARBA y AGIP. `;
+  h += `Las sugerencias aparecen debajo de las celdas vac\u00edas \u2014 hac\u00e9 click en ellas para aceptarlas individualmente, o us\u00e1 los botones para aceptar todas. `;
+  h += `Luego puls\u00e1 <strong>"Guardar"</strong> y <strong>"Aplicar a Tareas"</strong> para actualizar los vencimientos de todas las tareas del mes.`;
   h += `</div></div>`;
+
+  // Fuentes reference
+  if (sugerencias && sugerencias.fuentes) {
+    h += `<div class="vtos-fuentes">`;
+    h += `<strong>Fuentes de referencia:</strong>`;
+    h += `<div class="fuentes-grid">`;
+    Object.entries(sugerencias.fuentes).forEach(([tipo, fuente]) => {
+      h += `<span class="fuente-item"><strong>${tipo}:</strong> ${fuente}</span>`;
+    });
+    h += `</div>`;
+    h += `<p class="fuentes-disclaimer">Las fechas son orientativas. Verificar contra las resoluciones oficiales vigentes de cada organismo.</p>`;
+    h += `</div>`;
+  }
 
   h += `<div id="vtosResult"></div>`;
 
   document.getElementById('viewVtos').innerHTML = h;
+}
+
+function countEmptyCells(tabla) {
+  let count = 0;
+  VTO_TASK_TYPES.forEach(tipo => {
+    for (let d = 0; d <= 9; d++) {
+      if (!tabla || !tabla[tipo] || !tabla[tipo][String(d)]) count++;
+    }
+  });
+  return count;
+}
+
+function countSugerenciasDisponibles(tabla, tablaSug) {
+  let count = 0;
+  VTO_TASK_TYPES.forEach(tipo => {
+    for (let d = 0; d <= 9; d++) {
+      const sug = tablaSug && tablaSug[tipo] ? tablaSug[tipo][String(d)] : null;
+      if (sug) count++;
+    }
+  });
+  return count;
+}
+
+async function cargarSugerencias() {
+  try {
+    showToast('Cargando sugerencias...', 'info');
+    const data = await api('GET', `/api/vencimientos/${state.vtoPeriodo}/sugerencias`);
+    state.vtoSugerencias[state.vtoPeriodo] = data;
+    renderVencimientos();
+    showToast('Sugerencias cargadas correctamente', 'success');
+  } catch(e) {
+    showToast('Error al cargar sugerencias: ' + e.message, 'error');
+  }
+}
+
+function aceptarSugerencia(tipo, digito) {
+  const sug = state.vtoSugerencias[state.vtoPeriodo];
+  if (!sug || !sug.tabla[tipo]) return;
+  const val = sug.tabla[tipo][String(digito)];
+  if (!val) return;
+
+  const inputId = `vto_${tipo.replace(/\s/g,'_')}_${digito}`;
+  const input = document.getElementById(inputId);
+  if (input) {
+    input.value = val;
+    input.classList.add('has-value', 'sug-match');
+    input.classList.remove('has-sug');
+    // Remove the hint
+    const cell = input.closest('.vto-cell');
+    const hint = cell ? cell.querySelector('.sug-hint') : null;
+    if (hint) hint.remove();
+    if (cell) cell.closest('td').classList.remove('td-has-sug');
+  }
+}
+
+function aceptarTodasSugerencias() {
+  const sug = state.vtoSugerencias[state.vtoPeriodo];
+  if (!sug) return;
+
+  VTO_TASK_TYPES.forEach(tipo => {
+    for (let d = 0; d <= 9; d++) {
+      const val = sug.tabla[tipo] ? sug.tabla[tipo][String(d)] : null;
+      if (val) {
+        const inputId = `vto_${tipo.replace(/\s/g,'_')}_${d}`;
+        const input = document.getElementById(inputId);
+        if (input) {
+          input.value = val;
+          input.classList.add('has-value', 'sug-match');
+          input.classList.remove('has-sug');
+        }
+      }
+    }
+  });
+
+  // Re-render to clean up hints
+  const tabla = collectVtosFromForm();
+  if (!state.vencimientos[state.vtoPeriodo]) {
+    state.vencimientos[state.vtoPeriodo] = { periodo: state.vtoPeriodo, tabla };
+  } else {
+    state.vencimientos[state.vtoPeriodo].tabla = tabla;
+  }
+  renderVencimientos();
+  showToast('Todas las sugerencias aplicadas. Record\u00e1 guardar los cambios.', 'success');
+}
+
+function aceptarSugerenciasVacias() {
+  const sug = state.vtoSugerencias[state.vtoPeriodo];
+  if (!sug) return;
+
+  let count = 0;
+  VTO_TASK_TYPES.forEach(tipo => {
+    for (let d = 0; d <= 9; d++) {
+      const inputId = `vto_${tipo.replace(/\s/g,'_')}_${d}`;
+      const input = document.getElementById(inputId);
+      if (input && !input.value) {
+        const val = sug.tabla[tipo] ? sug.tabla[tipo][String(d)] : null;
+        if (val) {
+          input.value = val;
+          input.classList.add('has-value', 'sug-match');
+          input.classList.remove('has-sug');
+          count++;
+        }
+      }
+    }
+  });
+
+  const tabla = collectVtosFromForm();
+  if (!state.vencimientos[state.vtoPeriodo]) {
+    state.vencimientos[state.vtoPeriodo] = { periodo: state.vtoPeriodo, tabla };
+  } else {
+    state.vencimientos[state.vtoPeriodo].tabla = tabla;
+  }
+  renderVencimientos();
+  showToast(`${count} celdas completadas con sugerencias. Record\u00e1 guardar.`, 'success');
+}
+
+function descartarSugerencias() {
+  delete state.vtoSugerencias[state.vtoPeriodo];
+  renderVencimientos();
+  showToast('Sugerencias descartadas', 'info');
+}
+
+function onVtoInputChange(input, tipo, digito) {
+  input.classList.toggle('has-value', !!input.value);
+  input.classList.remove('has-sug', 'sug-match');
+  if (input.value) {
+    const sug = state.vtoSugerencias[state.vtoPeriodo];
+    if (sug && sug.tabla[tipo] && sug.tabla[tipo][String(digito)] === input.value) {
+      input.classList.add('sug-match');
+    }
+  }
+  // Remove hint if present
+  const cell = input.closest('.vto-cell');
+  const hint = cell ? cell.querySelector('.sug-hint') : null;
+  if (hint && input.value) hint.remove();
 }
 
 async function loadVtoPeriodo() {
@@ -1808,7 +2040,6 @@ async function saveVencimientos() {
 }
 
 async function aplicarVencimientos() {
-  // Save first
   const tabla = collectVtosFromForm();
   try {
     await api('PUT', `/api/vencimientos/${state.vtoPeriodo}`, { tabla });
@@ -1819,7 +2050,6 @@ async function aplicarVencimientos() {
     document.getElementById('vtosResult').innerHTML =
       `<div class="vtos-result success">\u2705 ${result.tareasActualizadas} tareas actualizadas de ${result.totalTareas} en ${result.mes}.</div>`;
 
-    // Reload tasks
     state.tasks = await api('GET', '/api/tasks');
     showToast(`Vencimientos aplicados: ${result.tareasActualizadas} tareas actualizadas`, 'success');
   } catch (e) {
