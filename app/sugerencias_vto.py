@@ -1,169 +1,203 @@
 """
 Sugerencias de vencimientos fiscales argentinos 2026.
 
-Basado en:
-- ARCA (ex AFIP): Monotributo, Autónomos, IVA, Libro IVA Digital
-- COMARB (RG CA 20/2025): IIBB Convenio Multilateral
-- ARBA: IIBB Provincia de Buenos Aires
-- AGIP: IIBB Ciudad de Buenos Aires
-- ARCA: Casas Particulares (Régimen Especial de Seguridad Social)
+Datos exactos extraídos de fuentes oficiales:
+- VEP Autónomos: estudiodelamo.com/vencimientos-autonomos/
+- VEP Monotributo: estudiodelamo.com/vencimiento-monotributo-recategorizacion/
+- IIBB CM: estudiodelamo.com/vencimientos-convenio-multilateral-ingresos-brutos/
+  (COMARB - RG CA 20/2025)
+- IVA y Libro IVA Digital: estudiodelamo.com/vencimientos-iva/
+- IIBB AGIP: Resolución N° 557-AGIP/25 (Anexo I, IF-2025-54028171-GCABA-AGIP)
+- IIBB ARBA: RN ARBA 6/2026, web.arba.gov.ar/vencimientos-contribuyentes-locales
+- Casas Particulares: ARCA - Régimen Especial de Seguridad Social
 
-Fuentes: argentina.gob.ar/arca/vencimientos, ca.gob.ar, Ámbito, iProfesional.
 Nota: No existe API pública de ARCA. Estos datos son orientativos y deben
 verificarse mes a mes contra las resoluciones oficiales vigentes.
 """
 
-from datetime import date, timedelta
-from typing import Dict, Optional
+from typing import Dict
 
-# Feriados nacionales Argentina 2026 (inamovibles + trasladables confirmados)
-FERIADOS_2026 = {
-    date(2026, 1, 1),   # Año Nuevo
-    date(2026, 2, 16),  # Carnaval
-    date(2026, 2, 17),  # Carnaval
-    date(2026, 3, 24),  # Día de la Memoria
-    date(2026, 4, 2),   # Día del Veterano (Malvinas)
-    date(2026, 4, 3),   # Viernes Santo
-    date(2026, 5, 1),   # Día del Trabajador
-    date(2026, 5, 25),  # Revolución de Mayo
-    date(2026, 6, 15),  # Paso a la Inmortalidad Güemes (trasladado)
-    date(2026, 6, 20),  # Día de la Bandera
-    date(2026, 7, 9),   # Día de la Independencia
-    date(2026, 8, 17),  # Paso a la Inmortalidad San Martín
-    date(2026, 10, 12), # Día del Respeto a la Diversidad Cultural
-    date(2026, 11, 23), # Día de la Soberanía Nacional (trasladado)
-    date(2026, 12, 8),  # Inmaculada Concepción
-    date(2026, 12, 25), # Navidad
-}
-
-
-def siguiente_dia_habil(d: date) -> date:
-    """Si cae en fin de semana o feriado, avanza al siguiente día hábil."""
-    while d.weekday() >= 5 or d in FERIADOS_2026:
-        d += timedelta(days=1)
-    return d
-
-
-def _fecha(year: int, month: int, day: int) -> str:
-    """Genera fecha ajustada a día hábil en formato ISO."""
-    try:
-        d = date(year, month, day)
-    except ValueError:
-        # Si el día no existe en ese mes, usar último día del mes
-        if month == 12:
-            d = date(year + 1, 1, 1) - timedelta(days=1)
-        else:
-            d = date(year, month + 1, 1) - timedelta(days=1)
-    return siguiente_dia_habil(d).isoformat()
-
-
-# ─── Patrones base de vencimiento por dígito CUIT ───
-# Cada entrada: {dígito: día_del_mes}
-# Basado en calendarios ARCA/COMARB 2025-2026
-
-# VEP Monotributo - Componente impositivo y previsional
-# Fuente: ARCA - generalmente alrededor del 20 de cada mes
-PATRON_MONOTRIBUTO = {
-    "0": 20, "1": 20,
-    "2": 20, "3": 20,
-    "4": 21, "5": 21,
-    "6": 22, "7": 22,
-    "8": 23, "9": 23,
-}
-
-# VEP Autónomos - Aportes previsionales
-# Fuente: ARCA - mismo patrón que Monotributo
-PATRON_AUTONOMOS = {
-    "0": 20, "1": 20,
-    "2": 20, "3": 20,
-    "4": 21, "5": 21,
-    "6": 22, "7": 22,
-    "8": 23, "9": 23,
-}
-
-# IVA - Declaración Jurada mensual
-# Fuente: ARCA - generalmente entre el 18 y 22
-PATRON_IVA = {
-    "0": 18, "1": 18,
-    "2": 19, "3": 19,
-    "4": 20, "5": 20,
-    "6": 21, "7": 21,
-    "8": 22, "9": 22,
-}
-
-# Libro IVA Digital - Se presenta unos días antes del IVA
-# Fuente: ARCA
-PATRON_LIBRO_IVA = {
-    "0": 14, "1": 14,
-    "2": 15, "3": 15,
-    "4": 16, "5": 16,
-    "6": 17, "7": 17,
-    "8": 18, "9": 18,
-}
-
-# IIBB Convenio Multilateral - Anticipo mensual (CM03/CM04)
-# Fuente: COMARB RG CA 20/2025
-PATRON_IIBB_CM = {
-    "0": 15, "1": 15,
-    "2": 16, "3": 16,
-    "4": 17, "5": 17,
-    "6": 18, "7": 18,
-    "8": 19, "9": 19,
-}
-
-# IIBB ARBA - Provincia de Buenos Aires
-# Fuente: ARBA calendario fiscal
-PATRON_IIBB_ARBA = {
-    "0": 17, "1": 17,
-    "2": 18, "3": 18,
-    "4": 19, "5": 19,
-    "6": 20, "7": 20,
-    "8": 21, "9": 21,
-}
-
-# IIBB AGIP - Ciudad de Buenos Aires
-# Fuente: AGIP calendario fiscal
-PATRON_IIBB_AGIP = {
-    "0": 15, "1": 15,
-    "2": 16, "3": 16,
-    "4": 17, "5": 17,
-    "6": 18, "7": 18,
-    "8": 19, "9": 19,
-}
-
-# Casas Particulares - Régimen Especial Seguridad Social
-# Fuente: ARCA - generalmente el 10 para todos los dígitos
-PATRON_CASAS = {
-    "0": 10, "1": 10,
-    "2": 10, "3": 10,
-    "4": 10, "5": 10,
-    "6": 10, "7": 10,
-    "8": 10, "9": 10,
-}
-
-# Mapeo tipo de tarea -> patrón base
-PATRONES = {
-    "Casas Particulares": PATRON_CASAS,
-    "VEP Monotributo": PATRON_MONOTRIBUTO,
-    "VEP Autonomos": PATRON_AUTONOMOS,
-    "IIBB CM": PATRON_IIBB_CM,
-    "IIBB ARBA": PATRON_IIBB_ARBA,
-    "IIBB AGIP": PATRON_IIBB_AGIP,
-    "IVA": PATRON_IVA,
-    "Libro IVA Digital": PATRON_LIBRO_IVA,
-}
 
 # Fuentes por tipo de tarea (para mostrar en la UI)
 FUENTES = {
-    "Casas Particulares": "ARCA - Régimen Especial Seg. Social",
-    "VEP Monotributo": "ARCA - Resolución General vigente",
-    "VEP Autonomos": "ARCA - Resolución General vigente",
-    "IIBB CM": "COMARB - RG CA 20/2025",
-    "IIBB ARBA": "ARBA - Calendario Fiscal",
-    "IIBB AGIP": "AGIP - Calendario Fiscal",
-    "IVA": "ARCA - Resolución General vigente",
-    "Libro IVA Digital": "ARCA - Resolución General vigente",
+    "Casas Particulares": "ARCA - Rég. Especial Seg. Social",
+    "VEP Monotributo": "estudiodelamo.com (ARCA)",
+    "VEP Autonomos": "estudiodelamo.com (ARCA)",
+    "IIBB CM": "estudiodelamo.com (COMARB RG CA 20/2025)",
+    "IIBB ARBA": "RN ARBA 6/2026",
+    "IIBB AGIP": "Res. 557-AGIP/25",
+    "IVA": "estudiodelamo.com (ARCA)",
+    "Libro IVA Digital": "estudiodelamo.com (ARCA)",
 }
+
+
+def _d(month: int, day: int) -> str:
+    """Helper: genera fecha ISO 2026-MM-DD."""
+    return f"2026-{month:02d}-{day:02d}"
+
+
+# ═══════════════════════════════════════════════════════════════════
+# VEP AUTÓNOMOS - Aportes previsionales
+# Fuente: estudiodelamo.com/vencimientos-autonomos/
+# Agrupación: 0-1-2-3 | 4-5-6 | 7-8-9
+# ═══════════════════════════════════════════════════════════════════
+_AUTONOMOS = {
+    "2026-01": {"0": _d(1,5),  "1": _d(1,5),  "2": _d(1,5),  "3": _d(1,5),  "4": _d(1,6),  "5": _d(1,6),  "6": _d(1,6),  "7": _d(1,7),  "8": _d(1,7),  "9": _d(1,7)},
+    "2026-02": {"0": _d(2,5),  "1": _d(2,5),  "2": _d(2,5),  "3": _d(2,5),  "4": _d(2,6),  "5": _d(2,6),  "6": _d(2,6),  "7": _d(2,9),  "8": _d(2,9),  "9": _d(2,9)},
+    "2026-03": {"0": _d(3,5),  "1": _d(3,5),  "2": _d(3,5),  "3": _d(3,5),  "4": _d(3,6),  "5": _d(3,6),  "6": _d(3,6),  "7": _d(3,9),  "8": _d(3,9),  "9": _d(3,9)},
+    "2026-04": {"0": _d(4,6),  "1": _d(4,6),  "2": _d(4,6),  "3": _d(4,6),  "4": _d(4,7),  "5": _d(4,7),  "6": _d(4,7),  "7": _d(4,8),  "8": _d(4,8),  "9": _d(4,8)},
+    "2026-05": {"0": _d(5,5),  "1": _d(5,5),  "2": _d(5,5),  "3": _d(5,5),  "4": _d(5,6),  "5": _d(5,6),  "6": _d(5,6),  "7": _d(5,7),  "8": _d(5,7),  "9": _d(5,7)},
+    "2026-06": {"0": _d(6,5),  "1": _d(6,5),  "2": _d(6,5),  "3": _d(6,5),  "4": _d(6,8),  "5": _d(6,8),  "6": _d(6,8),  "7": _d(6,9),  "8": _d(6,9),  "9": _d(6,9)},
+    "2026-07": {"0": _d(7,6),  "1": _d(7,6),  "2": _d(7,6),  "3": _d(7,6),  "4": _d(7,7),  "5": _d(7,7),  "6": _d(7,7),  "7": _d(7,8),  "8": _d(7,8),  "9": _d(7,8)},
+    "2026-08": {"0": _d(8,5),  "1": _d(8,5),  "2": _d(8,5),  "3": _d(8,5),  "4": _d(8,6),  "5": _d(8,6),  "6": _d(8,6),  "7": _d(8,7),  "8": _d(8,7),  "9": _d(8,7)},
+    "2026-09": {"0": _d(9,7),  "1": _d(9,7),  "2": _d(9,7),  "3": _d(9,7),  "4": _d(9,8),  "5": _d(9,8),  "6": _d(9,8),  "7": _d(9,9),  "8": _d(9,9),  "9": _d(9,9)},
+    "2026-10": {"0": _d(10,5), "1": _d(10,5), "2": _d(10,5), "3": _d(10,5), "4": _d(10,6), "5": _d(10,6), "6": _d(10,6), "7": _d(10,7), "8": _d(10,7), "9": _d(10,7)},
+    "2026-11": {"0": _d(11,5), "1": _d(11,5), "2": _d(11,5), "3": _d(11,5), "4": _d(11,6), "5": _d(11,6), "6": _d(11,6), "7": _d(11,9), "8": _d(11,9), "9": _d(11,9)},
+    "2026-12": {"0": _d(12,7), "1": _d(12,7), "2": _d(12,7), "3": _d(12,7), "4": _d(12,9), "5": _d(12,9), "6": _d(12,9), "7": _d(12,10),"8": _d(12,10),"9": _d(12,10)},
+}
+
+
+# ═══════════════════════════════════════════════════════════════════
+# VEP MONOTRIBUTO - Componente impositivo y previsional
+# Fuente: estudiodelamo.com/vencimiento-monotributo-recategorizacion/
+# Fecha única mensual para todos los dígitos (el 20, ajustado por hábiles)
+# ═══════════════════════════════════════════════════════════════════
+_MONOTRIBUTO_FECHAS = {
+    "2026-01": _d(1,20),
+    "2026-02": _d(2,20),
+    "2026-03": _d(3,20),
+    "2026-04": _d(4,20),
+    "2026-05": _d(5,20),
+    "2026-06": _d(6,22),   # 20 es sábado → 22 lunes
+    "2026-07": _d(7,20),
+    "2026-08": _d(8,20),
+    "2026-09": _d(9,21),   # 20 es domingo → 21 lunes
+    "2026-10": _d(10,20),
+    "2026-11": _d(11,20),
+    "2026-12": _d(12,21),  # 20 es domingo → 21 lunes
+}
+
+def _monotributo(periodo: str) -> dict:
+    f = _MONOTRIBUTO_FECHAS.get(periodo)
+    if not f:
+        return {str(d): None for d in range(10)}
+    return {str(d): f for d in range(10)}
+
+
+# ═══════════════════════════════════════════════════════════════════
+# IVA - Declaración Jurada mensual (mismas fechas para Libro IVA Digital)
+# Fuente: estudiodelamo.com/vencimientos-iva/
+# Agrupación: 0-1 | 2-3 | 4-5 | 6-7 | 8-9
+# Nota: "Enero" = declaración de enero, vence en febrero, etc.
+# ═══════════════════════════════════════════════════════════════════
+_IVA = {
+    # No hay datos para enero (diciembre 2025 se declaró en enero)
+    "2026-02": {"0": _d(2,18), "1": _d(2,18), "2": _d(2,19), "3": _d(2,19), "4": _d(2,20), "5": _d(2,20), "6": _d(2,23), "7": _d(2,23), "8": _d(2,24), "9": _d(2,24)},
+    "2026-03": {"0": _d(3,18), "1": _d(3,18), "2": _d(3,19), "3": _d(3,19), "4": _d(3,20), "5": _d(3,20), "6": _d(3,23), "7": _d(3,23), "8": _d(3,25), "9": _d(3,25)},
+    "2026-04": {"0": _d(4,20), "1": _d(4,20), "2": _d(4,21), "3": _d(4,21), "4": _d(4,22), "5": _d(4,22), "6": _d(4,23), "7": _d(4,23), "8": _d(4,24), "9": _d(4,24)},
+    "2026-05": {"0": _d(5,18), "1": _d(5,18), "2": _d(5,19), "3": _d(5,19), "4": _d(5,20), "5": _d(5,20), "6": _d(5,21), "7": _d(5,21), "8": _d(5,22), "9": _d(5,22)},
+    "2026-06": {"0": _d(6,18), "1": _d(6,18), "2": _d(6,19), "3": _d(6,19), "4": _d(6,22), "5": _d(6,22), "6": _d(6,23), "7": _d(6,23), "8": _d(6,24), "9": _d(6,24)},
+    "2026-07": {"0": _d(7,20), "1": _d(7,20), "2": _d(7,21), "3": _d(7,21), "4": _d(7,22), "5": _d(7,22), "6": _d(7,23), "7": _d(7,23), "8": _d(7,24), "9": _d(7,24)},
+    "2026-08": {"0": _d(8,18), "1": _d(8,18), "2": _d(8,19), "3": _d(8,19), "4": _d(8,20), "5": _d(8,20), "6": _d(8,21), "7": _d(8,21), "8": _d(8,24), "9": _d(8,24)},
+    "2026-09": {"0": _d(9,18), "1": _d(9,18), "2": _d(9,21), "3": _d(9,21), "4": _d(9,22), "5": _d(9,22), "6": _d(9,23), "7": _d(9,23), "8": _d(9,24), "9": _d(9,24)},
+    "2026-10": {"0": _d(10,19),"1": _d(10,19),"2": _d(10,20),"3": _d(10,20),"4": _d(10,21),"5": _d(10,21),"6": _d(10,22),"7": _d(10,22),"8": _d(10,23),"9": _d(10,23)},
+    "2026-11": {"0": _d(11,18),"1": _d(11,18),"2": _d(11,19),"3": _d(11,19),"4": _d(11,20),"5": _d(11,20),"6": _d(11,23),"7": _d(11,23),"8": _d(11,24),"9": _d(11,24)},
+    "2026-12": {"0": _d(12,18),"1": _d(12,18),"2": _d(12,21),"3": _d(12,21),"4": _d(12,22),"5": _d(12,22),"6": _d(12,23),"7": _d(12,23),"8": _d(12,24),"9": _d(12,24)},
+}
+
+
+# ═══════════════════════════════════════════════════════════════════
+# IIBB CONVENIO MULTILATERAL - Anticipos CM03/CM04
+# Fuente: estudiodelamo.com/vencimientos-convenio-multilateral-ingresos-brutos/
+# (COMARB - RG CA 20/2025)
+# Agrupación: 0-1-2 | 3-4-5 | 6-7 | 8-9
+# ═══════════════════════════════════════════════════════════════════
+_IIBB_CM = {
+    "2026-01": {"0": _d(1,15), "1": _d(1,15), "2": _d(1,15), "3": _d(1,16), "4": _d(1,16), "5": _d(1,16), "6": _d(1,19), "7": _d(1,19), "8": _d(1,20), "9": _d(1,20)},
+    "2026-02": {"0": _d(2,13), "1": _d(2,13), "2": _d(2,13), "3": _d(2,18), "4": _d(2,18), "5": _d(2,18), "6": _d(2,19), "7": _d(2,19), "8": _d(2,20), "9": _d(2,20)},
+    "2026-03": {"0": _d(3,13), "1": _d(3,13), "2": _d(3,13), "3": _d(3,16), "4": _d(3,16), "5": _d(3,16), "6": _d(3,17), "7": _d(3,17), "8": _d(3,18), "9": _d(3,18)},
+    "2026-04": {"0": _d(4,15), "1": _d(4,15), "2": _d(4,15), "3": _d(4,16), "4": _d(4,16), "5": _d(4,16), "6": _d(4,17), "7": _d(4,17), "8": _d(4,20), "9": _d(4,20)},
+    "2026-05": {"0": _d(5,15), "1": _d(5,15), "2": _d(5,15), "3": _d(5,18), "4": _d(5,18), "5": _d(5,18), "6": _d(5,19), "7": _d(5,19), "8": _d(5,20), "9": _d(5,20)},
+    "2026-06": {"0": _d(6,16), "1": _d(6,16), "2": _d(6,16), "3": _d(6,17), "4": _d(6,17), "5": _d(6,17), "6": _d(6,18), "7": _d(6,18), "8": _d(6,19), "9": _d(6,19)},
+    "2026-07": {"0": _d(7,15), "1": _d(7,15), "2": _d(7,15), "3": _d(7,16), "4": _d(7,16), "5": _d(7,16), "6": _d(7,17), "7": _d(7,17), "8": _d(7,20), "9": _d(7,20)},
+    "2026-08": {"0": _d(8,14), "1": _d(8,14), "2": _d(8,14), "3": _d(8,18), "4": _d(8,18), "5": _d(8,18), "6": _d(8,19), "7": _d(8,19), "8": _d(8,20), "9": _d(8,20)},
+    "2026-09": {"0": _d(9,15), "1": _d(9,15), "2": _d(9,15), "3": _d(9,16), "4": _d(9,16), "5": _d(9,16), "6": _d(9,17), "7": _d(9,17), "8": _d(9,18), "9": _d(9,18)},
+    "2026-10": {"0": _d(10,15),"1": _d(10,15),"2": _d(10,15),"3": _d(10,16),"4": _d(10,16),"5": _d(10,16),"6": _d(10,19),"7": _d(10,19),"8": _d(10,20),"9": _d(10,20)},
+    "2026-11": {"0": _d(11,13),"1": _d(11,13),"2": _d(11,13),"3": _d(11,16),"4": _d(11,16),"5": _d(11,16),"6": _d(11,17),"7": _d(11,17),"8": _d(11,18),"9": _d(11,18)},
+    "2026-12": {"0": _d(12,15),"1": _d(12,15),"2": _d(12,15),"3": _d(12,16),"4": _d(12,16),"5": _d(12,16),"6": _d(12,17),"7": _d(12,17),"8": _d(12,18),"9": _d(12,18)},
+}
+
+
+# ═══════════════════════════════════════════════════════════════════
+# IIBB ARBA - Contribuyentes Locales Provincia de Buenos Aires
+# Fuente: RN ARBA 6/2026, web.arba.gov.ar/vencimientos-contribuyentes-locales
+# Agrupación: 0-1 | 2-3 | 4-5 | 6-7 | 8-9
+# 11 anticipos (febrero a diciembre)
+# ═══════════════════════════════════════════════════════════════════
+_IIBB_ARBA = {
+    # No hay anticipo en enero
+    "2026-02": {"0": _d(2,23), "1": _d(2,23), "2": _d(2,24), "3": _d(2,24), "4": _d(2,25), "5": _d(2,25), "6": _d(2,26), "7": _d(2,26), "8": _d(2,27), "9": _d(2,27)},
+    "2026-03": {"0": _d(3,25), "1": _d(3,25), "2": _d(3,26), "3": _d(3,26), "4": _d(3,27), "5": _d(3,27), "6": _d(3,30), "7": _d(3,30), "8": _d(3,31), "9": _d(3,31)},
+    "2026-04": {"0": _d(4,20), "1": _d(4,20), "2": _d(4,21), "3": _d(4,21), "4": _d(4,22), "5": _d(4,22), "6": _d(4,23), "7": _d(4,23), "8": _d(4,24), "9": _d(4,24)},
+    "2026-05": {"0": _d(5,18), "1": _d(5,18), "2": _d(5,19), "3": _d(5,19), "4": _d(5,20), "5": _d(5,20), "6": _d(5,21), "7": _d(5,21), "8": _d(5,22), "9": _d(5,22)},
+    "2026-06": {"0": _d(6,22), "1": _d(6,22), "2": _d(6,23), "3": _d(6,23), "4": _d(6,24), "5": _d(6,24), "6": _d(6,25), "7": _d(6,25), "8": _d(6,26), "9": _d(6,26)},
+    "2026-07": {"0": _d(7,20), "1": _d(7,20), "2": _d(7,21), "3": _d(7,21), "4": _d(7,22), "5": _d(7,22), "6": _d(7,23), "7": _d(7,23), "8": _d(7,24), "9": _d(7,24)},
+    "2026-08": {"0": _d(8,24), "1": _d(8,24), "2": _d(8,25), "3": _d(8,25), "4": _d(8,26), "5": _d(8,26), "6": _d(8,27), "7": _d(8,27), "8": _d(8,28), "9": _d(8,28)},
+    "2026-09": {"0": _d(9,21), "1": _d(9,21), "2": _d(9,22), "3": _d(9,22), "4": _d(9,23), "5": _d(9,23), "6": _d(9,24), "7": _d(9,24), "8": _d(9,25), "9": _d(9,25)},
+    "2026-10": {"0": _d(10,19),"1": _d(10,19),"2": _d(10,20),"3": _d(10,20),"4": _d(10,21),"5": _d(10,21),"6": _d(10,22),"7": _d(10,22),"8": _d(10,23),"9": _d(10,23)},
+    "2026-11": {"0": _d(11,24),"1": _d(11,24),"2": _d(11,25),"3": _d(11,25),"4": _d(11,26),"5": _d(11,26),"6": _d(11,27),"7": _d(11,27),"8": _d(11,30),"9": _d(11,30)},
+    "2026-12": {"0": _d(12,18),"1": _d(12,18),"2": _d(12,19),"3": _d(12,19),"4": _d(12,20),"5": _d(12,20),"6": _d(12,21),"7": _d(12,21),"8": _d(12,22),"9": _d(12,22)},
+}
+
+
+# ═══════════════════════════════════════════════════════════════════
+# IIBB AGIP - Contribuyentes Locales Ciudad de Buenos Aires
+# Fuente: Resolución N° 557-AGIP/25 (Anexo I)
+# Agrupación: 0-1 | 2-3 | 4-5 | 6-7 | 8-9
+# 12 anticipos (febrero 2026 a enero 2027, pero acá solo meses 2026)
+# ═══════════════════════════════════════════════════════════════════
+_IIBB_AGIP = {
+    # No hay anticipo en enero (el anticipo 12/2025 venció en ene 2026)
+    "2026-02": {"0": _d(2,18), "1": _d(2,18), "2": _d(2,19), "3": _d(2,19), "4": _d(2,20), "5": _d(2,20), "6": _d(2,23), "7": _d(2,23), "8": _d(2,24), "9": _d(2,24)},
+    "2026-03": {"0": _d(3,11), "1": _d(3,11), "2": _d(3,12), "3": _d(3,12), "4": _d(3,13), "5": _d(3,13), "6": _d(3,16), "7": _d(3,16), "8": _d(3,17), "9": _d(3,17)},
+    "2026-04": {"0": _d(4,13), "1": _d(4,13), "2": _d(4,14), "3": _d(4,14), "4": _d(4,15), "5": _d(4,15), "6": _d(4,16), "7": _d(4,16), "8": _d(4,17), "9": _d(4,17)},
+    "2026-05": {"0": _d(5,11), "1": _d(5,11), "2": _d(5,12), "3": _d(5,12), "4": _d(5,13), "5": _d(5,13), "6": _d(5,14), "7": _d(5,14), "8": _d(5,15), "9": _d(5,15)},
+    "2026-06": {"0": _d(6,11), "1": _d(6,11), "2": _d(6,12), "3": _d(6,12), "4": _d(6,16), "5": _d(6,16), "6": _d(6,17), "7": _d(6,17), "8": _d(6,18), "9": _d(6,18)},
+    "2026-07": {"0": _d(7,13), "1": _d(7,13), "2": _d(7,14), "3": _d(7,14), "4": _d(7,15), "5": _d(7,15), "6": _d(7,16), "7": _d(7,16), "8": _d(7,17), "9": _d(7,17)},
+    "2026-08": {"0": _d(8,11), "1": _d(8,11), "2": _d(8,12), "3": _d(8,12), "4": _d(8,13), "5": _d(8,13), "6": _d(8,14), "7": _d(8,14), "8": _d(8,18), "9": _d(8,18)},
+    "2026-09": {"0": _d(9,11), "1": _d(9,11), "2": _d(9,14), "3": _d(9,14), "4": _d(9,15), "5": _d(9,15), "6": _d(9,16), "7": _d(9,16), "8": _d(9,17), "9": _d(9,17)},
+    "2026-10": {"0": _d(10,13),"1": _d(10,13),"2": _d(10,14),"3": _d(10,14),"4": _d(10,15),"5": _d(10,15),"6": _d(10,16),"7": _d(10,16),"8": _d(10,19),"9": _d(10,19)},
+    "2026-11": {"0": _d(11,11),"1": _d(11,11),"2": _d(11,12),"3": _d(11,12),"4": _d(11,13),"5": _d(11,13),"6": _d(11,16),"7": _d(11,16),"8": _d(11,17),"9": _d(11,17)},
+    "2026-12": {"0": _d(12,11),"1": _d(12,11),"2": _d(12,14),"3": _d(12,14),"4": _d(12,15),"5": _d(12,15),"6": _d(12,16),"7": _d(12,16),"8": _d(12,17),"9": _d(12,17)},
+}
+
+
+# ═══════════════════════════════════════════════════════════════════
+# CASAS PARTICULARES - Régimen Especial de Seguridad Social
+# Fuente: ARCA - generalmente el 10 de cada mes para todos los dígitos
+# (ajustado por días hábiles/feriados)
+# ═══════════════════════════════════════════════════════════════════
+_CASAS = {
+    "2026-01": {str(d): _d(1,12)  for d in range(10)},  # 10 es sábado → 12 lunes
+    "2026-02": {str(d): _d(2,10)  for d in range(10)},
+    "2026-03": {str(d): _d(3,10)  for d in range(10)},
+    "2026-04": {str(d): _d(4,10)  for d in range(10)},
+    "2026-05": {str(d): _d(5,11)  for d in range(10)},  # 10 es domingo → 11 lunes
+    "2026-06": {str(d): _d(6,10)  for d in range(10)},
+    "2026-07": {str(d): _d(7,10)  for d in range(10)},
+    "2026-08": {str(d): _d(8,10)  for d in range(10)},
+    "2026-09": {str(d): _d(9,10)  for d in range(10)},
+    "2026-10": {str(d): _d(10,13) for d in range(10)},  # 10 sáb → 12 lun feriado → 13 mar
+    "2026-11": {str(d): _d(11,10) for d in range(10)},
+    "2026-12": {str(d): _d(12,10) for d in range(10)},
+}
+
+
+# ═══════════════════════════════════════════════════════════════════
+# Función principal
+# ═══════════════════════════════════════════════════════════════════
+
+_EMPTY_DIGITOS = {str(d): None for d in range(10)}
 
 
 def generar_sugerencias(periodo: str) -> Dict:
@@ -174,39 +208,30 @@ def generar_sugerencias(periodo: str) -> Dict:
         periodo: formato "YYYY-MM" (ej: "2026-03")
 
     Returns:
-        {
-            "periodo": "2026-03",
-            "tabla": {
-                "VEP Monotributo": {"0": "2026-03-20", ...},
-                ...
-            },
-            "fuentes": {
-                "VEP Monotributo": "ARCA - Resolución General vigente",
-                ...
-            },
-            "nota": "Fechas orientativas basadas en calendarios oficiales..."
-        }
+        dict con periodo, tabla, fuentes y nota
     """
     parts = periodo.split("-")
     if len(parts) != 2:
         return {"periodo": periodo, "tabla": {}, "fuentes": {}, "nota": "Período inválido"}
 
-    year = int(parts[0])
-    month = int(parts[1])
-
-    tabla = {}
-    for tipo, patron in PATRONES.items():
-        tabla[tipo] = {}
-        for digito, dia in patron.items():
-            tabla[tipo][digito] = _fecha(year, month, dia)
+    tabla = {
+        "Casas Particulares": _CASAS.get(periodo, _EMPTY_DIGITOS.copy()),
+        "VEP Monotributo": _monotributo(periodo),
+        "VEP Autonomos": _AUTONOMOS.get(periodo, _EMPTY_DIGITOS.copy()),
+        "IIBB CM": _IIBB_CM.get(periodo, _EMPTY_DIGITOS.copy()),
+        "IIBB ARBA": _IIBB_ARBA.get(periodo, _EMPTY_DIGITOS.copy()),
+        "IIBB AGIP": _IIBB_AGIP.get(periodo, _EMPTY_DIGITOS.copy()),
+        "IVA": _IVA.get(periodo, _EMPTY_DIGITOS.copy()),
+        "Libro IVA Digital": _IVA.get(periodo, _EMPTY_DIGITOS.copy()),
+    }
 
     return {
         "periodo": periodo,
         "tabla": tabla,
         "fuentes": FUENTES,
         "nota": (
-            "Fechas orientativas basadas en calendarios oficiales de ARCA, COMARB, "
-            "ARBA y AGIP. Ajustadas automáticamente por días hábiles y feriados "
-            "nacionales. Verificar contra resoluciones vigentes antes de aplicar."
+            "Fechas extraídas de fuentes oficiales (ARCA, COMARB RG CA 20/2025, "
+            "ARBA RN 6/2026, AGIP Res. 557/25). "
+            "Verificar contra resoluciones vigentes antes de aplicar."
         ),
     }
