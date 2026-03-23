@@ -615,6 +615,7 @@ body{font-family:'Inter','Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;
         <button class="btn" onclick="goToday()">Hoy</button>
       </div>
       <div class="filter-group" id="filterGroup">
+        <select class="filter-select" id="filterMes" onchange="onFilterMesChange()"><option value="">Todos los meses</option></select>
         <select class="filter-select" id="filterCliente" onchange="render()"><option value="">Todos los clientes</option></select>
         <select class="filter-select" id="filterTarea" onchange="render()"><option value="">Todas las tareas</option></select>
         <select class="filter-select" id="filterResponsable" onchange="render()"><option value="">Todos</option></select>
@@ -635,7 +636,7 @@ body{font-family:'Inter','Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;
         <button class="btn active" data-view="month" onclick="setView('month')">Mes</button>
         <button class="btn" data-view="week" onclick="setView('week')">Semana</button>
         <button class="btn" data-view="list" onclick="setView('list')">Lista</button>
-        <button class="btn" data-view="mycal" onclick="setView('mycal')">📋 Mi Cal</button>
+        <button class="btn" data-view="mycal" onclick="setView('mycal')">📋 Mi Calendario</button>
         <button class="btn" data-view="clientes" onclick="setView('clientes')">👤 Clientes</button>
         <button class="btn" data-view="vtos" id="btnVtosTab" onclick="setView('vtos')" style="display:none">📅 Vtos</button>
         <button class="btn" data-view="users" id="btnUsersTab" onclick="setView('users')" style="display:none">👥</button>
@@ -1069,6 +1070,7 @@ function getDeadlineText(vencimiento) {
 
 // =================== FILTERS ===================
 function getFilteredTasks() {
+  const fM = document.getElementById('filterMes').value;
   const fC = document.getElementById('filterCliente').value;
   const fT = document.getElementById('filterTarea').value;
   const fR = document.getElementById('filterResponsable').value;
@@ -1076,6 +1078,7 @@ function getFilteredTasks() {
   const search = document.getElementById('searchInput').value.toLowerCase();
 
   return state.tasks.filter(t => {
+    if (fM && !(t.vencimiento || '').startsWith(fM)) return false;
     if (fC && t.cliente !== fC) return false;
     if (fT && t.tarea !== fT) return false;
     if (fR && t.responsable !== fR) return false;
@@ -1104,6 +1107,16 @@ function populateFilters() {
     el.innerHTML = `<option value="">${label}</option>` + items.map(i => `<option value="${i}">${i}</option>`).join('');
     el.value = v;
   };
+  const mesEl = document.getElementById('filterMes');
+  const mesVal = mesEl.value;
+  const meses = [...new Set(all.map(t => (t.vencimiento||'').slice(0,7)).filter(Boolean))].sort();
+  mesEl.innerHTML = `<option value="">Todos los meses</option>` + meses.map(m => {
+    const [y, mo] = m.split('-');
+    const label = `${MONTHS_ES[parseInt(mo,10)-1]} ${y}`;
+    return `<option value="${m}">${label}</option>`;
+  }).join('');
+  mesEl.value = mesVal;
+
   sel('filterCliente', [...new Set(all.map(t => t.cliente))].sort(), 'Todos los clientes');
   sel('filterTarea', [...new Set(all.map(t => t.tarea))].sort(), 'Todas las tareas');
   sel('filterResponsable', [...new Set(all.map(t => t.responsable))].sort(), 'Todos');
@@ -1133,8 +1146,11 @@ function renderLegend() {
 
 // =================== STATS ===================
 function updateStats() {
+  const year = state.currentDate.getFullYear();
+  const month = String(state.currentDate.getMonth() + 1).padStart(2, '0');
+  const currentMonth = `${year}-${month}`;
   let pending = 0, overdue = 0, ready = 0, finalized = 0;
-  state.tasks.forEach(t => {
+  state.tasks.filter(t => (t.vencimiento || '').startsWith(currentMonth)).forEach(t => {
     const s = getTaskStatus(t);
     if (s === 'finalized') finalized++;
     else if (s === 'overdue') overdue++;
@@ -1255,7 +1271,6 @@ function renderWeek() {
       } else {
         h += `<div class="card-actions" onclick="event.stopPropagation()">`;
         h += `<button class="action-btn ${t.completado?'active':''}" onclick="toggleStatus(${t.taskId},'completado')" title="Completado">✔</button>`;
-        h += `<button class="action-btn ${t.revisado?'active':''}" onclick="toggleStatus(${t.taskId},'revisado')" title="Revisado">🔍</button>`;
         h += `<button class="action-btn ${t.enviado?'active':''}" onclick="toggleStatus(${t.taskId},'enviado')" title="Enviado">📩</button>`;
         h += `<button class="action-btn finalize-btn" onclick="finalizeTask(${t.taskId})" title="Finalizar">🏁</button>`;
         h += `</div>`;
@@ -1272,6 +1287,13 @@ function renderWeek() {
 function renderList() {
   const year = state.currentDate.getFullYear(), month = state.currentDate.getMonth();
   document.getElementById('monthLabel').textContent = `${MONTHS_ES[month]} ${year}`;
+
+  // Always sync filterMes to the navigated month
+  const mesEl = document.getElementById('filterMes');
+  const currentMonth = `${year}-${String(month + 1).padStart(2, '0')}`;
+  if ([...mesEl.options].some(o => o.value === currentMonth)) {
+    mesEl.value = currentMonth;
+  }
 
   let tasks = getFilteredTasks();
   tasks.sort((a, b) => {
@@ -1310,7 +1332,6 @@ function renderList() {
     } else {
       h += `<td><div class="status-checks">`;
       h += `<button class="check-btn ${t.completado?'active':''}" onclick="toggleStatus(${t.taskId},'completado')" title="Completado">✔</button>`;
-      h += `<button class="check-btn ${t.revisado?'active':''}" onclick="toggleStatus(${t.taskId},'revisado')" title="Revisado">🔍</button>`;
       h += `<button class="check-btn ${t.enviado?'active':''}" onclick="toggleStatus(${t.taskId},'enviado')" title="Enviado">📩</button>`;
       h += `</div></td>`;
       h += `<td><button class="check-btn finalize-btn" onclick="finalizeTask(${t.taskId})" title="Finalizar">🏁</button></td>`;
@@ -1320,6 +1341,15 @@ function renderList() {
 
   h += `</tbody></table>`;
   document.getElementById('viewList').innerHTML = h;
+}
+
+function onFilterMesChange() {
+  const val = document.getElementById('filterMes').value;
+  if (val) {
+    const [y, m] = val.split('-').map(Number);
+    state.currentDate = new Date(y, m - 1, 1);
+  }
+  render();
 }
 
 function sortBy(c) {
