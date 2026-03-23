@@ -2,11 +2,24 @@ __pycache__/
 *.pyc
 .env
 firebase-sa.json
+*firebase-adminsdk*.json
 .venv/
 *.xlsx
 node_modules/
 .DS_Store
 mongo_data/
+.vscode/
+
+# Data files
+data.json
+index.html
+
+# Scripts de análisis / migración
+analyze*.py
+extract_data.py
+inject_data.py
+prep_data.py
+build.py
 
 # Temp analysis files
 read_excel.py

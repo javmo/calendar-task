@@ -615,6 +615,7 @@ body{font-family:'Inter','Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;
         <button class="btn" onclick="goToday()">Hoy</button>
       </div>
       <div class="filter-group" id="filterGroup">
+        <select class="filter-select" id="filterMes" onchange="onFilterMesChange()"><option value="">Todos los meses</option></select>
         <select class="filter-select" id="filterCliente" onchange="render()"><option value="">Todos los clientes</option></select>
         <select class="filter-select" id="filterTarea" onchange="render()"><option value="">Todas las tareas</option></select>
         <select class="filter-select" id="filterResponsable" onchange="render()"><option value="">Todos</option></select>
@@ -635,7 +636,7 @@ body{font-family:'Inter','Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;
         <button class="btn active" data-view="month" onclick="setView('month')">Mes</button>
         <button class="btn" data-view="week" onclick="setView('week')">Semana</button>
         <button class="btn" data-view="list" onclick="setView('list')">Lista</button>
-        <button class="btn" data-view="mycal" onclick="setView('mycal')">📋 Mi Cal</button>
+        <button class="btn" data-view="mycal" onclick="setView('mycal')">📋 Mi Calendario</button>
         <button class="btn" data-view="clientes" onclick="setView('clientes')">👤 Clientes</button>
         <button class="btn" data-view="vtos" id="btnVtosTab" onclick="setView('vtos')" style="display:none">📅 Vtos</button>
         <button class="btn" data-view="users" id="btnUsersTab" onclick="setView('users')" style="display:none">👥</button>
@@ -681,7 +682,6 @@ body{font-family:'Inter','Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;
         <button class="btn" onclick="closeModal()">Cancelar</button>
         <button class="btn btn-primary" onclick="saveTask()">Guardar</button>
         <button class="btn btn-danger" id="btnDelete" style="display:none" onclick="deleteTask()">🗑 Eliminar</button>
-        <button class="btn btn-success" id="btnFinalize" style="display:none" onclick="finalizeFromModal()">✅ Finalizar</button>
       </div>
     </div>
   </div>
@@ -708,6 +708,7 @@ body{font-family:'Inter','Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;
       <h2 id="clientEditTitle">✏️ Editar Cliente <button class="modal-close" onclick="closeClientEdit()">✕</button></h2>
       <div class="form-group"><label>Nombre</label><input type="text" id="ceNombre"></div>
       <div class="form-group"><label>CUIT</label><input type="text" id="ceCuit"></div>
+      <div class="form-group"><label>Email</label><input type="email" id="ceEmail" placeholder="email@ejemplo.com"></div>
       <div class="form-group"><label>Clave ARCA</label><input type="text" id="ceClaveArca"></div>
       <div class="form-group"><label>Clave AGIP</label><input type="text" id="ceClaveAgip"></div>
       <div class="form-group"><label>Clave ARBA</label><input type="text" id="ceClaveArba"></div>
@@ -731,6 +732,7 @@ body{font-family:'Inter','Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;
 </div>
 
 <div class="toast-container" id="toastContainer"></div>
+
 
 <script>
 // =================== CONFIGURATION ===================
@@ -777,6 +779,8 @@ const state = {
   finalizedCollapsed: false,
   devMode: false,
   clientSearch: '',
+  googleAccessToken: null,
+  pendingEmailTaskId: null,
 };
 
 let authToken = null;
@@ -888,7 +892,10 @@ async function handleAuthState(firebaseUser) {
 
 function login() {
   const provider = new firebase.auth.GoogleAuthProvider();
-  firebase.auth().signInWithPopup(provider).catch(e => {
+  provider.addScope('https://www.googleapis.com/auth/gmail.send');
+  firebase.auth().signInWithPopup(provider).then(result => {
+    state.googleAccessToken = result.credential.accessToken;
+  }).catch(e => {
     showLoginError(e.message);
   });
 }
@@ -1069,6 +1076,7 @@ function getDeadlineText(vencimiento) {
 
 // =================== FILTERS ===================
 function getFilteredTasks() {
+  const fM = document.getElementById('filterMes').value;
   const fC = document.getElementById('filterCliente').value;
   const fT = document.getElementById('filterTarea').value;
   const fR = document.getElementById('filterResponsable').value;
@@ -1076,6 +1084,7 @@ function getFilteredTasks() {
   const search = document.getElementById('searchInput').value.toLowerCase();
 
   return state.tasks.filter(t => {
+    if (fM && !(t.vencimiento || '').startsWith(fM)) return false;
     if (fC && t.cliente !== fC) return false;
     if (fT && t.tarea !== fT) return false;
     if (fR && t.responsable !== fR) return false;
@@ -1104,9 +1113,22 @@ function populateFilters() {
     el.innerHTML = `<option value="">${label}</option>` + items.map(i => `<option value="${i}">${i}</option>`).join('');
     el.value = v;
   };
-  sel('filterCliente', [...new Set(all.map(t => t.cliente))].sort(), 'Todos los clientes');
-  sel('filterTarea', [...new Set(all.map(t => t.tarea))].sort(), 'Todas las tareas');
-  sel('filterResponsable', [...new Set(all.map(t => t.responsable))].sort(), 'Todos');
+  const mesEl = document.getElementById('filterMes');
+  const mesVal = mesEl.value;
+  const meses = [...new Set(all.map(t => (t.vencimiento||'').slice(0,7)).filter(Boolean))].sort();
+  mesEl.innerHTML = `<option value="">Todos los meses</option>` + meses.map(m => {
+    const [y, mo] = m.split('-');
+    const label = `${MONTHS_ES[parseInt(mo,10)-1]} ${y}`;
+    return `<option value="${m}">${label}</option>`;
+  }).join('');
+  mesEl.value = mesVal;
+
+  const fM = mesEl.value;
+  const monthTasks = fM ? all.filter(t => (t.vencimiento||'').startsWith(fM)) : all;
+
+  sel('filterCliente', [...new Set(monthTasks.map(t => t.cliente))].sort(), 'Todos los clientes');
+  sel('filterTarea', [...new Set(monthTasks.map(t => t.tarea))].sort(), 'Todas las tareas');
+  sel('filterResponsable', [...new Set(monthTasks.map(t => t.responsable))].sort(), 'Todos');
 }
 
 function populateFormSelects() {
@@ -1125,16 +1147,23 @@ function populateFormSelects() {
 }
 
 function renderLegend() {
+  const fM = document.getElementById('filterMes').value;
+  const tasks = fM ? state.tasks.filter(t => (t.vencimiento||'').startsWith(fM)) : state.tasks;
+  const activeTipos = [...new Set(tasks.map(t => t.tarea))];
   document.getElementById('legend').innerHTML =
-    Object.entries(TASK_COLORS).map(([n,c]) =>
-      `<div class="legend-item"><div class="legend-dot" style="background:${c}"></div>${n}</div>`
-    ).join('');
+    activeTipos
+      .filter(n => TASK_COLORS[n])
+      .map(n => `<div class="legend-item"><div class="legend-dot" style="background:${TASK_COLORS[n]}"></div>${n}</div>`)
+      .join('');
 }
 
 // =================== STATS ===================
 function updateStats() {
+  const year = state.currentDate.getFullYear();
+  const month = String(state.currentDate.getMonth() + 1).padStart(2, '0');
+  const currentMonth = `${year}-${month}`;
   let pending = 0, overdue = 0, ready = 0, finalized = 0;
-  state.tasks.forEach(t => {
+  state.tasks.filter(t => (t.vencimiento || '').startsWith(currentMonth)).forEach(t => {
     const s = getTaskStatus(t);
     if (s === 'finalized') finalized++;
     else if (s === 'overdue') overdue++;
@@ -1171,6 +1200,7 @@ function changeMonth(delta) {
     state.myCalWeekStart = new Date(state.myCalWeekStart.getTime() + delta * 7 * 86400000);
   } else {
     state.currentDate.setMonth(state.currentDate.getMonth() + delta);
+    populateFilters();
   }
   render();
 }
@@ -1255,9 +1285,7 @@ function renderWeek() {
       } else {
         h += `<div class="card-actions" onclick="event.stopPropagation()">`;
         h += `<button class="action-btn ${t.completado?'active':''}" onclick="toggleStatus(${t.taskId},'completado')" title="Completado">✔</button>`;
-        h += `<button class="action-btn ${t.revisado?'active':''}" onclick="toggleStatus(${t.taskId},'revisado')" title="Revisado">🔍</button>`;
         h += `<button class="action-btn ${t.enviado?'active':''}" onclick="toggleStatus(${t.taskId},'enviado')" title="Enviado">📩</button>`;
-        h += `<button class="action-btn finalize-btn" onclick="finalizeTask(${t.taskId})" title="Finalizar">🏁</button>`;
         h += `</div>`;
       }
       h += `</div>`;
@@ -1273,7 +1301,32 @@ function renderList() {
   const year = state.currentDate.getFullYear(), month = state.currentDate.getMonth();
   document.getElementById('monthLabel').textContent = `${MONTHS_ES[month]} ${year}`;
 
-  let tasks = getFilteredTasks();
+  const currentMonth = `${year}-${String(month + 1).padStart(2, '0')}`;
+
+  // Sync filterMes display
+  const mesEl = document.getElementById('filterMes');
+  if ([...mesEl.options].some(o => o.value === currentMonth)) mesEl.value = currentMonth;
+
+  // Filter by current month directly + other active filters
+  const fC = document.getElementById('filterCliente').value;
+  const fT = document.getElementById('filterTarea').value;
+  const fR = document.getElementById('filterResponsable').value;
+  const fE = document.getElementById('filterEstado').value;
+  const search = document.getElementById('searchInput').value.toLowerCase();
+
+  let tasks = state.tasks.filter(t => {
+    if (!(t.vencimiento || '').startsWith(currentMonth)) return false;
+    if (fC && t.cliente !== fC) return false;
+    if (fT && t.tarea !== fT) return false;
+    if (fR && t.responsable !== fR) return false;
+    if (fE) {
+      if (fE === 'finalized' && !t.finalizada) return false;
+      if (fE === 'pending') { if (t.finalizada || getTaskStatus(t) === 'overdue') return false; }
+      if (fE === 'overdue') { if (t.finalizada || getTaskStatus(t) !== 'overdue') return false; }
+    }
+    if (search && !t.cliente.toLowerCase().includes(search) && !t.tarea.toLowerCase().includes(search)) return false;
+    return true;
+  });
   tasks.sort((a, b) => {
     let va = a[state.sortCol] || '', vb = b[state.sortCol] || '';
     if (typeof va === 'string') va = va.toLowerCase();
@@ -1310,16 +1363,24 @@ function renderList() {
     } else {
       h += `<td><div class="status-checks">`;
       h += `<button class="check-btn ${t.completado?'active':''}" onclick="toggleStatus(${t.taskId},'completado')" title="Completado">✔</button>`;
-      h += `<button class="check-btn ${t.revisado?'active':''}" onclick="toggleStatus(${t.taskId},'revisado')" title="Revisado">🔍</button>`;
       h += `<button class="check-btn ${t.enviado?'active':''}" onclick="toggleStatus(${t.taskId},'enviado')" title="Enviado">📩</button>`;
       h += `</div></td>`;
-      h += `<td><button class="check-btn finalize-btn" onclick="finalizeTask(${t.taskId})" title="Finalizar">🏁</button></td>`;
     }
     h += `</tr>`;
   });
 
   h += `</tbody></table>`;
   document.getElementById('viewList').innerHTML = h;
+}
+
+function onFilterMesChange() {
+  const val = document.getElementById('filterMes').value;
+  if (val) {
+    const [y, m] = val.split('-').map(Number);
+    state.currentDate = new Date(y, m - 1, 1);
+  }
+  populateFilters();
+  render();
 }
 
 function sortBy(c) {
@@ -1399,7 +1460,6 @@ function renderMyCalendar() {
       gridH += `<div class="sc-meta">`;
       gridH += `<span class="deadline-badge ${dlClass}">Vto: ${formatDateShort(t.vencimiento)}</span>`;
       if (!isFin) {
-        gridH += `<button class="sc-finalize" onclick="finalizeTask(${t.taskId})">✅ Finalizar</button>`;
       } else {
         gridH += `<span class="fin-tag">✅ ${formatDateShort(t.fechaFinalizacion)}</span>`;
       }
@@ -1663,6 +1723,7 @@ function addClient() {
   document.getElementById('clientEditTitle').innerHTML = '➕ Nuevo Cliente <button class="modal-close" onclick="closeClientEdit()">✕</button>';
   document.getElementById('ceNombre').value = '';
   document.getElementById('ceCuit').value = '';
+  document.getElementById('ceEmail').value = '';
   document.getElementById('ceClaveArca').value = '';
   document.getElementById('ceClaveAgip').value = '';
   document.getElementById('ceClaveArba').value = '';
@@ -1680,6 +1741,7 @@ function editClientFromDetail() {
   document.getElementById('clientEditTitle').innerHTML = '✏️ Editar Cliente <button class="modal-close" onclick="closeClientEdit()">✕</button>';
   document.getElementById('ceNombre').value = c.nombre;
   document.getElementById('ceCuit').value = c.cuit || '';
+  document.getElementById('ceEmail').value = c.email || '';
   document.getElementById('ceClaveArca').value = c.claveArca || '';
   document.getElementById('ceClaveAgip').value = c.claveAgip || '';
   document.getElementById('ceClaveArba').value = c.claveArba || '';
@@ -1696,6 +1758,7 @@ async function saveClientEdit() {
   const data = {
     nombre,
     cuit: document.getElementById('ceCuit').value.trim(),
+    email: document.getElementById('ceEmail').value.trim(),
     claveArca: document.getElementById('ceClaveArca').value.trim(),
     claveAgip: document.getElementById('ceClaveAgip').value.trim(),
     claveArba: document.getElementById('ceClaveArba').value.trim(),
@@ -2157,7 +2220,6 @@ function addTask() {
   document.getElementById('formVencimiento').value = '';
   document.getElementById('formSemana').value = '1ER SEMANA';
   document.getElementById('btnDelete').style.display = 'none';
-  document.getElementById('btnFinalize').style.display = 'none';
   document.getElementById('modalOverlay').classList.add('active');
 }
 
@@ -2172,7 +2234,6 @@ function editTask(id) {
   document.getElementById('formVencimiento').value = t.vencimiento;
   document.getElementById('formSemana').value = t.semana;
   document.getElementById('btnDelete').style.display = '';
-  document.getElementById('btnFinalize').style.display = '';
   document.getElementById('modalOverlay').classList.add('active');
 }
 

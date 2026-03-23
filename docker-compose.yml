@@ -1,11 +1,14 @@
 version: '3.8'
 
 services:
-  app:
-    build: .
+  mongo:
+    image: mongo:7
+    container_name: calendar-mongo
     ports:
-      - "8080:8080"
-    env_file:
-      - .env
+      - "27017:27017"
     volumes:
-      - ./static:/app/static
+      - mongo_data:/data/db
+    restart: unless-stopped
+
+volumes:
+  mongo_data:
