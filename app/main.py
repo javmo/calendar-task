@@ -137,6 +137,7 @@ class ScheduleIn(BaseModel):
 class ClienteIn(BaseModel):
     nombre: str
     cuit: Optional[str] = ""
+    email: Optional[str] = ""
     claveArca: Optional[str] = ""
     claveAgip: Optional[str] = ""
     claveArba: Optional[str] = ""
@@ -147,6 +148,7 @@ class ClienteIn(BaseModel):
 class ClienteUpdate(BaseModel):
     nombre: Optional[str] = None
     cuit: Optional[str] = None
+    email: Optional[str] = None
     claveArca: Optional[str] = None
     claveAgip: Optional[str] = None
     claveArba: Optional[str] = None
