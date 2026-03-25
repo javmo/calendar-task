@@ -476,12 +476,62 @@ body{font-family:'Inter','Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;
 .client-edit-modal{background:var(--surface);border-radius:16px;padding:28px;width:480px;max-width:95vw;max-height:85vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
 .client-edit-modal h2{font-size:17px;font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:8px}
 
+/* =================== ADMIN ASSIGNMENT VIEW =================== */
+.assign-container{padding:20px 28px}
+.assign-layout{display:grid;grid-template-columns:280px 1fr;gap:20px;min-height:60vh}
+.assign-sidebar{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;display:flex;flex-direction:column}
+.assign-sidebar-header{padding:16px;border-bottom:1px solid var(--border);background:var(--surface2)}
+.assign-sidebar-header h3{font-size:14px;font-weight:700;margin-bottom:10px}
+.assign-sidebar-body{overflow-y:auto;flex:1;padding:8px}
+.assign-mode-tabs{display:flex;gap:2px;background:var(--bg);border-radius:6px;padding:3px}
+.assign-mode-tab{flex:1;padding:6px 8px;border:none;background:transparent;font-size:11px;font-weight:600;cursor:pointer;border-radius:4px;color:var(--text-muted);transition:all .15s;font-family:inherit}
+.assign-mode-tab.active{background:var(--accent);color:white}
+.assign-mode-tab:hover:not(.active){background:var(--surface-hover);color:var(--text)}
+.assign-user-select{margin-top:12px}
+.assign-user-select label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:6px}
+.assign-user-select select{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);font-size:13px;font-family:inherit}
+.assign-user-card{padding:10px 12px;border-radius:var(--radius-sm);cursor:pointer;display:flex;align-items:center;gap:10px;transition:all .12s;border:2px solid transparent;margin-bottom:4px}
+.assign-user-card:hover{background:var(--surface-hover)}
+.assign-user-card.selected{background:var(--accent-bg);border-color:var(--accent)}
+.assign-user-card .auc-avatar{width:32px;height:32px;border-radius:50%;object-fit:cover;background:var(--bg)}
+.assign-user-card .auc-info{flex:1;min-width:0}
+.assign-user-card .auc-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.assign-user-card .auc-email{font-size:10px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.assign-user-card .auc-badge{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;background:var(--accent-bg);color:var(--accent)}
+.assign-main{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;display:flex;flex-direction:column}
+.assign-main-header{padding:16px;border-bottom:1px solid var(--border);background:var(--surface2);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.assign-main-header h3{font-size:14px;font-weight:700}
+.assign-filter-row{display:flex;gap:8px;flex:1;flex-wrap:wrap;align-items:center}
+.assign-filter-row select,.assign-filter-row input{padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);font-size:12px;font-family:inherit}
+.assign-actions-bar{padding:10px 16px;background:var(--accent-bg);border-bottom:1px solid var(--accent);display:flex;align-items:center;gap:12px;font-size:13px;animation:slideDown .2s ease}
+@keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.assign-actions-bar .selected-count{font-weight:700;color:var(--accent)}
+.assign-task-list{overflow-y:auto;flex:1;max-height:65vh}
+.assign-task-table{width:100%;border-collapse:collapse;font-size:13px}
+.assign-task-table thead{position:sticky;top:0;z-index:1}
+.assign-task-table th{padding:10px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);background:var(--surface2);border-bottom:1px solid var(--border)}
+.assign-task-table td{padding:8px 12px;border-bottom:1px solid var(--border-light)}
+.assign-task-table tr:hover{background:var(--surface-hover)}
+.assign-task-table .cb-cell{width:36px;text-align:center}
+.assign-task-table input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--accent)}
+.assign-task-table .at-client{font-weight:600}
+.assign-task-table .at-type{font-size:11px;padding:2px 8px;border-radius:4px;font-weight:600;display:inline-block}
+.assign-task-table .at-assigned{font-size:11px;color:var(--text-muted)}
+.assign-task-table .at-assigned.has-user{color:var(--success);font-weight:600}
+.assign-empty{padding:40px;text-align:center;color:var(--text-muted);font-size:14px}
+.assign-group-header{padding:10px 12px;background:var(--bg);font-size:12px;font-weight:700;color:var(--text-secondary);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;cursor:pointer}
+.assign-group-header:hover{background:var(--surface-hover)}
+.assign-group-header .group-count{font-size:10px;padding:1px 8px;border-radius:10px;background:var(--accent-bg);color:var(--accent);font-weight:700}
+.btn-success{background:var(--success);border-color:var(--success);color:white}
+.btn-success:hover{background:#047857;border-color:#047857;color:white}
+
 /* =================== RESPONSIVE =================== */
 @media(max-width:768px){
   .header{flex-direction:column;gap:10px;padding:12px 16px}
   .toolbar{flex-direction:column;align-items:stretch;padding:10px 16px}
   .header-stats{flex-wrap:wrap}
-  .calendar-container,.list-container,.my-cal-container,.users-container,.clients-container{padding:10px}
+  .calendar-container,.list-container,.my-cal-container,.users-container,.clients-container,.assign-container{padding:10px}
+  .assign-layout{grid-template-columns:1fr;grid-template-rows:auto 1fr}
   .clients-grid{grid-template-columns:1fr}
   .cd-info-grid{grid-template-columns:1fr}
   .finalized-panel{margin:10px}
@@ -639,6 +689,7 @@ body{font-family:'Inter','Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;
         <button class="btn" data-view="mycal" onclick="setView('mycal')">📋 Mi Calendario</button>
         <button class="btn" data-view="clientes" onclick="setView('clientes')">👤 Clientes</button>
         <button class="btn" data-view="vtos" id="btnVtosTab" onclick="setView('vtos')" style="display:none">📅 Vtos</button>
+        <button class="btn" data-view="assign" id="btnAssignTab" onclick="setView('assign')" style="display:none">📋 Asignar</button>
         <button class="btn" data-view="users" id="btnUsersTab" onclick="setView('users')" style="display:none">👥</button>
       </div>
     </div>
@@ -653,6 +704,7 @@ body{font-family:'Inter','Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;
   <div id="viewUsers" class="users-container" style="display:none"></div>
   <div id="viewClientes" class="clients-container" style="display:none"></div>
   <div id="viewVtos" class="vtos-container" style="display:none"></div>
+  <div id="viewAssign" class="assign-container" style="display:none"></div>
 
   <div class="finalized-panel" id="finalizedPanel" style="display:none">
     <div class="finalized-header" id="finalizedHeader" onclick="toggleFinalized()">
@@ -779,8 +831,6 @@ const state = {
   finalizedCollapsed: false,
   devMode: false,
   clientSearch: '',
-  googleAccessToken: null,
-  pendingEmailTaskId: null,
 };
 
 let authToken = null;
@@ -892,10 +942,7 @@ async function handleAuthState(firebaseUser) {
 
 function login() {
   const provider = new firebase.auth.GoogleAuthProvider();
-  provider.addScope('https://www.googleapis.com/auth/gmail.send');
-  firebase.auth().signInWithPopup(provider).then(result => {
-    state.googleAccessToken = result.credential.accessToken;
-  }).catch(e => {
+  firebase.auth().signInWithPopup(provider).catch(e => {
     showLoginError(e.message);
   });
 }
@@ -1021,6 +1068,7 @@ function updateUserMenu() {
   document.getElementById('btnUsersView').style.display = isAdmin ? '' : 'none';
   document.getElementById('btnUsersTab').style.display = isAdmin ? '' : 'none';
   document.getElementById('btnVtosTab').style.display = isAdmin ? '' : 'none';
+  document.getElementById('btnAssignTab').style.display = isAdmin ? '' : 'none';
 }
 
 function toggleUserMenu() {
@@ -1181,14 +1229,14 @@ function setView(v) {
   state.currentView = v;
   document.querySelectorAll('.view-toggle .btn').forEach(b => b.classList.toggle('active', b.dataset.view === v));
 
-const views = { month: 'viewMonth', week: 'viewWeek', list: 'viewList', mycal: 'viewMyCal', users: 'viewUsers', clientes: 'viewClientes', vtos: 'viewVtos' };
+const views = { month: 'viewMonth', week: 'viewWeek', list: 'viewList', mycal: 'viewMyCal', users: 'viewUsers', clientes: 'viewClientes', vtos: 'viewVtos', assign: 'viewAssign' };
     for (const [key, id] of Object.entries(views)) {
       document.getElementById(id).style.display = key === v ? '' : 'none';
     }
 
     // Show/hide filters for special views
-    document.getElementById('filterGroup').style.display = (v === 'users' || v === 'clientes' || v === 'vtos') ? 'none' : '';
-    document.getElementById('legend').style.display = (v === 'users' || v === 'mycal' || v === 'clientes' || v === 'vtos') ? 'none' : '';
+    document.getElementById('filterGroup').style.display = (v === 'users' || v === 'clientes' || v === 'vtos' || v === 'assign') ? 'none' : '';
+    document.getElementById('legend').style.display = (v === 'users' || v === 'mycal' || v === 'clientes' || v === 'vtos' || v === 'assign') ? 'none' : '';
 
   render();
 }
@@ -2122,6 +2170,294 @@ async function aplicarVencimientos() {
   }
 }
 
+// =================== RENDER: ADMIN ASSIGNMENT ===================
+state.assignMode = 'client'; // 'client', 'category', 'manual'
+state.assignSelectedUser = '';
+state.assignSelectedTasks = new Set();
+state.assignFilterClient = '';
+state.assignFilterCategory = '';
+state.assignSearch = '';
+
+function renderAssign() {
+  document.getElementById('monthLabel').textContent = 'Asignar Tareas';
+
+  const usersWithName = state.users.filter(u => u.responsableName);
+
+  let h = `<div class="assign-layout">`;
+
+  // === SIDEBAR ===
+  h += `<div class="assign-sidebar">`;
+  h += `<div class="assign-sidebar-header">`;
+  h += `<h3>Asignar a usuario</h3>`;
+  h += `<div class="assign-mode-tabs">`;
+  h += `<button class="assign-mode-tab ${state.assignMode==='client'?'active':''}" onclick="setAssignMode('client')">Por Cliente</button>`;
+  h += `<button class="assign-mode-tab ${state.assignMode==='category'?'active':''}" onclick="setAssignMode('category')">Por Categoria</button>`;
+  h += `<button class="assign-mode-tab ${state.assignMode==='manual'?'active':''}" onclick="setAssignMode('manual')">Manual</button>`;
+  h += `</div></div>`;
+  h += `<div class="assign-sidebar-body">`;
+
+  // User list
+  state.users.forEach(u => {
+    const taskCount = state.tasks.filter(t => t.assignedTo === u.email || (u.responsableName && t.responsable === u.responsableName)).length;
+    const sel = state.assignSelectedUser === u.email;
+    h += `<div class="assign-user-card ${sel?'selected':''}" onclick="selectAssignUser('${u.email}')">`;
+    h += `<img class="auc-avatar" src="${u.photoURL || 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Ccircle cx=%2712%27 cy=%278%27 r=%274%27 fill=%27%23ccc%27/%3E%3Cpath d=%27M4 20c0-4 4-7 8-7s8 3 8 7%27 fill=%27%23ccc%27/%3E%3C/svg%3E'}">`;
+    h += `<div class="auc-info"><div class="auc-name">${u.displayName || u.email.split('@')[0]}</div>`;
+    h += `<div class="auc-email">${u.responsableName || u.email}</div></div>`;
+    h += `<span class="auc-badge">${taskCount}</span>`;
+    h += `</div>`;
+  });
+
+  h += `</div></div>`;
+
+  // === MAIN PANEL ===
+  h += `<div class="assign-main">`;
+  h += `<div class="assign-main-header">`;
+
+  if (state.assignMode === 'client') {
+    h += `<h3>Asignar por Cliente</h3>`;
+    h += `<div class="assign-filter-row">`;
+    h += `<select onchange="state.assignFilterClient=this.value;state.assignSelectedTasks.clear();renderAssign()">`;
+    h += `<option value="">-- Elegir cliente --</option>`;
+    const clientNames = [...new Set(state.tasks.map(t => t.cliente))].sort();
+    clientNames.forEach(c => {
+      h += `<option value="${c}" ${state.assignFilterClient===c?'selected':''}>${c}</option>`;
+    });
+    h += `</select></div>`;
+  } else if (state.assignMode === 'category') {
+    h += `<h3>Asignar por Categoria</h3>`;
+    h += `<div class="assign-filter-row">`;
+    h += `<select onchange="state.assignFilterCategory=this.value;state.assignSelectedTasks.clear();renderAssign()">`;
+    h += `<option value="">-- Elegir categoria --</option>`;
+    const cats = [...new Set(state.tasks.map(t => t.tarea))].sort();
+    cats.forEach(c => {
+      h += `<option value="${c}" ${state.assignFilterCategory===c?'selected':''}>${c}</option>`;
+    });
+    h += `</select></div>`;
+  } else {
+    h += `<h3>Seleccion Manual</h3>`;
+    h += `<div class="assign-filter-row">`;
+    h += `<select onchange="state.assignFilterClient=this.value;state.assignSelectedTasks.clear();renderAssign()">`;
+    h += `<option value="">Todos los clientes</option>`;
+    const clientNames2 = [...new Set(state.tasks.map(t => t.cliente))].sort();
+    clientNames2.forEach(c => {
+      h += `<option value="${c}" ${state.assignFilterClient===c?'selected':''}>${c}</option>`;
+    });
+    h += `</select>`;
+    h += `<select onchange="state.assignFilterCategory=this.value;state.assignSelectedTasks.clear();renderAssign()">`;
+    h += `<option value="">Todas las categorias</option>`;
+    const cats2 = [...new Set(state.tasks.map(t => t.tarea))].sort();
+    cats2.forEach(c => {
+      h += `<option value="${c}" ${state.assignFilterCategory===c?'selected':''}>${c}</option>`;
+    });
+    h += `</select>`;
+    h += `<input type="text" placeholder="Buscar..." value="${state.assignSearch}" oninput="state.assignSearch=this.value;renderAssign()">`;
+    h += `</div>`;
+  }
+  h += `</div>`;
+
+  // Action bar (when tasks selected)
+  const selCount = state.assignSelectedTasks.size;
+  if (selCount > 0) {
+    const selUser = state.users.find(u => u.email === state.assignSelectedUser);
+    h += `<div class="assign-actions-bar">`;
+    h += `<span class="selected-count">${selCount} tarea${selCount!==1?'s':''} seleccionada${selCount!==1?'s':''}</span>`;
+    if (selUser) {
+      h += `<button class="btn btn-success" onclick="executeBulkAssign()">Asignar a ${selUser.responsableName || selUser.displayName}</button>`;
+      h += `<button class="btn btn-danger" onclick="executeBulkUnassign()">Desasignar</button>`;
+    } else {
+      h += `<span style="color:var(--text-muted);font-size:12px">Selecciona un usuario en la barra lateral</span>`;
+    }
+    h += `<button class="btn" onclick="state.assignSelectedTasks.clear();renderAssign()">Deseleccionar</button>`;
+    h += `</div>`;
+  }
+
+  // Task list
+  let filteredTasks = getAssignFilteredTasks();
+
+  h += `<div class="assign-task-list">`;
+  if (filteredTasks.length === 0) {
+    if (state.assignMode === 'client' && !state.assignFilterClient) {
+      h += `<div class="assign-empty">Selecciona un cliente para ver sus tareas</div>`;
+    } else if (state.assignMode === 'category' && !state.assignFilterCategory) {
+      h += `<div class="assign-empty">Selecciona una categoria para ver las tareas</div>`;
+    } else {
+      h += `<div class="assign-empty">No se encontraron tareas</div>`;
+    }
+  } else {
+    const allChecked = filteredTasks.every(t => state.assignSelectedTasks.has(t.taskId));
+    h += `<table class="assign-task-table"><thead><tr>`;
+    h += `<th class="cb-cell"><input type="checkbox" ${allChecked?'checked':''} onchange="toggleAllAssign(this.checked)"></th>`;
+    h += `<th>Cliente</th><th>Tarea</th><th>Vto</th><th>Asignado a</th>`;
+    h += `</tr></thead><tbody>`;
+
+    if (state.assignMode === 'category') {
+      // Group by client
+      const byClient = {};
+      filteredTasks.forEach(t => {
+        if (!byClient[t.cliente]) byClient[t.cliente] = [];
+        byClient[t.cliente].push(t);
+      });
+      Object.keys(byClient).sort().forEach(clientName => {
+        const tasks = byClient[clientName];
+        const allGroupChecked = tasks.every(t => state.assignSelectedTasks.has(t.taskId));
+        h += `<tr class="assign-group-header" onclick="toggleGroupAssign('${clientName.replace(/'/g,"\\'")}')">`;
+        h += `<td class="cb-cell"><input type="checkbox" ${allGroupChecked?'checked':''} onclick="event.stopPropagation();toggleGroupAssign('${clientName.replace(/'/g,"\\'")}')" onchange="return false"></td>`;
+        h += `<td colspan="4">${clientName} <span class="group-count">${tasks.length}</span></td></tr>`;
+        tasks.forEach(t => renderAssignRow(t, h));
+        // We need to accumulate h differently here
+      });
+      // Re-do with proper accumulation
+      h = h.split('<tbody>')[0] + '<tbody>';
+      Object.keys(byClient).sort().forEach(clientName => {
+        const tasks = byClient[clientName];
+        const allGroupChecked = tasks.every(t => state.assignSelectedTasks.has(t.taskId));
+        h += `<tr><td class="cb-cell"><input type="checkbox" ${allGroupChecked?'checked':''} onchange="toggleGroupAssignCb('${clientName.replace(/'/g,"\\'")}', this.checked)"></td>`;
+        h += `<td colspan="4" style="background:var(--bg);font-weight:700;font-size:12px;color:var(--text-secondary)">${clientName} <span class="group-count">${tasks.length}</span></td></tr>`;
+        tasks.forEach(t => { h += buildAssignRow(t); });
+      });
+    } else {
+      filteredTasks.forEach(t => { h += buildAssignRow(t); });
+    }
+
+    h += `</tbody></table>`;
+  }
+  h += `</div>`;
+
+  h += `</div>`; // assign-main
+  h += `</div>`; // assign-layout
+
+  document.getElementById('viewAssign').innerHTML = h;
+}
+
+function buildAssignRow(t) {
+  const co = TASK_COLORS[t.tarea] || '#64748b';
+  const checked = state.assignSelectedTasks.has(t.taskId);
+  const assignedUser = state.users.find(u => u.email === t.assignedTo);
+  const assignedName = assignedUser ? (assignedUser.responsableName || assignedUser.displayName) : (t.responsable || '');
+  const hasAssigned = !!t.assignedTo;
+  let r = `<tr>`;
+  r += `<td class="cb-cell"><input type="checkbox" ${checked?'checked':''} onchange="toggleAssignTask(${t.taskId}, this.checked)"></td>`;
+  r += `<td class="at-client">${t.cliente}</td>`;
+  r += `<td><span class="at-type" style="background:${co}15;color:${co}">${t.tarea}</span></td>`;
+  r += `<td style="font-size:11px;color:var(--text-muted)">${formatDateShort(t.vencimiento)}</td>`;
+  r += `<td class="at-assigned ${hasAssigned?'has-user':''}">${assignedName}</td>`;
+  r += `</tr>`;
+  return r;
+}
+
+function getAssignFilteredTasks() {
+  let tasks = state.tasks.filter(t => !t.finalizada);
+
+  if (state.assignMode === 'client') {
+    if (!state.assignFilterClient) return [];
+    tasks = tasks.filter(t => t.cliente === state.assignFilterClient);
+  } else if (state.assignMode === 'category') {
+    if (!state.assignFilterCategory) return [];
+    tasks = tasks.filter(t => t.tarea === state.assignFilterCategory);
+  } else {
+    // manual mode
+    if (state.assignFilterClient) tasks = tasks.filter(t => t.cliente === state.assignFilterClient);
+    if (state.assignFilterCategory) tasks = tasks.filter(t => t.tarea === state.assignFilterCategory);
+    if (state.assignSearch) {
+      const s = state.assignSearch.toLowerCase();
+      tasks = tasks.filter(t => t.cliente.toLowerCase().includes(s) || t.tarea.toLowerCase().includes(s));
+    }
+  }
+
+  tasks.sort((a, b) => (a.cliente + a.tarea).localeCompare(b.cliente + b.tarea));
+  return tasks;
+}
+
+function setAssignMode(mode) {
+  state.assignMode = mode;
+  state.assignSelectedTasks.clear();
+  state.assignFilterClient = '';
+  state.assignFilterCategory = '';
+  state.assignSearch = '';
+  renderAssign();
+}
+
+function selectAssignUser(email) {
+  state.assignSelectedUser = state.assignSelectedUser === email ? '' : email;
+  renderAssign();
+}
+
+function toggleAssignTask(taskId, checked) {
+  if (checked) state.assignSelectedTasks.add(taskId);
+  else state.assignSelectedTasks.delete(taskId);
+  renderAssign();
+}
+
+function toggleAllAssign(checked) {
+  const tasks = getAssignFilteredTasks();
+  if (checked) tasks.forEach(t => state.assignSelectedTasks.add(t.taskId));
+  else tasks.forEach(t => state.assignSelectedTasks.delete(t.taskId));
+  renderAssign();
+}
+
+function toggleGroupAssignCb(clientName, checked) {
+  const tasks = getAssignFilteredTasks().filter(t => t.cliente === clientName);
+  if (checked) tasks.forEach(t => state.assignSelectedTasks.add(t.taskId));
+  else tasks.forEach(t => state.assignSelectedTasks.delete(t.taskId));
+  renderAssign();
+}
+
+async function executeBulkAssign() {
+  const user = state.users.find(u => u.email === state.assignSelectedUser);
+  if (!user) { showToast('Selecciona un usuario primero', 'error'); return; }
+
+  const taskIds = [...state.assignSelectedTasks];
+  if (taskIds.length === 0) { showToast('Selecciona al menos una tarea', 'error'); return; }
+
+  try {
+    const result = await api('PUT', '/api/tasks/bulk-assign', {
+      taskIds,
+      assignedTo: user.email,
+      responsable: user.responsableName || null,
+    });
+
+    // Update local state
+    taskIds.forEach(id => {
+      const t = state.tasks.find(x => x.taskId === id);
+      if (t) {
+        t.assignedTo = user.email;
+        if (user.responsableName) t.responsable = user.responsableName;
+      }
+    });
+
+    state.assignSelectedTasks.clear();
+    showToast(`${result.modified} tarea${result.modified!==1?'s':''} asignada${result.modified!==1?'s':''} a ${user.responsableName || user.displayName}`, 'success');
+    renderAssign();
+  } catch (e) {
+    showToast('Error: ' + e.message, 'error');
+  }
+}
+
+async function executeBulkUnassign() {
+  const taskIds = [...state.assignSelectedTasks];
+  if (taskIds.length === 0) { showToast('Selecciona al menos una tarea', 'error'); return; }
+
+  try {
+    const result = await api('PUT', '/api/tasks/bulk-assign', {
+      taskIds,
+      assignedTo: '',
+      responsable: '',
+    });
+
+    taskIds.forEach(id => {
+      const t = state.tasks.find(x => x.taskId === id);
+      if (t) { t.assignedTo = ''; t.responsable = ''; }
+    });
+
+    state.assignSelectedTasks.clear();
+    showToast(`${result.modified} tarea${result.modified!==1?'s':''} desasignada${result.modified!==1?'s':''}`, 'success');
+    renderAssign();
+  } catch (e) {
+    showToast('Error: ' + e.message, 'error');
+  }
+}
+
 // =================== RENDER: FINALIZED PANEL ===================
 function renderFinalized() {
   const finalized = state.tasks.filter(t => t.finalizada);
@@ -2130,7 +2466,7 @@ function renderFinalized() {
   const count = document.getElementById('finCount');
 
   if (finalized.length === 0) { panel.style.display = 'none'; return; }
-  if (state.currentView === 'users' || state.currentView === 'mycal' || state.currentView === 'clientes' || state.currentView === 'vtos') { panel.style.display = 'none'; return; }
+  if (state.currentView === 'users' || state.currentView === 'mycal' || state.currentView === 'clientes' || state.currentView === 'vtos' || state.currentView === 'assign') { panel.style.display = 'none'; return; }
 
   panel.style.display = '';
   count.textContent = finalized.length;
@@ -2170,6 +2506,7 @@ function render() {
   else if (state.currentView === 'users') renderUsers();
   else if (state.currentView === 'clientes') renderClientes();
   else if (state.currentView === 'vtos') renderVencimientos();
+  else if (state.currentView === 'assign') renderAssign();
   renderFinalized();
 }
 
