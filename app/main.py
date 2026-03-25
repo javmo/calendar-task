@@ -5,7 +5,7 @@ MongoDB + Firebase Auth
 import os
 from contextlib import asynccontextmanager
 from datetime import date, datetime
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, Depends, HTTPException, Header
@@ -247,6 +247,39 @@ async def create_task(task: TaskIn, user=Depends(get_current_user)):
     await db.tasks.insert_one(doc)
     doc.pop("_id", None)
     return doc
+
+
+# --- Bulk Task Assignment (Admin) ---
+class BulkAssignBody(BaseModel):
+    taskIds: List[int]
+    assignedTo: Optional[str] = None  # user email
+    responsable: Optional[str] = None  # responsable name
+
+
+@app.put("/api/tasks/bulk-assign")
+async def bulk_assign_tasks(body: BulkAssignBody, user=Depends(get_current_user)):
+    caller = await db.users.find_one({"email": user["email"]})
+    if not caller or caller.get("role") != "admin":
+        raise HTTPException(403, "Solo admin puede asignar tareas en lote")
+
+    if not body.taskIds:
+        raise HTTPException(400, "No se enviaron tareas")
+
+    update_data = {}
+    if body.assignedTo is not None:
+        update_data["assignedTo"] = body.assignedTo
+    if body.responsable is not None:
+        update_data["responsable"] = body.responsable
+
+    if not update_data:
+        raise HTTPException(400, "Nada que asignar")
+
+    result = await db.tasks.update_many(
+        {"taskId": {"$in": body.taskIds}},
+        {"$set": update_data},
+    )
+
+    return {"ok": True, "modified": result.modified_count}
 
 
 @app.put("/api/tasks/{task_id}")
