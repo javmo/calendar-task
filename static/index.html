@@ -228,19 +228,30 @@ body{font-family:'Inter','Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;
 
 /* =================== MY CALENDAR =================== */
 .my-cal-container{padding:20px 28px}
-.my-cal-layout{display:grid;grid-template-columns:300px 1fr;gap:16px;min-height:70vh}
-.my-cal-sidebar{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;border:1px solid var(--border)}
-.sidebar-header{padding:14px 16px;background:var(--accent-bg);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-.sidebar-header h3{font-size:14px;font-weight:700;color:var(--accent);display:flex;align-items:center;gap:6px}
+.my-cal-layout{display:grid;grid-template-columns:260px 1fr;gap:16px;min-height:70vh}
+.my-cal-sidebar{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;border:1px solid var(--border);max-height:85vh}
+.sidebar-header{padding:12px 14px;background:var(--accent-bg);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.sidebar-header h3{font-size:13px;font-weight:700;color:var(--accent);display:flex;align-items:center;gap:6px}
 .sidebar-count{background:var(--accent);color:white;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700}
-.sidebar-tasks{padding:8px;display:flex;flex-direction:column;gap:6px;overflow-y:auto;flex:1}
-.sidebar-task{padding:10px 12px;border-radius:var(--radius-sm);border-left:4px solid;cursor:grab;transition:all .15s;position:relative}
+.sidebar-search{padding:8px;border-bottom:1px solid var(--border-light);flex-shrink:0}
+.sidebar-search input{width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;background:var(--surface)}
+.sidebar-search input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-bg)}
+.sidebar-month-filter{padding:6px 8px;border-bottom:1px solid var(--border-light);flex-shrink:0}
+.sidebar-month-filter select{width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:11px;font-family:inherit;background:var(--surface)}
+.sidebar-tasks{padding:6px;display:flex;flex-direction:column;gap:3px;overflow-y:auto;flex:1}
+.sidebar-task{padding:6px 8px;border-radius:6px;border-left:3px solid;cursor:grab;transition:all .15s;position:relative}
 .sidebar-task:active{cursor:grabbing}
-.sidebar-task:hover{transform:translateX(3px);box-shadow:var(--shadow)}
+.sidebar-task:hover{transform:translateX(2px);box-shadow:var(--shadow-sm)}
 .sidebar-task.dragging{opacity:.4;transform:scale(.95)}
-.sidebar-task .st-client{font-size:12px;font-weight:600;color:var(--text);margin-bottom:2px}
-.sidebar-task .st-type{font-size:10px;color:var(--text-muted);margin-bottom:6px}
-.sidebar-task .st-meta{display:flex;gap:6px;align-items:center}
+.sidebar-task .st-client{font-size:11px;font-weight:600;color:var(--text);line-height:1.2}
+.sidebar-task .st-type{font-size:9px;color:var(--text-muted);margin-top:1px}
+.sidebar-task .st-vto{font-size:9px;color:var(--text-muted);margin-top:1px}
+.sidebar-task .st-meta{display:flex;gap:4px;align-items:center;margin-top:2px}
+.sidebar-group-header{padding:6px 8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);cursor:pointer;display:flex;align-items:center;gap:6px;border-radius:4px}
+.sidebar-group-header:hover{background:var(--surface-hover)}
+.sidebar-group-header .sg-arrow{font-size:8px;transition:transform .15s}
+.sidebar-group-header .sg-arrow.collapsed{transform:rotate(-90deg)}
+.sidebar-group-header .sg-count{font-size:9px;padding:1px 6px;border-radius:8px;background:var(--accent-bg);color:var(--accent)}
 .deadline-badge{padding:2px 6px;border-radius:4px;font-size:9px;font-weight:700;display:inline-flex;align-items:center;gap:3px}
 .deadline-badge.dl-overdue{background:#fef2f2;color:#dc2626;border:1px solid #fecaca}
 .deadline-badge.dl-urgent{background:#fffbeb;color:#d97706;border:1px solid #fde68a}
@@ -257,29 +268,35 @@ body{font-family:'Inter','Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;
 .sidebar-task[data-type="Liquidación de sueldos"]{border-color:var(--color-lsd);background:#fef2f2}
 .sidebar-task[data-type="Tareas generales"]{border-color:var(--color-tareas);background:#f8fafc}
 
-.my-cal-grid-container{overflow-x:auto}
+.my-cal-grid-container{overflow-x:auto;overflow-y:auto;max-height:85vh}
 .my-cal-week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--border);border-radius:var(--radius);overflow:hidden;min-width:700px;box-shadow:var(--shadow)}
-.my-day-col{background:var(--surface);min-height:60vh;display:flex;flex-direction:column}
+.my-day-col{background:var(--surface);min-height:50vh;display:flex;flex-direction:column}
 .my-day-col.today{background:var(--accent-bg)}
 .my-day-col.drag-over{background:#eef2ff;box-shadow:inset 0 0 0 2px var(--accent)}
-.my-day-header{padding:14px 12px;text-align:center;border-bottom:1px solid var(--border);background:var(--surface2)}
-.my-day-header .wday-name{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-muted);font-weight:700}
-.my-day-header .wday-num{font-size:24px;font-weight:800;margin-top:2px}
+.my-day-header{padding:10px 8px;text-align:center;border-bottom:1px solid var(--border);background:var(--surface2);position:sticky;top:0;z-index:2}
+.my-day-header .wday-name{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);font-weight:700}
+.my-day-header .wday-num{font-size:20px;font-weight:800;margin-top:1px}
 .my-day-col.today .wday-num{color:var(--accent)}
-.my-day-body{padding:8px;flex:1;display:flex;flex-direction:column;gap:5px;overflow-y:auto;min-height:100px}
-.my-sched-card{padding:8px 10px;border-radius:var(--radius-sm);font-size:12px;border-left:4px solid;transition:all .12s;position:relative;cursor:grab}
+.my-day-body{padding:6px;flex:1;display:flex;flex-direction:column;gap:3px;overflow-y:auto;min-height:80px}
+.my-day-body .show-more-btn{padding:4px;text-align:center;font-size:10px;font-weight:700;color:var(--accent);cursor:pointer;border-radius:4px;border:1px dashed var(--accent);background:var(--accent-bg);transition:all .12s}
+.my-day-body .show-more-btn:hover{background:var(--accent);color:white}
+.my-sched-card{padding:5px 7px;border-radius:6px;font-size:11px;border-left:3px solid;transition:all .12s;position:relative;cursor:grab}
 .my-sched-card:active{cursor:grabbing}
-.my-sched-card:hover{box-shadow:var(--shadow)}
-.my-sched-card .sc-client{font-weight:600;margin-bottom:2px;font-size:12px}
-.my-sched-card .sc-type{font-size:10px;color:var(--text-muted);margin-bottom:4px}
-.my-sched-card .sc-meta{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
-.my-sched-card .sc-remove{position:absolute;top:4px;right:4px;width:18px;height:18px;border-radius:50%;border:none;background:var(--bg);color:var(--text-muted);font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s}
+.my-sched-card:hover{box-shadow:var(--shadow-sm)}
+.my-sched-card .sc-client{font-weight:600;font-size:11px;line-height:1.2}
+.my-sched-card .sc-type{font-size:9px;color:var(--text-muted)}
+.my-sched-card .sc-vto{font-size:9px;color:var(--text-muted)}
+.my-sched-card .sc-meta{display:flex;gap:3px;align-items:center;flex-wrap:wrap;margin-top:1px}
+.my-sched-card .sc-remove{position:absolute;top:2px;right:2px;width:16px;height:16px;border-radius:50%;border:none;background:var(--bg);color:var(--text-muted);font-size:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s}
 .my-sched-card:hover .sc-remove{opacity:1}
 .my-sched-card .sc-remove:hover{background:var(--danger-bg);color:var(--danger)}
 .my-sched-card .sc-finalize{padding:2px 6px;border-radius:4px;border:1px solid var(--success-border);background:var(--success-bg);color:var(--success);font-size:9px;font-weight:700;cursor:pointer;transition:all .12s}
 .my-sched-card .sc-finalize:hover{background:var(--success);color:white}
 .my-sched-card.finalized{opacity:.5}
 .my-sched-card.finalized .sc-client,.my-sched-card.finalized .sc-type{text-decoration:line-through}
+.back-to-top{position:fixed;bottom:24px;right:24px;width:40px;height:40px;border-radius:50%;background:var(--accent);color:white;border:none;font-size:18px;cursor:pointer;box-shadow:var(--shadow-lg);z-index:50;display:none;align-items:center;justify-content:center;transition:all .15s}
+.back-to-top:hover{background:var(--accent-light);transform:scale(1.1)}
+.back-to-top.visible{display:flex}
 .my-sched-card[data-type="Casas Particulares"]{border-color:var(--color-casas);background:#fdf2f8}
 .my-sched-card[data-type="VEP Monotributo"]{border-color:var(--color-vep-mono);background:#fff7ed}
 .my-sched-card[data-type="VEP Autonomos"]{border-color:var(--color-vep-auto);background:#fefce8}
@@ -1438,6 +1455,11 @@ function sortBy(c) {
 }
 
 // =================== RENDER: MY CALENDAR ===================
+state.myCalSearch = '';
+state.myCalMonthFilter = '';
+state.myCalCollapsedGroups = new Set();
+state.myCalExpandedDays = new Set(); // days with all tasks shown
+
 function renderMyCalendar() {
   if (!state.currentUser) return;
 
@@ -1459,25 +1481,71 @@ function renderMyCalendar() {
   const scheduledIds = new Set(state.schedule.map(s => s.taskId));
 
   // Unscheduled tasks (not finalized, not scheduled)
-  const unscheduled = myTasks.filter(t => !t.finalizada && !scheduledIds.has(t.taskId));
+  let unscheduled = myTasks.filter(t => !t.finalizada && !scheduledIds.has(t.taskId));
+
+  // Apply month filter to sidebar
+  if (state.myCalMonthFilter) {
+    unscheduled = unscheduled.filter(t => (t.vencimiento || '').startsWith(state.myCalMonthFilter));
+  }
+
+  // Apply search filter to sidebar
+  if (state.myCalSearch) {
+    const s = state.myCalSearch.toLowerCase();
+    unscheduled = unscheduled.filter(t =>
+      t.cliente.toLowerCase().includes(s) || t.tarea.toLowerCase().includes(s)
+    );
+  }
+
+  unscheduled.sort((a, b) => (a.vencimiento || '').localeCompare(b.vencimiento || ''));
+
+  // Group by task type for collapsible sections
+  const byType = {};
+  unscheduled.forEach(t => {
+    if (!byType[t.tarea]) byType[t.tarea] = [];
+    byType[t.tarea].push(t);
+  });
 
   // Build sidebar
   let sideH = '';
-  if (unscheduled.length === 0) {
-    sideH = '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px">🎉 ¡Sin tareas pendientes!</div>';
-  }
-  unscheduled.sort((a, b) => (a.vencimiento || '').localeCompare(b.vencimiento || ''));
-  unscheduled.forEach(t => {
-    const dlClass = getDeadlineClass(t.vencimiento);
-    const dlText = getDeadlineText(t.vencimiento);
-    sideH += `<div class="sidebar-task" data-type="${t.tarea}" draggable="true" ondragstart="onDragStart(event, ${t.taskId})" ondragend="onDragEnd(event)">`;
-    sideH += `<div class="st-client">${t.cliente}</div>`;
-    sideH += `<div class="st-type">${t.tarea}</div>`;
-    sideH += `<div class="st-meta"><span class="deadline-badge ${dlClass}">📅 ${dlText} (${formatDateShort(t.vencimiento)})</span></div>`;
-    sideH += `</div>`;
+
+  // Search box
+  sideH += `<div class="sidebar-search"><input type="text" placeholder="Buscar tarea o cliente..." value="${state.myCalSearch}" oninput="state.myCalSearch=this.value;renderMyCalendar()"></div>`;
+
+  // Month filter
+  const months = [...new Set(myTasks.filter(t=>!t.finalizada).map(t => (t.vencimiento||'').slice(0,7)).filter(Boolean))].sort();
+  sideH += `<div class="sidebar-month-filter"><select onchange="state.myCalMonthFilter=this.value;renderMyCalendar()">`;
+  sideH += `<option value="">Todos los meses</option>`;
+  months.forEach(m => {
+    const [y, mo] = m.split('-');
+    sideH += `<option value="${m}" ${state.myCalMonthFilter===m?'selected':''}>${MONTHS_ES[parseInt(mo,10)-1]} ${y}</option>`;
   });
+  sideH += `</select></div>`;
+
+  if (unscheduled.length === 0) {
+    sideH += '<div style="padding:16px;text-align:center;color:var(--text-muted);font-size:12px">Sin tareas pendientes</div>';
+  } else {
+    sideH += `<div class="sidebar-tasks">`;
+    Object.keys(byType).sort().forEach(tipo => {
+      const tasks = byType[tipo];
+      const collapsed = state.myCalCollapsedGroups.has(tipo);
+      sideH += `<div class="sidebar-group-header" onclick="toggleMyCalGroup('${tipo.replace(/'/g,"\\'")}')">`;
+      sideH += `<span class="sg-arrow ${collapsed?'collapsed':''}">▼</span>`;
+      sideH += `${tipo} <span class="sg-count">${tasks.length}</span>`;
+      sideH += `</div>`;
+      if (!collapsed) {
+        tasks.forEach(t => {
+          sideH += `<div class="sidebar-task" data-type="${t.tarea}" draggable="true" ondragstart="onDragStart(event, ${t.taskId})" ondragend="onDragEnd(event)">`;
+          sideH += `<div class="st-client">${t.cliente}</div>`;
+          sideH += `<div class="st-type">${t.tarea} — <span class="st-vto">${formatDateShort(t.vencimiento)}</span></div>`;
+          sideH += `</div>`;
+        });
+      }
+    });
+    sideH += `</div>`;
+  }
 
   // Build week grid
+  const MAX_VISIBLE = 4;
   let gridH = '';
   for (let i = 0; i < 7; i++) {
     const d = new Date(ws.getTime() + i * 86400000);
@@ -1493,37 +1561,47 @@ function renderMyCalendar() {
     // Also show tasks due this day (even if not scheduled)
     const dueTasks = myTasks.filter(t => t.vencimiento === ds && !daySchedules.some(s => s.taskId === t.taskId));
 
-    gridH += `<div class="my-day-col ${isT?'today':''}" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event, '${ds}')">`;
-    gridH += `<div class="my-day-header"><div class="wday-name">${DAYS_FULL[d.getDay()]}</div><div class="wday-num">${d.getDate()}</div></div>`;
-    gridH += `<div class="my-day-body">`;
+    const allDayCards = [];
 
     // Scheduled tasks
     dayTasks.forEach(t => {
-      const dlClass = getDeadlineClass(t.vencimiento);
       const isFin = t.finalizada;
-      gridH += `<div class="my-sched-card ${isFin?'finalized':''}" data-type="${t.tarea}" draggable="${!isFin}" ${!isFin?`ondragstart="onDragStart(event, ${t.taskId})" ondragend="onDragEnd(event)"`:''}>`;
-      gridH += `<button class="sc-remove" onclick="removeSchedule(${t.taskId})" title="Quitar">✕</button>`;
-      gridH += `<div class="sc-client">${t.cliente}</div>`;
-      gridH += `<div class="sc-type">${t.tarea}</div>`;
-      gridH += `<div class="sc-meta">`;
-      gridH += `<span class="deadline-badge ${dlClass}">Vto: ${formatDateShort(t.vencimiento)}</span>`;
-      if (!isFin) {
-      } else {
-        gridH += `<span class="fin-tag">✅ ${formatDateShort(t.fechaFinalizacion)}</span>`;
-      }
-      gridH += `</div></div>`;
+      let card = `<div class="my-sched-card ${isFin?'finalized':''}" data-type="${t.tarea}" draggable="${!isFin}" ${!isFin?`ondragstart="onDragStart(event, ${t.taskId})" ondragend="onDragEnd(event)"`:''}>`;
+      card += `<button class="sc-remove" onclick="removeSchedule(${t.taskId})" title="Quitar">✕</button>`;
+      card += `<div class="sc-client">${t.cliente}</div>`;
+      card += `<div class="sc-type">${t.tarea}</div>`;
+      card += `<div class="sc-meta"><span class="sc-vto">Vto: ${formatDateShort(t.vencimiento)}</span>`;
+      if (isFin) card += ` <span class="fin-tag">✅</span>`;
+      card += `</div></div>`;
+      allDayCards.push(card);
     });
 
     // Due tasks (not scheduled, shown as ghost)
     dueTasks.forEach(t => {
       if (t.finalizada) return;
-      const dlClass = getDeadlineClass(t.vencimiento);
-      gridH += `<div class="my-sched-card" data-type="${t.tarea}" style="opacity:.6;border-style:dashed" draggable="true" ondragstart="onDragStart(event, ${t.taskId})" ondragend="onDragEnd(event)">`;
-      gridH += `<div class="sc-client">${t.cliente}</div>`;
-      gridH += `<div class="sc-type">${t.tarea} <small style="color:var(--warning)">(vence hoy)</small></div>`;
-      gridH += `<div class="sc-meta"><span class="deadline-badge ${dlClass}">Vto: ${formatDateShort(t.vencimiento)}</span></div>`;
-      gridH += `</div>`;
+      let card = `<div class="my-sched-card" data-type="${t.tarea}" style="opacity:.6;border-style:dashed" draggable="true" ondragstart="onDragStart(event, ${t.taskId})" ondragend="onDragEnd(event)">`;
+      card += `<div class="sc-client">${t.cliente}</div>`;
+      card += `<div class="sc-type">${t.tarea} <small style="color:var(--warning)">(vence)</small></div>`;
+      card += `<div class="sc-meta"><span class="sc-vto">Vto: ${formatDateShort(t.vencimiento)}</span></div>`;
+      card += `</div>`;
+      allDayCards.push(card);
     });
+
+    gridH += `<div class="my-day-col ${isT?'today':''}" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event, '${ds}')">`;
+    gridH += `<div class="my-day-header"><div class="wday-name">${DAYS_FULL[d.getDay()]}</div><div class="wday-num">${d.getDate()}</div></div>`;
+    gridH += `<div class="my-day-body">`;
+
+    const expanded = state.myCalExpandedDays.has(ds);
+    const visibleCards = expanded ? allDayCards : allDayCards.slice(0, MAX_VISIBLE);
+    const hiddenCount = allDayCards.length - MAX_VISIBLE;
+
+    visibleCards.forEach(card => { gridH += card; });
+
+    if (!expanded && hiddenCount > 0) {
+      gridH += `<div class="show-more-btn" onclick="state.myCalExpandedDays.add('${ds}');renderMyCalendar()">+ ${hiddenCount} mas</div>`;
+    } else if (expanded && hiddenCount > 0) {
+      gridH += `<div class="show-more-btn" onclick="state.myCalExpandedDays.delete('${ds}');renderMyCalendar()">Mostrar menos</div>`;
+    }
 
     gridH += `</div></div>`;
   }
@@ -1532,15 +1610,31 @@ function renderMyCalendar() {
     `<div class="my-cal-layout">
       <div class="my-cal-sidebar">
         <div class="sidebar-header">
-          <h3>📋 Sin agendar</h3>
+          <h3>Sin agendar</h3>
           <span class="sidebar-count">${unscheduled.length}</span>
         </div>
-        <div class="sidebar-tasks">${sideH}</div>
+        ${sideH}
       </div>
       <div class="my-cal-grid-container">
         <div class="my-cal-week-grid">${gridH}</div>
       </div>
-    </div>`;
+    </div>
+    <button class="back-to-top" id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">▲</button>`;
+
+  // Show/hide back-to-top on scroll
+  const onScroll = () => {
+    const btn = document.getElementById('backToTop');
+    if (btn) btn.classList.toggle('visible', window.scrollY > 300);
+  };
+  window.removeEventListener('scroll', onScroll);
+  window.addEventListener('scroll', onScroll);
+  onScroll();
+}
+
+function toggleMyCalGroup(tipo) {
+  if (state.myCalCollapsedGroups.has(tipo)) state.myCalCollapsedGroups.delete(tipo);
+  else state.myCalCollapsedGroups.add(tipo);
+  renderMyCalendar();
 }
 
 // =================== DRAG & DROP ===================
@@ -2171,8 +2265,9 @@ async function aplicarVencimientos() {
 }
 
 // =================== RENDER: ADMIN ASSIGNMENT ===================
-state.assignMode = 'client'; // 'client', 'category', 'manual'
+state.assignMode = 'user'; // 'user', 'client', 'category', 'manual'
 state.assignSelectedUser = '';
+state.assignReassignTo = '';
 state.assignSelectedTasks = new Set();
 state.assignFilterClient = '';
 state.assignFilterCategory = '';
@@ -2181,93 +2276,108 @@ state.assignSearch = '';
 function renderAssign() {
   document.getElementById('monthLabel').textContent = 'Asignar Tareas';
 
-  const usersWithName = state.users.filter(u => u.responsableName);
-
   let h = `<div class="assign-layout">`;
 
-  // === SIDEBAR ===
+  // === SIDEBAR: Users ===
   h += `<div class="assign-sidebar">`;
   h += `<div class="assign-sidebar-header">`;
-  h += `<h3>Asignar a usuario</h3>`;
-  h += `<div class="assign-mode-tabs">`;
-  h += `<button class="assign-mode-tab ${state.assignMode==='client'?'active':''}" onclick="setAssignMode('client')">Por Cliente</button>`;
-  h += `<button class="assign-mode-tab ${state.assignMode==='category'?'active':''}" onclick="setAssignMode('category')">Por Categoria</button>`;
-  h += `<button class="assign-mode-tab ${state.assignMode==='manual'?'active':''}" onclick="setAssignMode('manual')">Manual</button>`;
-  h += `</div></div>`;
+  h += `<h3>${state.assignMode === 'user' ? 'Tareas del usuario' : 'Asignar a'}</h3>`;
+  h += `</div>`;
   h += `<div class="assign-sidebar-body">`;
 
-  // User list
+  // "Sin asignar" card
+  const unassignedCount = state.tasks.filter(t => !t.finalizada && !t.assignedTo && !t.responsable).length;
+  const selUnassigned = state.assignSelectedUser === '__unassigned__';
+  h += `<div class="assign-user-card ${selUnassigned?'selected':''}" onclick="selectAssignUser('__unassigned__')">`;
+  h += `<div style="width:32px;height:32px;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--text-muted)">?</div>`;
+  h += `<div class="auc-info"><div class="auc-name">Sin asignar</div>`;
+  h += `<div class="auc-email">Tareas sin responsable</div></div>`;
+  h += `<span class="auc-badge">${unassignedCount}</span>`;
+  h += `</div>`;
+
   state.users.forEach(u => {
-    const taskCount = state.tasks.filter(t => t.assignedTo === u.email || (u.responsableName && t.responsable === u.responsableName)).length;
+    const taskCount = state.tasks.filter(t => !t.finalizada && (t.assignedTo === u.email || (u.responsableName && t.responsable === u.responsableName))).length;
     const sel = state.assignSelectedUser === u.email;
     h += `<div class="assign-user-card ${sel?'selected':''}" onclick="selectAssignUser('${u.email}')">`;
-    h += `<img class="auc-avatar" src="${u.photoURL || 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Ccircle cx=%2712%27 cy=%278%27 r=%274%27 fill=%27%23ccc%27/%3E%3Cpath d=%27M4 20c0-4 4-7 8-7s8 3 8 7%27 fill=%27%23ccc%27/%3E%3C/svg%3E'}">`;
+    h += `<img class="auc-avatar" src="${u.photoURL || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='8' r='4' fill='%23ccc'/%3E%3Cpath d='M4 20c0-4 4-7 8-7s8 3 8 7' fill='%23ccc'/%3E%3C/svg%3E"}">`;
     h += `<div class="auc-info"><div class="auc-name">${u.displayName || u.email.split('@')[0]}</div>`;
     h += `<div class="auc-email">${u.responsableName || u.email}</div></div>`;
     h += `<span class="auc-badge">${taskCount}</span>`;
     h += `</div>`;
   });
-
   h += `</div></div>`;
 
   // === MAIN PANEL ===
   h += `<div class="assign-main">`;
-  h += `<div class="assign-main-header">`;
 
-  if (state.assignMode === 'client') {
-    h += `<h3>Asignar por Cliente</h3>`;
-    h += `<div class="assign-filter-row">`;
+  // Mode tabs at the top of main panel
+  h += `<div class="assign-main-header">`;
+  h += `<div class="assign-mode-tabs" style="margin-right:12px">`;
+  h += `<button class="assign-mode-tab ${state.assignMode==='user'?'active':''}" onclick="setAssignMode('user')">Por Usuario</button>`;
+  h += `<button class="assign-mode-tab ${state.assignMode==='client'?'active':''}" onclick="setAssignMode('client')">Por Cliente</button>`;
+  h += `<button class="assign-mode-tab ${state.assignMode==='category'?'active':''}" onclick="setAssignMode('category')">Por Categoria</button>`;
+  h += `<button class="assign-mode-tab ${state.assignMode==='manual'?'active':''}" onclick="setAssignMode('manual')">Manual</button>`;
+  h += `</div>`;
+
+  // Filters per mode
+  h += `<div class="assign-filter-row">`;
+  if (state.assignMode === 'user') {
+    if (!state.assignSelectedUser) {
+      h += `<span style="color:var(--text-muted);font-size:13px">Selecciona un usuario para ver sus tareas</span>`;
+    } else {
+      const selU = state.assignSelectedUser === '__unassigned__' ? {displayName:'Sin asignar'} : state.users.find(u=>u.email===state.assignSelectedUser);
+      h += `<span style="font-size:13px;font-weight:600">Tareas de: ${selU ? (selU.responsableName || selU.displayName) : state.assignSelectedUser}</span>`;
+    }
+  } else if (state.assignMode === 'client') {
     h += `<select onchange="state.assignFilterClient=this.value;state.assignSelectedTasks.clear();renderAssign()">`;
     h += `<option value="">-- Elegir cliente --</option>`;
-    const clientNames = [...new Set(state.tasks.map(t => t.cliente))].sort();
-    clientNames.forEach(c => {
+    [...new Set(state.tasks.map(t => t.cliente))].sort().forEach(c => {
       h += `<option value="${c}" ${state.assignFilterClient===c?'selected':''}>${c}</option>`;
     });
-    h += `</select></div>`;
+    h += `</select>`;
   } else if (state.assignMode === 'category') {
-    h += `<h3>Asignar por Categoria</h3>`;
-    h += `<div class="assign-filter-row">`;
     h += `<select onchange="state.assignFilterCategory=this.value;state.assignSelectedTasks.clear();renderAssign()">`;
     h += `<option value="">-- Elegir categoria --</option>`;
-    const cats = [...new Set(state.tasks.map(t => t.tarea))].sort();
-    cats.forEach(c => {
+    [...new Set(state.tasks.map(t => t.tarea))].sort().forEach(c => {
       h += `<option value="${c}" ${state.assignFilterCategory===c?'selected':''}>${c}</option>`;
     });
-    h += `</select></div>`;
+    h += `</select>`;
   } else {
-    h += `<h3>Seleccion Manual</h3>`;
-    h += `<div class="assign-filter-row">`;
     h += `<select onchange="state.assignFilterClient=this.value;state.assignSelectedTasks.clear();renderAssign()">`;
     h += `<option value="">Todos los clientes</option>`;
-    const clientNames2 = [...new Set(state.tasks.map(t => t.cliente))].sort();
-    clientNames2.forEach(c => {
+    [...new Set(state.tasks.map(t => t.cliente))].sort().forEach(c => {
       h += `<option value="${c}" ${state.assignFilterClient===c?'selected':''}>${c}</option>`;
     });
     h += `</select>`;
     h += `<select onchange="state.assignFilterCategory=this.value;state.assignSelectedTasks.clear();renderAssign()">`;
     h += `<option value="">Todas las categorias</option>`;
-    const cats2 = [...new Set(state.tasks.map(t => t.tarea))].sort();
-    cats2.forEach(c => {
+    [...new Set(state.tasks.map(t => t.tarea))].sort().forEach(c => {
       h += `<option value="${c}" ${state.assignFilterCategory===c?'selected':''}>${c}</option>`;
     });
     h += `</select>`;
     h += `<input type="text" placeholder="Buscar..." value="${state.assignSearch}" oninput="state.assignSearch=this.value;renderAssign()">`;
-    h += `</div>`;
   }
   h += `</div>`;
+  h += `</div>`; // main-header
 
   // Action bar (when tasks selected)
   const selCount = state.assignSelectedTasks.size;
   if (selCount > 0) {
-    const selUser = state.users.find(u => u.email === state.assignSelectedUser);
     h += `<div class="assign-actions-bar">`;
     h += `<span class="selected-count">${selCount} tarea${selCount!==1?'s':''} seleccionada${selCount!==1?'s':''}</span>`;
-    if (selUser) {
-      h += `<button class="btn btn-success" onclick="executeBulkAssign()">Asignar a ${selUser.responsableName || selUser.displayName}</button>`;
-      h += `<button class="btn btn-danger" onclick="executeBulkUnassign()">Desasignar</button>`;
-    } else {
-      h += `<span style="color:var(--text-muted);font-size:12px">Selecciona un usuario en la barra lateral</span>`;
-    }
+
+    // Reassign dropdown + button
+    h += `<select id="reassignSelect" onchange="state.assignReassignTo=this.value" style="padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;min-width:150px">`;
+    h += `<option value="">-- Reasignar a --</option>`;
+    state.users.filter(u => u.email !== state.assignSelectedUser).forEach(u => {
+      h += `<option value="${u.email}" ${state.assignReassignTo===u.email?'selected':''}>${u.responsableName || u.displayName || u.email}</option>`;
+    });
+    h += `</select>`;
+    h += `<button class="btn btn-success" onclick="executeBulkReassign()">Reasignar</button>`;
+
+    // Unassign button
+    h += `<button class="btn btn-danger" onclick="executeBulkUnassign()">Quitar asignacion</button>`;
+
     h += `<button class="btn" onclick="state.assignSelectedTasks.clear();renderAssign()">Deseleccionar</button>`;
     h += `</div>`;
   }
@@ -2277,7 +2387,9 @@ function renderAssign() {
 
   h += `<div class="assign-task-list">`;
   if (filteredTasks.length === 0) {
-    if (state.assignMode === 'client' && !state.assignFilterClient) {
+    if (state.assignMode === 'user' && !state.assignSelectedUser) {
+      h += `<div class="assign-empty">Selecciona un usuario en la barra lateral para ver sus tareas</div>`;
+    } else if (state.assignMode === 'client' && !state.assignFilterClient) {
       h += `<div class="assign-empty">Selecciona un cliente para ver sus tareas</div>`;
     } else if (state.assignMode === 'category' && !state.assignFilterCategory) {
       h += `<div class="assign-empty">Selecciona una categoria para ver las tareas</div>`;
@@ -2291,24 +2403,13 @@ function renderAssign() {
     h += `<th>Cliente</th><th>Tarea</th><th>Vto</th><th>Asignado a</th>`;
     h += `</tr></thead><tbody>`;
 
-    if (state.assignMode === 'category') {
-      // Group by client
+    // Group by client for category and user modes
+    if (state.assignMode === 'category' || state.assignMode === 'user') {
       const byClient = {};
       filteredTasks.forEach(t => {
         if (!byClient[t.cliente]) byClient[t.cliente] = [];
         byClient[t.cliente].push(t);
       });
-      Object.keys(byClient).sort().forEach(clientName => {
-        const tasks = byClient[clientName];
-        const allGroupChecked = tasks.every(t => state.assignSelectedTasks.has(t.taskId));
-        h += `<tr class="assign-group-header" onclick="toggleGroupAssign('${clientName.replace(/'/g,"\\'")}')">`;
-        h += `<td class="cb-cell"><input type="checkbox" ${allGroupChecked?'checked':''} onclick="event.stopPropagation();toggleGroupAssign('${clientName.replace(/'/g,"\\'")}')" onchange="return false"></td>`;
-        h += `<td colspan="4">${clientName} <span class="group-count">${tasks.length}</span></td></tr>`;
-        tasks.forEach(t => renderAssignRow(t, h));
-        // We need to accumulate h differently here
-      });
-      // Re-do with proper accumulation
-      h = h.split('<tbody>')[0] + '<tbody>';
       Object.keys(byClient).sort().forEach(clientName => {
         const tasks = byClient[clientName];
         const allGroupChecked = tasks.every(t => state.assignSelectedTasks.has(t.taskId));
@@ -2335,13 +2436,13 @@ function buildAssignRow(t) {
   const checked = state.assignSelectedTasks.has(t.taskId);
   const assignedUser = state.users.find(u => u.email === t.assignedTo);
   const assignedName = assignedUser ? (assignedUser.responsableName || assignedUser.displayName) : (t.responsable || '');
-  const hasAssigned = !!t.assignedTo;
+  const hasAssigned = !!(t.assignedTo || t.responsable);
   let r = `<tr>`;
   r += `<td class="cb-cell"><input type="checkbox" ${checked?'checked':''} onchange="toggleAssignTask(${t.taskId}, this.checked)"></td>`;
   r += `<td class="at-client">${t.cliente}</td>`;
   r += `<td><span class="at-type" style="background:${co}15;color:${co}">${t.tarea}</span></td>`;
   r += `<td style="font-size:11px;color:var(--text-muted)">${formatDateShort(t.vencimiento)}</td>`;
-  r += `<td class="at-assigned ${hasAssigned?'has-user':''}">${assignedName}</td>`;
+  r += `<td class="at-assigned ${hasAssigned?'has-user':''}">${assignedName || '<span style="color:var(--text-muted);font-style:italic">Sin asignar</span>'}</td>`;
   r += `</tr>`;
   return r;
 }
@@ -2349,14 +2450,24 @@ function buildAssignRow(t) {
 function getAssignFilteredTasks() {
   let tasks = state.tasks.filter(t => !t.finalizada);
 
-  if (state.assignMode === 'client') {
+  if (state.assignMode === 'user') {
+    if (!state.assignSelectedUser) return [];
+    if (state.assignSelectedUser === '__unassigned__') {
+      tasks = tasks.filter(t => !t.assignedTo && !t.responsable);
+    } else {
+      const u = state.users.find(x => x.email === state.assignSelectedUser);
+      tasks = tasks.filter(t =>
+        t.assignedTo === state.assignSelectedUser ||
+        (u && u.responsableName && t.responsable === u.responsableName && !t.assignedTo)
+      );
+    }
+  } else if (state.assignMode === 'client') {
     if (!state.assignFilterClient) return [];
     tasks = tasks.filter(t => t.cliente === state.assignFilterClient);
   } else if (state.assignMode === 'category') {
     if (!state.assignFilterCategory) return [];
     tasks = tasks.filter(t => t.tarea === state.assignFilterCategory);
   } else {
-    // manual mode
     if (state.assignFilterClient) tasks = tasks.filter(t => t.cliente === state.assignFilterClient);
     if (state.assignFilterCategory) tasks = tasks.filter(t => t.tarea === state.assignFilterCategory);
     if (state.assignSearch) {
@@ -2375,11 +2486,14 @@ function setAssignMode(mode) {
   state.assignFilterClient = '';
   state.assignFilterCategory = '';
   state.assignSearch = '';
+  state.assignReassignTo = '';
   renderAssign();
 }
 
 function selectAssignUser(email) {
   state.assignSelectedUser = state.assignSelectedUser === email ? '' : email;
+  state.assignSelectedTasks.clear();
+  state.assignReassignTo = '';
   renderAssign();
 }
 
@@ -2403,9 +2517,10 @@ function toggleGroupAssignCb(clientName, checked) {
   renderAssign();
 }
 
-async function executeBulkAssign() {
-  const user = state.users.find(u => u.email === state.assignSelectedUser);
-  if (!user) { showToast('Selecciona un usuario primero', 'error'); return; }
+async function executeBulkReassign() {
+  const targetEmail = state.assignReassignTo;
+  const targetUser = state.users.find(u => u.email === targetEmail);
+  if (!targetUser) { showToast('Selecciona un usuario destino en el dropdown', 'error'); return; }
 
   const taskIds = [...state.assignSelectedTasks];
   if (taskIds.length === 0) { showToast('Selecciona al menos una tarea', 'error'); return; }
@@ -2413,21 +2528,21 @@ async function executeBulkAssign() {
   try {
     const result = await api('PUT', '/api/tasks/bulk-assign', {
       taskIds,
-      assignedTo: user.email,
-      responsable: user.responsableName || null,
+      assignedTo: targetUser.email,
+      responsable: targetUser.responsableName || null,
     });
 
-    // Update local state
     taskIds.forEach(id => {
       const t = state.tasks.find(x => x.taskId === id);
       if (t) {
-        t.assignedTo = user.email;
-        if (user.responsableName) t.responsable = user.responsableName;
+        t.assignedTo = targetUser.email;
+        if (targetUser.responsableName) t.responsable = targetUser.responsableName;
       }
     });
 
     state.assignSelectedTasks.clear();
-    showToast(`${result.modified} tarea${result.modified!==1?'s':''} asignada${result.modified!==1?'s':''} a ${user.responsableName || user.displayName}`, 'success');
+    state.assignReassignTo = '';
+    showToast(`${result.modified} tarea${result.modified!==1?'s':''} reasignada${result.modified!==1?'s':''} a ${targetUser.responsableName || targetUser.displayName}`, 'success');
     renderAssign();
   } catch (e) {
     showToast('Error: ' + e.message, 'error');
@@ -2437,6 +2552,8 @@ async function executeBulkAssign() {
 async function executeBulkUnassign() {
   const taskIds = [...state.assignSelectedTasks];
   if (taskIds.length === 0) { showToast('Selecciona al menos una tarea', 'error'); return; }
+
+  if (!confirm(`Quitar asignacion de ${taskIds.length} tarea${taskIds.length!==1?'s':''}? Quedaran sin responsable.`)) return;
 
   try {
     const result = await api('PUT', '/api/tasks/bulk-assign', {
