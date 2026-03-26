@@ -268,15 +268,19 @@ body{font-family:'Inter','Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;
 .sidebar-task[data-type="Liquidación de sueldos"]{border-color:var(--color-lsd);background:#fef2f2}
 .sidebar-task[data-type="Tareas generales"]{border-color:var(--color-tareas);background:#f8fafc}
 
-.my-cal-grid-container{overflow-x:auto;overflow-y:auto;max-height:85vh}
-.my-cal-week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--border);border-radius:var(--radius);overflow:hidden;min-width:700px;box-shadow:var(--shadow)}
-.my-day-col{background:var(--surface);min-height:50vh;display:flex;flex-direction:column}
+.my-cal-grid-container{overflow-x:auto;overflow-y:auto;max-height:85vh;position:relative}
+.my-cal-week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:0;min-width:700px;box-shadow:var(--shadow);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden}
+.my-day-col{background:var(--surface);min-height:50vh;display:flex;flex-direction:column;border-right:1px solid var(--border-light)}
+.my-day-col:last-child{border-right:none}
 .my-day-col.today{background:var(--accent-bg)}
 .my-day-col.drag-over{background:#eef2ff;box-shadow:inset 0 0 0 2px var(--accent)}
-.my-day-header{padding:10px 8px;text-align:center;border-bottom:1px solid var(--border);background:var(--surface2);position:sticky;top:0;z-index:2}
+.my-cal-sticky-header{display:grid;grid-template-columns:repeat(7,1fr);position:sticky;top:0;z-index:3;min-width:700px;border-bottom:2px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.my-cal-sticky-header .my-day-header{padding:10px 8px;text-align:center;background:var(--surface2);border-right:1px solid var(--border-light)}
+.my-cal-sticky-header .my-day-header:last-child{border-right:none}
+.my-cal-sticky-header .my-day-header.today{background:var(--accent-bg)}
 .my-day-header .wday-name{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);font-weight:700}
 .my-day-header .wday-num{font-size:20px;font-weight:800;margin-top:1px}
-.my-day-col.today .wday-num{color:var(--accent)}
+.my-day-col.today .wday-num,.my-day-header.today .wday-num{color:var(--accent)}
 .my-day-body{padding:6px;flex:1;display:flex;flex-direction:column;gap:3px;overflow-y:auto;min-height:80px}
 .my-day-body .show-more-btn{padding:4px;text-align:center;font-size:10px;font-weight:700;color:var(--accent);cursor:pointer;border-radius:4px;border:1px dashed var(--accent);background:var(--accent-bg);transition:all .12s}
 .my-day-body .show-more-btn:hover{background:var(--accent);color:white}
@@ -360,10 +364,27 @@ body{font-family:'Inter','Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;
 
 /* =================== TOAST =================== */
 .toast-container{position:fixed;bottom:20px;right:20px;z-index:300;display:flex;flex-direction:column;gap:8px}
-.toast{padding:12px 20px;border-radius:var(--radius);background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:13px;box-shadow:var(--shadow-lg);animation:slideIn .3s ease;display:flex;align-items:center;gap:8px;font-weight:500}
+.toast{padding:12px 20px;border-radius:var(--radius);background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:13px;box-shadow:var(--shadow-lg);animation:slideIn .3s ease;display:flex;align-items:center;gap:8px;font-weight:500;max-width:380px}
 .toast.success{border-color:var(--success-border);background:var(--success-bg);color:var(--success)}
 .toast.error{border-color:var(--danger-border);background:var(--danger-bg);color:var(--danger)}
+.toast.info{border-color:#93c5fd;background:#eff6ff;color:#1d4ed8}
+.toast.loading{border-color:#c4b5fd;background:#f5f3ff;color:#6d28d9}
+.toast .toast-spinner{width:14px;height:14px;border:2px solid #c4b5fd;border-top:2px solid #6d28d9;border-radius:50%;animation:spin .6s linear infinite;flex-shrink:0}
 @keyframes slideIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+/* =================== CUSTOM DIALOG =================== */
+.dialog-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:400;align-items:center;justify-content:center;backdrop-filter:blur(4px);animation:fadeIn .15s ease}
+.dialog-overlay.active{display:flex}
+.dialog-box{background:var(--surface);border-radius:16px;padding:28px;width:420px;max-width:90vw;box-shadow:var(--shadow-lg);animation:dialogIn .2s ease}
+@keyframes dialogIn{from{opacity:0;transform:scale(.95) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.dialog-icon{font-size:32px;text-align:center;margin-bottom:12px}
+.dialog-title{font-size:17px;font-weight:700;text-align:center;margin-bottom:8px;color:var(--text)}
+.dialog-message{font-size:13px;text-align:center;color:var(--text-secondary);line-height:1.5;margin-bottom:20px}
+.dialog-input{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:inherit;margin-bottom:16px;transition:border-color .15s}
+.dialog-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-bg)}
+.dialog-actions{display:flex;gap:8px;justify-content:center}
+.dialog-actions .btn{min-width:100px;justify-content:center}
 
 /* =================== LOADING =================== */
 .loading-overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg);z-index:1000}
@@ -649,7 +670,7 @@ body{font-family:'Inter','Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;
       </div>
     </div>
     <div class="header-actions">
-      <button class="btn btn-header" onclick="addTask()">＋ Nueva Tarea</button>
+      <button class="btn btn-header" id="btnNewTask" onclick="addTask()">＋ Nueva Tarea</button>
       <button class="btn btn-header" onclick="exportJSON()">📥 Exportar</button>
       <button class="btn btn-header" onclick="document.getElementById('importInput').click()">📤 Importar</button>
       <input type="file" id="importInput" accept=".json" onchange="importJSON(event)" style="display:none">
@@ -802,6 +823,17 @@ body{font-family:'Inter','Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;
 
 <div class="toast-container" id="toastContainer"></div>
 
+<!-- Custom Dialog (replaces confirm/prompt) -->
+<div class="dialog-overlay" id="dialogOverlay" onclick="if(event.target===this)closeDialog(false)">
+  <div class="dialog-box">
+    <div class="dialog-icon" id="dialogIcon"></div>
+    <div class="dialog-title" id="dialogTitle"></div>
+    <div class="dialog-message" id="dialogMessage"></div>
+    <input type="text" class="dialog-input" id="dialogInput" style="display:none">
+    <div class="dialog-actions" id="dialogActions"></div>
+  </div>
+</div>
+
 
 <script>
 // =================== CONFIGURATION ===================
@@ -873,6 +905,7 @@ async function api(method, path, body = null) {
 }
 
 async function loadAllData() {
+  const loadingToast = showToast('Cargando datos...', 'loading', 0);
   try {
     const [tasks, users, clientes] = await Promise.all([
       api('GET', '/api/tasks'),
@@ -893,7 +926,9 @@ async function loadAllData() {
     if (state.currentUser) {
       state.schedule = await api('GET', '/api/schedule');
     }
+    removeToast(loadingToast);
   } catch (e) {
+    removeToast(loadingToast);
     console.error('Error loading data:', e);
     showToast('Error cargando datos: ' + e.message, 'error');
   }
@@ -1034,18 +1069,20 @@ function skipProfile() {
   document.getElementById('profileSetup').classList.remove('active');
 }
 
-function showProfileEdit() {
+async function showProfileEdit() {
   closeUserMenu();
-  const name = prompt('Tu nombre de responsable:', state.currentUser?.responsableName || '');
+  const name = await showPromptDialog('Editar perfil', 'Ingresa tu nombre de responsable', {
+    icon: '⚙️', placeholder: 'Ej: MECHI, PERSONA...', defaultValue: state.currentUser?.responsableName || ''
+  });
   if (name !== null && name.trim()) {
-    api('PUT', `/api/users/${encodeURIComponent(state.currentUser.email)}`, {
-      responsableName: name.trim(),
-    }).then(u => {
-      state.currentUser = u;
+    try {
+      state.currentUser = await api('PUT', `/api/users/${encodeURIComponent(state.currentUser.email)}`, {
+        responsableName: name.trim(),
+      });
       updateUserMenu();
       showToast('Perfil actualizado', 'success');
       render();
-    }).catch(e => showToast('Error: ' + e.message, 'error'));
+    } catch(e) { showToast('Error: ' + e.message, 'error'); }
   }
 }
 
@@ -1082,6 +1119,7 @@ function updateUserMenu() {
 
   // Show admin features
   const isAdmin = u.role === 'admin';
+  document.getElementById('btnNewTask').style.display = isAdmin ? '' : 'none';
   document.getElementById('btnUsersView').style.display = isAdmin ? '' : 'none';
   document.getElementById('btnUsersTab').style.display = isAdmin ? '' : 'none';
   document.getElementById('btnVtosTab').style.display = isAdmin ? '' : 'none';
@@ -1544,12 +1582,16 @@ function renderMyCalendar() {
     sideH += `</div>`;
   }
 
-  // Build week grid
+  // Build sticky header row + week grid
   const MAX_VISIBLE = 4;
+  let headerH = '';
   let gridH = '';
   for (let i = 0; i < 7; i++) {
     const d = new Date(ws.getTime() + i * 86400000);
     const ds = formatDate(d), isT = isToday(d);
+
+    // Sticky header
+    headerH += `<div class="my-day-header ${isT?'today':''}"><div class="wday-name">${DAYS_FULL[d.getDay()]}</div><div class="wday-num">${d.getDate()}</div></div>`;
 
     // Tasks scheduled for this day
     const daySchedules = state.schedule.filter(s => s.scheduledDate === ds);
@@ -1588,7 +1630,6 @@ function renderMyCalendar() {
     });
 
     gridH += `<div class="my-day-col ${isT?'today':''}" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event, '${ds}')">`;
-    gridH += `<div class="my-day-header"><div class="wday-name">${DAYS_FULL[d.getDay()]}</div><div class="wday-num">${d.getDate()}</div></div>`;
     gridH += `<div class="my-day-body">`;
 
     const expanded = state.myCalExpandedDays.has(ds);
@@ -1616,6 +1657,7 @@ function renderMyCalendar() {
         ${sideH}
       </div>
       <div class="my-cal-grid-container">
+        <div class="my-cal-sticky-header">${headerH}</div>
         <div class="my-cal-week-grid">${gridH}</div>
       </div>
     </div>
@@ -1931,7 +1973,7 @@ async function saveClientEdit() {
 async function deleteClient() {
   if (state.editingClientId === null) return;
   const c = state.clientes.find(x => x.clienteId === state.editingClientId);
-  if (!confirm(`¿Eliminar al cliente "${c?.nombre}"? Esto NO eliminará sus tareas.`)) return;
+  if (!await showConfirm('Eliminar cliente', `¿Eliminar a <strong>"${c?.nombre}"</strong>?<br>Esto NO eliminará sus tareas.`, { icon: '🗑️', confirmText: 'Eliminar', danger: true })) return;
   try {
     await api('DELETE', `/api/clientes/${state.editingClientId}`);
     state.clientes = state.clientes.filter(x => x.clienteId !== state.editingClientId);
@@ -2553,7 +2595,7 @@ async function executeBulkUnassign() {
   const taskIds = [...state.assignSelectedTasks];
   if (taskIds.length === 0) { showToast('Selecciona al menos una tarea', 'error'); return; }
 
-  if (!confirm(`Quitar asignacion de ${taskIds.length} tarea${taskIds.length!==1?'s':''}? Quedaran sin responsable.`)) return;
+  if (!await showConfirm('Quitar asignacion', `Se desasignaran <strong>${taskIds.length} tarea${taskIds.length!==1?'s':''}</strong>.<br>Quedaran sin responsable.`, { icon: '👤', confirmText: 'Desasignar', danger: true })) return;
 
   try {
     const result = await api('PUT', '/api/tasks/bulk-assign', {
@@ -2628,7 +2670,10 @@ function render() {
 }
 
 // =================== TASK ACTIONS ===================
+function isAdmin() { return state.currentUser && state.currentUser.role === 'admin'; }
+
 async function toggleStatus(id, field) {
+  if (!isAdmin()) { showToast('Solo admin puede modificar tareas', 'error'); return; }
   try {
     const updated = await api('PUT', `/api/tasks/${id}/status`, { field });
     const idx = state.tasks.findIndex(t => t.taskId === id);
@@ -2666,6 +2711,7 @@ function finalizeFromModal() {
 
 // =================== TASK CRUD ===================
 function addTask() {
+  if (!isAdmin()) { showToast('Solo admin puede crear tareas', 'error'); return; }
   state.editingId = null;
   document.getElementById('modalTitle').innerHTML = '📝 Nueva Tarea <button class="modal-close" onclick="closeModal()">✕</button>';
   document.getElementById('formCliente').value = '';
@@ -2678,6 +2724,7 @@ function addTask() {
 }
 
 function editTask(id) {
+  if (!isAdmin()) { showToast('Solo admin puede editar tareas', 'error'); return; }
   const t = state.tasks.find(x => x.taskId === id);
   if (!t) return;
   state.editingId = id;
@@ -2695,7 +2742,7 @@ async function saveTask() {
   const sel = document.getElementById('formCliente');
   let cliente = sel.value;
   if (!cliente) {
-    cliente = prompt('Ingresá el nombre del nuevo cliente:');
+    cliente = await showPromptDialog('Nuevo cliente', 'Ingresa el nombre del cliente', { icon: '👤', placeholder: 'Nombre del cliente...' });
     if (!cliente || !cliente.trim()) return;
     cliente = cliente.trim();
   }
@@ -2730,7 +2777,7 @@ async function saveTask() {
 
 async function deleteTask() {
   if (state.editingId === null) return;
-  if (!confirm('¿Eliminar esta tarea permanentemente?')) return;
+  if (!await showConfirm('Eliminar tarea', 'Esta accion no se puede deshacer.', { icon: '🗑️', confirmText: 'Eliminar', danger: true })) return;
   try {
     await api('DELETE', `/api/tasks/${state.editingId}`);
     state.tasks = state.tasks.filter(t => t.taskId !== state.editingId);
@@ -2797,18 +2844,75 @@ async function importJSON(event) {
 }
 
 // =================== TOAST ===================
-function showToast(msg, type = 'success') {
+const TOAST_ICONS = { success: '✅', error: '❌', info: 'ℹ️', loading: '' };
+function showToast(msg, type = 'success', duration = 3000) {
   const c = document.getElementById('toastContainer');
   const t = document.createElement('div');
   t.className = `toast ${type}`;
-  t.innerHTML = `${type === 'success' ? '✅' : '❌'} ${msg}`;
+  const icon = type === 'loading' ? '<span class="toast-spinner"></span>' : TOAST_ICONS[type] || '';
+  t.innerHTML = `${icon} ${msg}`;
   c.appendChild(t);
-  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3000);
+  if (duration > 0) {
+    setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, duration);
+  }
+  return t;
+}
+
+function removeToast(el) {
+  if (el && el.parentNode) { el.style.opacity = '0'; setTimeout(() => el.remove(), 200); }
+}
+
+// =================== CUSTOM DIALOG ===================
+let _dialogResolve = null;
+
+function showConfirm(title, message, { icon = '⚠️', confirmText = 'Confirmar', cancelText = 'Cancelar', danger = false } = {}) {
+  return new Promise(resolve => {
+    _dialogResolve = resolve;
+    document.getElementById('dialogIcon').textContent = icon;
+    document.getElementById('dialogTitle').textContent = title;
+    document.getElementById('dialogMessage').innerHTML = message;
+    document.getElementById('dialogInput').style.display = 'none';
+    document.getElementById('dialogActions').innerHTML =
+      `<button class="btn" onclick="closeDialog(false)">${cancelText}</button>` +
+      `<button class="btn ${danger ? 'btn-danger' : 'btn-primary'}" onclick="closeDialog(true)">${confirmText}</button>`;
+    document.getElementById('dialogOverlay').classList.add('active');
+    // Focus confirm button
+    document.getElementById('dialogActions').querySelector('.btn-primary,.btn-danger')?.focus();
+  });
+}
+
+function showPromptDialog(title, message, { icon = '✏️', placeholder = '', defaultValue = '', confirmText = 'Guardar', cancelText = 'Cancelar' } = {}) {
+  return new Promise(resolve => {
+    _dialogResolve = resolve;
+    document.getElementById('dialogIcon').textContent = icon;
+    document.getElementById('dialogTitle').textContent = title;
+    document.getElementById('dialogMessage').innerHTML = message;
+    const input = document.getElementById('dialogInput');
+    input.style.display = '';
+    input.placeholder = placeholder;
+    input.value = defaultValue;
+    document.getElementById('dialogActions').innerHTML =
+      `<button class="btn" onclick="closeDialog(null)">${cancelText}</button>` +
+      `<button class="btn btn-primary" onclick="closeDialog(document.getElementById('dialogInput').value)">${confirmText}</button>`;
+    document.getElementById('dialogOverlay').classList.add('active');
+    setTimeout(() => input.focus(), 100);
+  });
+}
+
+function closeDialog(value) {
+  document.getElementById('dialogOverlay').classList.remove('active');
+  if (_dialogResolve) { _dialogResolve(value); _dialogResolve = null; }
 }
 
 // =================== KEYBOARD SHORTCUTS ===================
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeModal(); closeClientDetail(); closeClientEdit(); }
+  if (e.key === 'Escape') { closeModal(); closeClientDetail(); closeClientEdit(); closeDialog(false); }
+  if (e.key === 'Enter' && document.getElementById('dialogOverlay').classList.contains('active')) {
+    e.preventDefault();
+    const confirmBtn = document.getElementById('dialogActions').querySelector('.btn-primary,.btn-danger');
+    if (confirmBtn) confirmBtn.click();
+    return;
+  }
   if (e.key === 'n' && e.ctrlKey) { e.preventDefault(); addTask(); }
   if (!document.querySelector('.modal-overlay.active')) {
     if (e.key === 'ArrowLeft') changeMonth(-1);
