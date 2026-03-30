@@ -563,6 +563,73 @@ body{font-family:'Inter','Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;
 .btn-success{background:var(--success);border-color:var(--success);color:white}
 .btn-success:hover{background:#047857;border-color:#047857;color:white}
 
+/* =================== WORKFLOW STATE BADGES =================== */
+.estado-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:12px;font-size:10px;font-weight:700;letter-spacing:.3px;white-space:nowrap}
+.estado-badge.estado-pendiente{background:#f0f0f0;color:#6b7280;border:1px solid #d1d5db}
+.estado-badge.estado-en_revision{background:#dbeafe;color:#1d4ed8;border:1px solid #93c5fd}
+.estado-badge.estado-aprobada{background:#dcfce7;color:#15803d;border:1px solid #86efac}
+.estado-badge.estado-devuelta{background:#fef3c7;color:#b45309;border:1px solid #fcd34d}
+.btn-workflow{padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid;transition:all .15s;font-family:inherit;display:inline-flex;align-items:center;gap:4px}
+.btn-workflow.btn-submit-review{background:#dbeafe;color:#1d4ed8;border-color:#93c5fd}
+.btn-workflow.btn-submit-review:hover{background:#bfdbfe;border-color:#60a5fa}
+.btn-workflow.btn-undo-submit{background:#f0f0f0;color:#6b7280;border-color:#d1d5db}
+.btn-workflow.btn-undo-submit:hover{background:#e5e7eb;border-color:#9ca3af}
+.btn-workflow.btn-approve{background:#dcfce7;color:#15803d;border-color:#86efac}
+.btn-workflow.btn-approve:hover{background:#bbf7d0;border-color:#4ade80}
+.btn-workflow.btn-return{background:#fef3c7;color:#b45309;border-color:#fcd34d}
+.btn-workflow.btn-return:hover{background:#fde68a;border-color:#f59e0b}
+
+/* =================== ADMIN REVIEW DASHBOARD =================== */
+.review-container{padding:20px 28px}
+.review-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.review-header h2{font-size:20px;font-weight:800;display:flex;align-items:center;gap:10px}
+.review-header .review-count{background:var(--accent);color:white;padding:3px 12px;border-radius:16px;font-size:14px;font-weight:700}
+.review-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:16px}
+.review-card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;box-shadow:var(--shadow-sm);transition:box-shadow .15s}
+.review-card:hover{box-shadow:var(--shadow)}
+.review-card-header{padding:14px 16px;border-bottom:1px solid var(--border-light);display:flex;align-items:center;gap:10px}
+.review-card-header .rc-type-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.review-card-header .rc-info{flex:1;min-width:0}
+.review-card-header .rc-client{font-size:15px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.review-card-header .rc-task{font-size:12px;color:var(--text-muted)}
+.review-card-body{padding:14px 16px}
+.review-card-meta{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;font-size:12px;color:var(--text-secondary)}
+.review-card-meta span{display:flex;align-items:center;gap:4px}
+.review-card-actions{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--border-light);background:var(--surface2)}
+.review-card-actions .btn-workflow{flex:1;justify-content:center}
+.review-empty{text-align:center;padding:60px 20px;color:var(--text-muted)}
+.review-empty .re-icon{font-size:48px;margin-bottom:16px;opacity:.5}
+.review-empty p{font-size:15px}
+
+/* =================== TASK HISTORY MODAL =================== */
+.history-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:300;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
+.history-overlay.active{display:flex}
+.history-modal{background:var(--surface);border-radius:16px;width:560px;max-width:95vw;max-height:85vh;display:flex;flex-direction:column;box-shadow:var(--shadow-lg)}
+.history-modal-header{padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.history-modal-header h2{font-size:17px;font-weight:700;display:flex;align-items:center;gap:8px}
+.history-modal-body{flex:1;overflow-y:auto;padding:16px 24px}
+.history-comment-form{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:8px}
+.history-comment-form input{flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit}
+.history-comment-form input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-bg)}
+.history-entry{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border-light)}
+.history-entry:last-child{border-bottom:none}
+.history-entry .he-icon{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.history-entry .he-icon.action-creada{background:#dbeafe;color:#1d4ed8}
+.history-entry .he-icon.action-enviada_a_revision{background:#e0e7ff;color:#4338ca}
+.history-entry .he-icon.action-revision_deshecha{background:#f3f4f6;color:#6b7280}
+.history-entry .he-icon.action-aprobada{background:#dcfce7;color:#15803d}
+.history-entry .he-icon.action-devuelta{background:#fef3c7;color:#b45309}
+.history-entry .he-icon.action-finalizada{background:#dcfce7;color:#15803d}
+.history-entry .he-icon.action-restaurada{background:#f3f4f6;color:#6b7280}
+.history-entry .he-icon.action-comentario{background:#ede9fe;color:#7c3aed}
+.history-entry .he-content{flex:1;min-width:0}
+.history-entry .he-header{display:flex;align-items:center;gap:6px;margin-bottom:2px}
+.history-entry .he-user{font-size:12px;font-weight:600;color:var(--text)}
+.history-entry .he-action-label{font-size:11px;color:var(--text-muted)}
+.history-entry .he-time{font-size:10px;color:var(--text-muted);margin-left:auto}
+.history-entry .he-comment{font-size:12px;color:var(--text-secondary);margin-top:2px;line-height:1.4;background:var(--surface2);padding:6px 10px;border-radius:6px}
+.history-empty{text-align:center;padding:30px;color:var(--text-muted);font-size:13px}
+
 /* =================== RESPONSIVE =================== */
 @media(max-width:768px){
   .header{flex-direction:column;gap:10px;padding:12px 16px}
@@ -574,6 +641,8 @@ body{font-family:'Inter','Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;
   .cd-info-grid{grid-template-columns:1fr}
   .finalized-panel{margin:10px}
   .my-cal-layout{grid-template-columns:1fr;grid-template-rows:auto 1fr}
+  .review-cards{grid-template-columns:1fr}
+  .review-container{padding:10px}
 }
 </style>
 </head>
@@ -666,6 +735,7 @@ body{font-family:'Inter','Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;
         <span class="stat-pill pending" title="Pendientes">⏳ <span class="count" id="statPending">0</span></span>
         <span class="stat-pill overdue" title="Vencidas">🔴 <span class="count" id="statOverdue">0</span></span>
         <span class="stat-pill done" title="Listas">✔ <span class="count" id="statDone">0</span></span>
+        <span class="stat-pill" title="En Revisión" style="background:rgba(59,130,246,.25);color:#bfdbfe">🔍 <span class="count" id="statReview">0</span></span>
         <span class="stat-pill finalized" title="Finalizadas">✅ <span class="count" id="statFinalized">0</span></span>
       </div>
     </div>
@@ -711,6 +781,8 @@ body{font-family:'Inter','Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;
           <option value="">Todos los estados</option>
           <option value="pending">Pendientes</option>
           <option value="overdue">Vencidas</option>
+          <option value="en_revision">En Revisión</option>
+          <option value="devuelta">Devueltas</option>
           <option value="finalized">Finalizadas</option>
         </select>
       </div>
@@ -728,6 +800,7 @@ body{font-family:'Inter','Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;
         <button class="btn" data-view="clientes" onclick="setView('clientes')">👤 Clientes</button>
         <button class="btn" data-view="vtos" id="btnVtosTab" onclick="setView('vtos')" style="display:none">📅 Vtos</button>
         <button class="btn" data-view="assign" id="btnAssignTab" onclick="setView('assign')" style="display:none">📋 Asignar</button>
+        <button class="btn" data-view="review" id="btnReviewTab" onclick="setView('review')" style="display:none">📝 Revisión</button>
         <button class="btn" data-view="users" id="btnUsersTab" onclick="setView('users')" style="display:none">👥</button>
       </div>
     </div>
@@ -743,6 +816,7 @@ body{font-family:'Inter','Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;
   <div id="viewClientes" class="clients-container" style="display:none"></div>
   <div id="viewVtos" class="vtos-container" style="display:none"></div>
   <div id="viewAssign" class="assign-container" style="display:none"></div>
+  <div id="viewReview" class="review-container" style="display:none"></div>
 
   <div class="finalized-panel" id="finalizedPanel" style="display:none">
     <div class="finalized-header" id="finalizedHeader" onclick="toggleFinalized()">
@@ -817,6 +891,21 @@ body{font-family:'Inter','Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;
         <button class="btn btn-primary" onclick="saveClientEdit()">Guardar</button>
         <button class="btn btn-danger" id="ceDeleteBtn" style="display:none" onclick="deleteClient()">🗑 Eliminar</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Task History / Comments Modal -->
+<div class="history-overlay" id="historyOverlay" onclick="if(event.target===this)closeHistory()">
+  <div class="history-modal">
+    <div class="history-modal-header">
+      <h2 id="historyTitle">📋 Historial de Tarea</h2>
+      <button class="modal-close" onclick="closeHistory()">✕</button>
+    </div>
+    <div class="history-modal-body" id="historyBody"></div>
+    <div class="history-comment-form">
+      <input type="text" id="historyCommentInput" placeholder="Agregar comentario..." onkeydown="if(event.key==='Enter')addComment()">
+      <button class="btn btn-primary" onclick="addComment()">Enviar</button>
     </div>
   </div>
 </div>
@@ -1124,6 +1213,7 @@ function updateUserMenu() {
   document.getElementById('btnUsersTab').style.display = isAdmin ? '' : 'none';
   document.getElementById('btnVtosTab').style.display = isAdmin ? '' : 'none';
   document.getElementById('btnAssignTab').style.display = isAdmin ? '' : 'none';
+  document.getElementById('btnReviewTab').style.display = isAdmin ? '' : 'none';
 }
 
 function toggleUserMenu() {
@@ -1147,12 +1237,35 @@ function getDaysInMonth(y,m) { return new Date(y, m+1, 0).getDate(); }
 
 function getTaskStatus(task) {
   if (task.finalizada) return 'finalized';
+  if (task.estado === 'en_revision') return 'en_revision';
+  if (task.estado === 'devuelta') return 'devuelta';
+  if (task.estado === 'aprobada') return 'finalized';
   if (task.completado && task.revisado && task.enviado) return 'ready';
   const vto = parseDate(task.vencimiento);
   if (!vto) return 'pending';
   const today = new Date(); today.setHours(0,0,0,0);
   if (vto < today) return 'overdue';
   return 'pending';
+}
+
+function getEstadoLabel(estado) {
+  const labels = {
+    'pendiente': 'Pendiente',
+    'en_revision': 'En Revisión',
+    'aprobada': 'Aprobada',
+    'devuelta': 'Devuelta',
+  };
+  return labels[estado] || estado || 'Pendiente';
+}
+
+function getEstadoIcon(estado) {
+  const icons = {
+    'pendiente': '⏳',
+    'en_revision': '🔍',
+    'aprobada': '✅',
+    'devuelta': '↩️',
+  };
+  return icons[estado] || '⏳';
 }
 
 function getDeadlineClass(vencimiento) {
@@ -1193,8 +1306,11 @@ function getFilteredTasks() {
     if (fR && t.responsable !== fR) return false;
     if (fE) {
       if (fE === 'finalized' && !t.finalizada) return false;
+      if (fE === 'en_revision' && t.estado !== 'en_revision') return false;
+      if (fE === 'devuelta' && t.estado !== 'devuelta') return false;
       if (fE === 'pending') {
         if (t.finalizada) return false;
+        if (t.estado === 'en_revision' || t.estado === 'devuelta') return false;
         const st = getTaskStatus(t);
         if (st === 'overdue') return false;
       }
@@ -1265,10 +1381,11 @@ function updateStats() {
   const year = state.currentDate.getFullYear();
   const month = String(state.currentDate.getMonth() + 1).padStart(2, '0');
   const currentMonth = `${year}-${month}`;
-  let pending = 0, overdue = 0, ready = 0, finalized = 0;
+  let pending = 0, overdue = 0, ready = 0, finalized = 0, review = 0;
   state.tasks.filter(t => (t.vencimiento || '').startsWith(currentMonth)).forEach(t => {
     const s = getTaskStatus(t);
     if (s === 'finalized') finalized++;
+    else if (s === 'en_revision') review++;
     else if (s === 'overdue') overdue++;
     else if (s === 'ready') ready++;
     else pending++;
@@ -1276,6 +1393,7 @@ function updateStats() {
   document.getElementById('statPending').textContent = pending;
   document.getElementById('statOverdue').textContent = overdue;
   document.getElementById('statDone').textContent = ready;
+  document.getElementById('statReview').textContent = review;
   document.getElementById('statFinalized').textContent = finalized;
 }
 
@@ -1284,14 +1402,14 @@ function setView(v) {
   state.currentView = v;
   document.querySelectorAll('.view-toggle .btn').forEach(b => b.classList.toggle('active', b.dataset.view === v));
 
-const views = { month: 'viewMonth', week: 'viewWeek', list: 'viewList', mycal: 'viewMyCal', users: 'viewUsers', clientes: 'viewClientes', vtos: 'viewVtos', assign: 'viewAssign' };
+const views = { month: 'viewMonth', week: 'viewWeek', list: 'viewList', mycal: 'viewMyCal', users: 'viewUsers', clientes: 'viewClientes', vtos: 'viewVtos', assign: 'viewAssign', review: 'viewReview' };
     for (const [key, id] of Object.entries(views)) {
       document.getElementById(id).style.display = key === v ? '' : 'none';
     }
 
     // Show/hide filters for special views
-    document.getElementById('filterGroup').style.display = (v === 'users' || v === 'clientes' || v === 'vtos' || v === 'assign') ? 'none' : '';
-    document.getElementById('legend').style.display = (v === 'users' || v === 'mycal' || v === 'clientes' || v === 'vtos' || v === 'assign') ? 'none' : '';
+    document.getElementById('filterGroup').style.display = (v === 'users' || v === 'clientes' || v === 'vtos' || v === 'assign' || v === 'review') ? 'none' : '';
+    document.getElementById('legend').style.display = (v === 'users' || v === 'mycal' || v === 'clientes' || v === 'vtos' || v === 'assign' || v === 'review') ? 'none' : '';
 
   render();
 }
@@ -1381,14 +1499,25 @@ function renderWeek() {
 
     dt.forEach(t => {
       const isFin = t.finalizada;
+      const estado = t.estado || 'pendiente';
       h += `<div class="week-task-card ${isFin?'finalized':''}" data-type="${t.tarea}" ${isFin?'':`onclick="editTask(${t.taskId})"`}>`;
       h += `<div class="client-name">${t.cliente}</div><div class="task-type">${t.tarea}</div>`;
       if (isFin) {
         h += `<div class="fin-tag">✅ Finalizada ${formatDateShort(t.fechaFinalizacion)}</div>`;
       } else {
+        h += `<div style="margin-top:2px"><span class="estado-badge estado-${estado}" style="font-size:9px;padding:1px 6px">${getEstadoIcon(estado)} ${getEstadoLabel(estado)}</span></div>`;
         h += `<div class="card-actions" onclick="event.stopPropagation()">`;
-        h += `<button class="action-btn ${t.completado?'active':''}" onclick="toggleStatus(${t.taskId},'completado')" title="Completado">✔</button>`;
-        h += `<button class="action-btn ${t.enviado?'active':''}" onclick="toggleStatus(${t.taskId},'enviado')" title="Enviado">📩</button>`;
+        if (isAdmin()) {
+          h += `<button class="action-btn ${t.completado?'active':''}" onclick="toggleStatus(${t.taskId},'completado')" title="Completado">✔</button>`;
+          h += `<button class="action-btn ${t.enviado?'active':''}" onclick="toggleStatus(${t.taskId},'enviado')" title="Enviado">📩</button>`;
+        } else {
+          if (estado === 'pendiente' || estado === 'devuelta') {
+            h += `<button class="action-btn" onclick="submitForReview(${t.taskId})" title="Enviar a revisión" style="font-size:10px;width:auto;padding:2px 6px">📤</button>`;
+          } else if (estado === 'en_revision') {
+            h += `<button class="action-btn" onclick="undoSubmitReview(${t.taskId})" title="Deshacer envío" style="font-size:10px;width:auto;padding:2px 6px">↩</button>`;
+          }
+        }
+        h += `<button class="action-btn" onclick="openHistory(${t.taskId})" title="Historial" style="font-size:10px">📋</button>`;
         h += `</div>`;
       }
       h += `</div>`;
@@ -1424,7 +1553,9 @@ function renderList() {
     if (fR && t.responsable !== fR) return false;
     if (fE) {
       if (fE === 'finalized' && !t.finalizada) return false;
-      if (fE === 'pending') { if (t.finalizada || getTaskStatus(t) === 'overdue') return false; }
+      if (fE === 'en_revision' && t.estado !== 'en_revision') return false;
+      if (fE === 'devuelta' && t.estado !== 'devuelta') return false;
+      if (fE === 'pending') { if (t.finalizada || t.estado === 'en_revision' || t.estado === 'devuelta' || getTaskStatus(t) === 'overdue') return false; }
       if (fE === 'overdue') { if (t.finalizada || getTaskStatus(t) !== 'overdue') return false; }
     }
     if (search && !t.cliente.toLowerCase().includes(search) && !t.tarea.toLowerCase().includes(search)) return false;
@@ -1444,7 +1575,7 @@ function renderList() {
   h += `<th onclick="sortBy('responsable')">Quién <span class="sort-icon">${si('responsable')}</span></th>`;
   h += `<th onclick="sortBy('vencimiento')">Vto <span class="sort-icon">${si('vencimiento')}</span></th>`;
   h += `<th onclick="sortBy('semana')">Sem <span class="sort-icon">${si('semana')}</span></th>`;
-  h += `<th>Estado</th><th></th>`;
+  h += `<th>Estado</th><th>Acciones</th>`;
   h += `</tr></thead><tbody>`;
 
   tasks.forEach(t => {
@@ -1452,6 +1583,7 @@ function renderList() {
     const co = TASK_COLORS[t.tarea] || '#64748b';
     const vb = st === 'overdue' ? 'overdue' : 'upcoming';
     const isFin = t.finalizada;
+    const estado = t.estado || 'pendiente';
 
     h += `<tr class="${isFin?'finalized':''}" ${isFin?'':`ondblclick="editTask(${t.taskId})"`}>`;
     h += `<td><strong>${t.cliente}</strong></td>`;
@@ -1462,11 +1594,25 @@ function renderList() {
 
     if (isFin) {
       h += `<td><span class="fin-tag">✅ Finalizada ${formatDateFull(t.fechaFinalizacion)}</span></td>`;
-      h += `<td><button class="restore-btn" onclick="restoreTask(${t.taskId})" title="Restaurar">↩</button></td>`;
-    } else {
       h += `<td><div class="status-checks">`;
-      h += `<button class="check-btn ${t.completado?'active':''}" onclick="toggleStatus(${t.taskId},'completado')" title="Completado">✔</button>`;
-      h += `<button class="check-btn ${t.enviado?'active':''}" onclick="toggleStatus(${t.taskId},'enviado')" title="Enviado">📩</button>`;
+      if (isAdmin()) h += `<button class="restore-btn" onclick="restoreTask(${t.taskId})" title="Restaurar">↩</button>`;
+      h += `<button class="check-btn" onclick="openHistory(${t.taskId})" title="Historial">📋</button>`;
+      h += `</div></td>`;
+    } else {
+      h += `<td><span class="estado-badge estado-${estado}">${getEstadoIcon(estado)} ${getEstadoLabel(estado)}</span></td>`;
+      h += `<td><div class="status-checks">`;
+      if (isAdmin()) {
+        h += `<button class="check-btn ${t.completado?'active':''}" onclick="toggleStatus(${t.taskId},'completado')" title="Completado">✔</button>`;
+        h += `<button class="check-btn ${t.enviado?'active':''}" onclick="toggleStatus(${t.taskId},'enviado')" title="Enviado">📩</button>`;
+      } else {
+        // Non-admin workflow buttons
+        if (estado === 'pendiente' || estado === 'devuelta') {
+          h += `<button class="btn-workflow btn-submit-review" onclick="submitForReview(${t.taskId})" title="Enviar a revisión">📤 Enviar</button>`;
+        } else if (estado === 'en_revision') {
+          h += `<button class="btn-workflow btn-undo-submit" onclick="undoSubmitReview(${t.taskId})" title="Deshacer envío">↩ Deshacer</button>`;
+        }
+      }
+      h += `<button class="check-btn" onclick="openHistory(${t.taskId})" title="Historial">📋</button>`;
       h += `</div></td>`;
     }
     h += `</tr>`;
@@ -2625,7 +2771,7 @@ function renderFinalized() {
   const count = document.getElementById('finCount');
 
   if (finalized.length === 0) { panel.style.display = 'none'; return; }
-  if (state.currentView === 'users' || state.currentView === 'mycal' || state.currentView === 'clientes' || state.currentView === 'vtos' || state.currentView === 'assign') { panel.style.display = 'none'; return; }
+  if (state.currentView === 'users' || state.currentView === 'mycal' || state.currentView === 'clientes' || state.currentView === 'vtos' || state.currentView === 'assign' || state.currentView === 'review') { panel.style.display = 'none'; return; }
 
   panel.style.display = '';
   count.textContent = finalized.length;
@@ -2666,6 +2812,7 @@ function render() {
   else if (state.currentView === 'clientes') renderClientes();
   else if (state.currentView === 'vtos') renderVencimientos();
   else if (state.currentView === 'assign') renderAssign();
+  else if (state.currentView === 'review') renderReview();
   renderFinalized();
 }
 
@@ -2673,7 +2820,7 @@ function render() {
 function isAdmin() { return state.currentUser && state.currentUser.role === 'admin'; }
 
 async function toggleStatus(id, field) {
-  if (!isAdmin()) { showToast('Solo admin puede modificar tareas', 'error'); return; }
+  if (!isAdmin() && field !== 'completado') { showToast('Solo admin puede modificar ese campo', 'error'); return; }
   try {
     const updated = await api('PUT', `/api/tasks/${id}/status`, { field });
     const idx = state.tasks.findIndex(t => t.taskId === id);
@@ -2724,9 +2871,15 @@ function addTask() {
 }
 
 function editTask(id) {
-  if (!isAdmin()) { showToast('Solo admin puede editar tareas', 'error'); return; }
   const t = state.tasks.find(x => x.taskId === id);
   if (!t) return;
+
+  if (!isAdmin()) {
+    // Non-admin: open history panel instead of edit modal
+    openHistory(id);
+    return;
+  }
+
   state.editingId = id;
   document.getElementById('modalTitle').innerHTML = '✏️ Editar Tarea <button class="modal-close" onclick="closeModal()">✕</button>';
   document.getElementById('formCliente').value = t.cliente;
@@ -2906,7 +3059,7 @@ function closeDialog(value) {
 
 // =================== KEYBOARD SHORTCUTS ===================
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeModal(); closeClientDetail(); closeClientEdit(); closeDialog(false); }
+  if (e.key === 'Escape') { closeModal(); closeClientDetail(); closeClientEdit(); closeHistory(); closeDialog(false); }
   if (e.key === 'Enter' && document.getElementById('dialogOverlay').classList.contains('active')) {
     e.preventDefault();
     const confirmBtn = document.getElementById('dialogActions').querySelector('.btn-primary,.btn-danger');
@@ -2919,6 +3072,230 @@ document.addEventListener('keydown', e => {
     if (e.key === 'ArrowRight') changeMonth(1);
   }
 });
+
+// =================== WORKFLOW ACTIONS ===================
+async function submitForReview(id) {
+  const comment = await showPromptDialog('Enviar a revisión', '¿Querés agregar un comentario? (opcional)', {
+    icon: '📤', placeholder: 'Comentario opcional...', confirmText: 'Enviar', cancelText: 'Cancelar'
+  });
+  if (comment === null) return;
+  try {
+    const updated = await api('PUT', `/api/tasks/${id}/submit-review`, { comment: comment || '' });
+    const idx = state.tasks.findIndex(t => t.taskId === id);
+    if (idx >= 0) state.tasks[idx] = updated;
+    render();
+    showToast('Tarea enviada a revisión', 'success');
+  } catch (e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+async function undoSubmitReview(id) {
+  if (!await showConfirm('Deshacer envío', '¿Querés retirar la tarea de revisión?', { icon: '↩️', confirmText: 'Deshacer' })) return;
+  try {
+    const updated = await api('PUT', `/api/tasks/${id}/undo-submit`);
+    const idx = state.tasks.findIndex(t => t.taskId === id);
+    if (idx >= 0) state.tasks[idx] = updated;
+    render();
+    showToast('Revisión deshecha', 'success');
+  } catch (e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+async function approveTask(id) {
+  const comment = await showPromptDialog('Aprobar tarea', '¿Querés agregar un comentario? (opcional)', {
+    icon: '✅', placeholder: 'Comentario opcional...', confirmText: 'Aprobar', cancelText: 'Cancelar'
+  });
+  if (comment === null) return;
+  try {
+    const result = await api('PUT', `/api/tasks/${id}/approve`, { comment: comment || '' });
+    const idx = state.tasks.findIndex(t => t.taskId === id);
+    if (idx >= 0) state.tasks[idx] = result;
+    render();
+    const emailMsg = result.emailSent ? ' (email enviado)' : '';
+    showToast(`Tarea aprobada y finalizada${emailMsg}`, 'success');
+  } catch (e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+async function returnTask(id) {
+  const comment = await showPromptDialog('Devolver tarea', 'Indicá las correcciones o ajustes necesarios:', {
+    icon: '↩️', placeholder: 'Detalle de correcciones...', confirmText: 'Devolver', cancelText: 'Cancelar'
+  });
+  if (comment === null || !comment.trim()) {
+    if (comment !== null) showToast('Debés indicar el motivo de devolución', 'error');
+    return;
+  }
+  try {
+    const updated = await api('PUT', `/api/tasks/${id}/return`, { comment: comment.trim() });
+    const idx = state.tasks.findIndex(t => t.taskId === id);
+    if (idx >= 0) state.tasks[idx] = updated;
+    render();
+    showToast('Tarea devuelta con observaciones', 'success');
+  } catch (e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+// =================== TASK HISTORY / COMMENTS ===================
+let historyTaskId = null;
+
+async function openHistory(taskId) {
+  historyTaskId = taskId;
+  const task = state.tasks.find(t => t.taskId === taskId);
+  if (!task) return;
+
+  document.getElementById('historyTitle').innerHTML = `📋 ${task.cliente} — ${task.tarea}`;
+  document.getElementById('historyBody').innerHTML = '<div class="history-empty">Cargando...</div>';
+  document.getElementById('historyOverlay').classList.add('active');
+  document.getElementById('historyCommentInput').value = '';
+
+  try {
+    const entries = await api('GET', `/api/tasks/${taskId}/history`);
+    renderHistoryEntries(entries);
+  } catch (e) {
+    document.getElementById('historyBody').innerHTML = `<div class="history-empty">Error cargando historial: ${e.message}</div>`;
+  }
+}
+
+function renderHistoryEntries(entries) {
+  const body = document.getElementById('historyBody');
+  if (!entries.length) {
+    body.innerHTML = '<div class="history-empty">Sin historial todavía. Agregá un comentario abajo.</div>';
+    return;
+  }
+
+  const actionLabels = {
+    'creada': 'creó la tarea',
+    'enviada_a_revision': 'envió a revisión',
+    'revision_deshecha': 'deshizo el envío a revisión',
+    'aprobada': 'aprobó la tarea',
+    'devuelta': 'devolvió la tarea',
+    'finalizada': 'finalizó la tarea',
+    'restaurada': 'restauró la tarea',
+    'comentario': 'comentó',
+  };
+
+  const actionIcons = {
+    'creada': '🆕',
+    'enviada_a_revision': '📤',
+    'revision_deshecha': '↩️',
+    'aprobada': '✅',
+    'devuelta': '🔄',
+    'finalizada': '✔️',
+    'restaurada': '🔁',
+    'comentario': '💬',
+  };
+
+  let h = '';
+  entries.forEach(e => {
+    const timeAgo = formatTimeAgo(e.createdAt);
+    h += `<div class="history-entry">`;
+    h += `<div class="he-icon action-${e.action}">${actionIcons[e.action] || '📝'}</div>`;
+    h += `<div class="he-content">`;
+    h += `<div class="he-header">`;
+    h += `<span class="he-user">${e.userName || e.userEmail || 'Usuario'}</span>`;
+    h += `<span class="he-action-label">${actionLabels[e.action] || e.action}</span>`;
+    h += `<span class="he-time">${timeAgo}</span>`;
+    h += `</div>`;
+    if (e.comment) {
+      h += `<div class="he-comment">${escapeHtml(e.comment)}</div>`;
+    }
+    h += `</div></div>`;
+  });
+  body.innerHTML = h;
+}
+
+function formatTimeAgo(isoStr) {
+  const d = new Date(isoStr + 'Z');
+  const now = new Date();
+  const diff = Math.floor((now - d) / 1000);
+  if (diff < 60) return 'Ahora';
+  if (diff < 3600) return `Hace ${Math.floor(diff/60)} min`;
+  if (diff < 86400) return `Hace ${Math.floor(diff/3600)}h`;
+  if (diff < 604800) return `Hace ${Math.floor(diff/86400)}d`;
+  return d.toLocaleDateString('es-AR');
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+async function addComment() {
+  if (!historyTaskId) return;
+  const input = document.getElementById('historyCommentInput');
+  const comment = input.value.trim();
+  if (!comment) return;
+
+  try {
+    await api('POST', `/api/tasks/${historyTaskId}/comments`, { comment });
+    input.value = '';
+    const entries = await api('GET', `/api/tasks/${historyTaskId}/history`);
+    renderHistoryEntries(entries);
+    showToast('Comentario agregado', 'success');
+  } catch (e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+function closeHistory() {
+  document.getElementById('historyOverlay').classList.remove('active');
+  historyTaskId = null;
+}
+
+// =================== ADMIN REVIEW DASHBOARD ===================
+async function renderReview() {
+  const container = document.getElementById('viewReview');
+
+  // Get tasks en_revision from local state
+  const reviewTasks = state.tasks.filter(t => t.estado === 'en_revision');
+
+  let h = `<div class="review-header">`;
+  h += `<h2>📝 Tareas para Revisar <span class="review-count">${reviewTasks.length}</span></h2>`;
+  h += `</div>`;
+
+  if (reviewTasks.length === 0) {
+    h += `<div class="review-empty">`;
+    h += `<div class="re-icon">✅</div>`;
+    h += `<p>No hay tareas pendientes de revisión</p>`;
+    h += `</div>`;
+    container.innerHTML = h;
+    return;
+  }
+
+  h += `<div class="review-cards">`;
+  reviewTasks.forEach(t => {
+    const co = TASK_COLORS[t.tarea] || '#64748b';
+    const dlClass = getDeadlineClass(t.vencimiento);
+    const assignedUser = state.users.find(u => u.email === t.assignedTo);
+    const assignedName = assignedUser ? (assignedUser.responsableName || assignedUser.displayName) : (t.responsable || 'Sin asignar');
+
+    h += `<div class="review-card">`;
+    h += `<div class="review-card-header">`;
+    h += `<div class="rc-type-dot" style="background:${co}"></div>`;
+    h += `<div class="rc-info">`;
+    h += `<div class="rc-client">${t.cliente}</div>`;
+    h += `<div class="rc-task">${t.tarea}</div>`;
+    h += `</div>`;
+    h += `<span class="estado-badge estado-en_revision">🔍 En Revisión</span>`;
+    h += `</div>`;
+
+    h += `<div class="review-card-body">`;
+    h += `<div class="review-card-meta">`;
+    h += `<span>👤 ${assignedName}</span>`;
+    h += `<span><span class="deadline-badge ${dlClass}">📅 ${formatDateFull(t.vencimiento)}</span></span>`;
+    h += `<span>📁 ${t.semana}</span>`;
+    h += `</div>`;
+    h += `</div>`;
+
+    h += `<div class="review-card-actions">`;
+    h += `<button class="btn-workflow btn-approve" onclick="approveTask(${t.taskId})">✅ Aprobar</button>`;
+    h += `<button class="btn-workflow btn-return" onclick="returnTask(${t.taskId})">↩️ Devolver</button>`;
+    h += `<button class="btn-workflow" style="background:var(--surface);color:var(--text-secondary);border-color:var(--border)" onclick="openHistory(${t.taskId})">📋 Historial</button>`;
+    h += `</div>`;
+    h += `</div>`;
+  });
+  h += `</div>`;
+
+  container.innerHTML = h;
+}
+
+// =================== FILTER ESTADO UPDATE ===================
+// Override the existing filter to include workflow states
 
 // =================== INIT ===================
 initFirebase();

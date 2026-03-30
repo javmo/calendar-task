@@ -3,8 +3,11 @@ Calendario de Tareas - FastAPI Backend
 MongoDB + Firebase Auth
 """
 import os
+import smtplib
 from contextlib import asynccontextmanager
 from datetime import date, datetime
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from typing import Optional, Dict, List
 
 from dotenv import load_dotenv
@@ -22,6 +25,20 @@ load_dotenv()
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
 DB_NAME = os.getenv("DB_NAME", "calendario")
 FIREBASE_SA_PATH = os.getenv("FIREBASE_SA_PATH", "firebase-sa.json")
+
+# SMTP config for email notifications
+SMTP_HOST = os.getenv("SMTP_HOST", "")
+SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
+SMTP_USER = os.getenv("SMTP_USER", "")
+SMTP_PASS = os.getenv("SMTP_PASS", "")
+SMTP_FROM = os.getenv("SMTP_FROM", "")
+
+# Task workflow states
+ESTADO_PENDIENTE = "pendiente"
+ESTADO_EN_REVISION = "en_revision"
+ESTADO_APROBADA = "aprobada"
+ESTADO_DEVUELTA = "devuelta"
+ESTADOS_VALIDOS = [ESTADO_PENDIENTE, ESTADO_EN_REVISION, ESTADO_APROBADA, ESTADO_DEVUELTA]
 
 # --------------- Globals ---------------
 db_client: AsyncIOMotorClient = None
@@ -50,6 +67,14 @@ async def lifespan(app: FastAPI):
     await db.clientes.create_index("nombre", unique=True)
     await db.clientes.create_index("cuit")
     await db.vencimientos.create_index("periodo", unique=True)
+    await db.task_history.create_index("taskId")
+    await db.task_history.create_index("createdAt")
+
+    # Migrate existing tasks: add estado field if missing
+    await db.tasks.update_many(
+        {"estado": {"$exists": False}},
+        {"$set": {"estado": ESTADO_PENDIENTE}},
+    )
 
     # Firebase Admin SDK
     firebase_sa_json = os.getenv("FIREBASE_SA_JSON", "")
@@ -109,6 +134,46 @@ async def get_current_user(authorization: str = Header(None)):
         raise HTTPException(status_code=401, detail="Token inválido")
 
 
+# --------------- Email Helper ---------------
+async def send_email(to_email: str, subject: str, html_body: str):
+    """Send email notification via SMTP. Fails silently if not configured."""
+    if not SMTP_HOST or not SMTP_USER:
+        print(f"⚠️ Email no configurado — no se envió: {subject}")
+        return False
+    try:
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = subject
+        msg["From"] = SMTP_FROM or SMTP_USER
+        msg["To"] = to_email
+        msg.attach(MIMEText(html_body, "html"))
+
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+            server.starttls()
+            server.login(SMTP_USER, SMTP_PASS)
+            server.sendmail(msg["From"], to_email, msg.as_string())
+        print(f"✅ Email enviado a {to_email}: {subject}")
+        return True
+    except Exception as e:
+        print(f"❌ Error enviando email: {e}")
+        return False
+
+
+async def add_history_entry(task_id: int, action: str, user_email: str,
+                            user_name: str, comment: str = "", extra: dict = None):
+    """Add an entry to the task history log."""
+    entry = {
+        "taskId": task_id,
+        "action": action,
+        "userEmail": user_email,
+        "userName": user_name,
+        "comment": comment,
+        "createdAt": datetime.utcnow().isoformat(),
+    }
+    if extra:
+        entry.update(extra)
+    await db.task_history.insert_one(entry)
+
+
 # --------------- Pydantic Models ---------------
 class TaskIn(BaseModel):
     cliente: str
@@ -163,6 +228,14 @@ class UserUpdate(BaseModel):
 
 class VencimientosUpdate(BaseModel):
     tabla: Dict[str, Dict[str, Optional[str]]]  # {tipo: {digito: fecha}}
+
+
+class TaskReviewBody(BaseModel):
+    comment: Optional[str] = ""
+
+
+class TaskCommentBody(BaseModel):
+    comment: str
 
 
 # =============== API Routes ===============
@@ -242,10 +315,18 @@ async def create_task(task: TaskIn, user=Depends(get_current_user)):
     doc["enviado"] = False
     doc["finalizada"] = False
     doc["fechaFinalizacion"] = None
+    doc["estado"] = ESTADO_PENDIENTE
     doc["createdAt"] = datetime.utcnow().isoformat()
 
     await db.tasks.insert_one(doc)
     doc.pop("_id", None)
+
+    # Log creation
+    await add_history_entry(
+        new_id, "creada", user.get("email", ""),
+        user.get("name", ""), "Tarea creada"
+    )
+
     return doc
 
 
@@ -282,6 +363,19 @@ async def bulk_assign_tasks(body: BulkAssignBody, user=Depends(get_current_user)
     return {"ok": True, "modified": result.modified_count}
 
 
+# --- Admin: Tasks pending review (must be before {task_id} routes) ---
+@app.get("/api/tasks/pending-review")
+async def get_pending_review(user=Depends(get_current_user)):
+    caller = await db.users.find_one({"email": user["email"]})
+    if not caller or caller.get("role") != "admin":
+        raise HTTPException(403, "Solo admin puede ver tareas en revisión")
+
+    tasks = await db.tasks.find(
+        {"estado": ESTADO_EN_REVISION}, {"_id": 0}
+    ).sort("vencimiento", 1).to_list(5000)
+    return tasks
+
+
 @app.put("/api/tasks/{task_id}")
 async def update_task(task_id: int, task: TaskUpdate, user=Depends(get_current_user)):
     update_data = {k: v for k, v in task.model_dump().items() if v is not None}
@@ -311,6 +405,12 @@ async def toggle_status(task_id: int, body: dict, user=Depends(get_current_user)
     if field not in ("completado", "revisado", "enviado"):
         raise HTTPException(400, "Campo inválido")
 
+    # Admin can toggle any field; non-admin only completado
+    caller = await db.users.find_one({"email": user["email"]})
+    is_admin = caller and caller.get("role") == "admin"
+    if not is_admin and field != "completado":
+        raise HTTPException(403, "Solo admin puede modificar ese campo")
+
     task = await db.tasks.find_one({"taskId": task_id})
     if not task:
         raise HTTPException(404, "Tarea no encontrada")
@@ -337,8 +437,15 @@ async def finalize_task(task_id: int, user=Depends(get_current_user)):
             "completado": True,
             "revisado": True,
             "enviado": True,
+            "estado": ESTADO_APROBADA,
         }},
     )
+
+    await add_history_entry(
+        task_id, "finalizada", user.get("email", ""),
+        user.get("name", ""), "Tarea finalizada directamente"
+    )
+
     updated = await db.tasks.find_one({"taskId": task_id}, {"_id": 0})
     return updated
 
@@ -353,13 +460,221 @@ async def restore_task(task_id: int, user=Depends(get_current_user)):
             "completado": False,
             "revisado": False,
             "enviado": False,
+            "estado": ESTADO_PENDIENTE,
         }},
     )
     if result.matched_count == 0:
         raise HTTPException(404, "Tarea no encontrada")
 
+    await add_history_entry(
+        task_id, "restaurada", user.get("email", ""),
+        user.get("name", ""), "Tarea restaurada"
+    )
+
     updated = await db.tasks.find_one({"taskId": task_id}, {"_id": 0})
     return updated
+
+
+# --- Workflow: Submit for Review (non-admin marks as done) ---
+@app.put("/api/tasks/{task_id}/submit-review")
+async def submit_for_review(task_id: int, body: TaskReviewBody = None, user=Depends(get_current_user)):
+    task = await db.tasks.find_one({"taskId": task_id})
+    if not task:
+        raise HTTPException(404, "Tarea no encontrada")
+
+    if task.get("estado") not in (ESTADO_PENDIENTE, ESTADO_DEVUELTA):
+        raise HTTPException(400, "La tarea no está en estado pendiente o devuelta")
+
+    await db.tasks.update_one(
+        {"taskId": task_id},
+        {"$set": {
+            "estado": ESTADO_EN_REVISION,
+            "completado": True,
+        }},
+    )
+
+    comment = (body.comment if body else "") or "Tarea enviada a revisión"
+    await add_history_entry(
+        task_id, "enviada_a_revision", user.get("email", ""),
+        user.get("name", ""), comment
+    )
+
+    updated = await db.tasks.find_one({"taskId": task_id}, {"_id": 0})
+    return updated
+
+
+# --- Workflow: Undo Submit (non-admin takes back) ---
+@app.put("/api/tasks/{task_id}/undo-submit")
+async def undo_submit_review(task_id: int, user=Depends(get_current_user)):
+    task = await db.tasks.find_one({"taskId": task_id})
+    if not task:
+        raise HTTPException(404, "Tarea no encontrada")
+
+    if task.get("estado") != ESTADO_EN_REVISION:
+        raise HTTPException(400, "La tarea no está en revisión")
+
+    await db.tasks.update_one(
+        {"taskId": task_id},
+        {"$set": {
+            "estado": ESTADO_PENDIENTE,
+            "completado": False,
+        }},
+    )
+
+    await add_history_entry(
+        task_id, "revision_deshecha", user.get("email", ""),
+        user.get("name", ""), "Revisión deshecha por el usuario"
+    )
+
+    updated = await db.tasks.find_one({"taskId": task_id}, {"_id": 0})
+    return updated
+
+
+# --- Workflow: Admin Approve (finalizar con email) ---
+@app.put("/api/tasks/{task_id}/approve")
+async def approve_task(task_id: int, body: TaskReviewBody = None, user=Depends(get_current_user)):
+    caller = await db.users.find_one({"email": user["email"]})
+    if not caller or caller.get("role") != "admin":
+        raise HTTPException(403, "Solo admin puede aprobar tareas")
+
+    task = await db.tasks.find_one({"taskId": task_id})
+    if not task:
+        raise HTTPException(404, "Tarea no encontrada")
+
+    if task.get("estado") != ESTADO_EN_REVISION:
+        raise HTTPException(400, "La tarea no está en revisión")
+
+    today = date.today().isoformat()
+    await db.tasks.update_one(
+        {"taskId": task_id},
+        {"$set": {
+            "estado": ESTADO_APROBADA,
+            "completado": True,
+            "revisado": True,
+            "enviado": True,
+            "finalizada": True,
+            "fechaFinalizacion": today,
+        }},
+    )
+
+    comment = (body.comment if body else "") or "Tarea aprobada por admin"
+    await add_history_entry(
+        task_id, "aprobada", user.get("email", ""),
+        user.get("name", ""), comment
+    )
+
+    # Send email notification to the assigned user
+    assigned_email = task.get("assignedTo", "")
+    if assigned_email:
+        cliente = task.get("cliente", "")
+        tarea = task.get("tarea", "")
+        admin_name = caller.get("displayName", user.get("name", "Admin"))
+        email_html = f"""
+        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
+            <h2 style="color:#059669">✅ Tarea Aprobada</h2>
+            <p>Hola,</p>
+            <p>La siguiente tarea fue <strong>aprobada y finalizada</strong> por <strong>{admin_name}</strong>:</p>
+            <div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;padding:16px;margin:16px 0">
+                <p style="margin:4px 0"><strong>Cliente:</strong> {cliente}</p>
+                <p style="margin:4px 0"><strong>Tarea:</strong> {tarea}</p>
+                <p style="margin:4px 0"><strong>Fecha:</strong> {today}</p>
+                {f'<p style="margin:4px 0"><strong>Comentario:</strong> {comment}</p>' if comment and comment != "Tarea aprobada por admin" else ''}
+            </div>
+            <p style="color:#6b7280;font-size:13px">— Calendario de Tareas</p>
+        </div>
+        """
+        await send_email(
+            assigned_email,
+            f"✅ Tarea aprobada: {cliente} — {tarea}",
+            email_html,
+        )
+
+    updated = await db.tasks.find_one({"taskId": task_id}, {"_id": 0})
+    return {**updated, "emailSent": bool(assigned_email and SMTP_HOST)}
+
+
+# --- Workflow: Admin Return with corrections ---
+@app.put("/api/tasks/{task_id}/return")
+async def return_task(task_id: int, body: TaskReviewBody, user=Depends(get_current_user)):
+    caller = await db.users.find_one({"email": user["email"]})
+    if not caller or caller.get("role") != "admin":
+        raise HTTPException(403, "Solo admin puede devolver tareas")
+
+    task = await db.tasks.find_one({"taskId": task_id})
+    if not task:
+        raise HTTPException(404, "Tarea no encontrada")
+
+    if task.get("estado") != ESTADO_EN_REVISION:
+        raise HTTPException(400, "La tarea no está en revisión")
+
+    await db.tasks.update_one(
+        {"taskId": task_id},
+        {"$set": {
+            "estado": ESTADO_DEVUELTA,
+            "completado": False,
+            "revisado": False,
+        }},
+    )
+
+    comment = body.comment or "Devuelta con ajustes"
+    await add_history_entry(
+        task_id, "devuelta", user.get("email", ""),
+        user.get("name", ""), comment
+    )
+
+    # Send email notification to the assigned user
+    assigned_email = task.get("assignedTo", "")
+    if assigned_email:
+        cliente = task.get("cliente", "")
+        tarea = task.get("tarea", "")
+        admin_name = caller.get("displayName", user.get("name", "Admin"))
+        email_html = f"""
+        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
+            <h2 style="color:#d97706">↩️ Tarea Devuelta</h2>
+            <p>Hola,</p>
+            <p>La siguiente tarea fue <strong>devuelta con observaciones</strong> por <strong>{admin_name}</strong>:</p>
+            <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:16px;margin:16px 0">
+                <p style="margin:4px 0"><strong>Cliente:</strong> {cliente}</p>
+                <p style="margin:4px 0"><strong>Tarea:</strong> {tarea}</p>
+                <p style="margin:4px 0"><strong>Observación:</strong> {comment}</p>
+            </div>
+            <p>Por favor revisá la tarea y volvé a enviarla para revisión.</p>
+            <p style="color:#6b7280;font-size:13px">— Calendario de Tareas</p>
+        </div>
+        """
+        await send_email(
+            assigned_email,
+            f"↩️ Tarea devuelta: {cliente} — {tarea}",
+            email_html,
+        )
+
+    updated = await db.tasks.find_one({"taskId": task_id}, {"_id": 0})
+    return updated
+
+
+# --- Task History / Comments ---
+@app.get("/api/tasks/{task_id}/history")
+async def get_task_history(task_id: int, user=Depends(get_current_user)):
+    entries = await db.task_history.find(
+        {"taskId": task_id}, {"_id": 0}
+    ).sort("createdAt", -1).to_list(200)
+    return entries
+
+
+@app.post("/api/tasks/{task_id}/comments")
+async def add_task_comment(task_id: int, body: TaskCommentBody, user=Depends(get_current_user)):
+    task = await db.tasks.find_one({"taskId": task_id})
+    if not task:
+        raise HTTPException(404, "Tarea no encontrada")
+
+    if not body.comment.strip():
+        raise HTTPException(400, "El comentario no puede estar vacío")
+
+    await add_history_entry(
+        task_id, "comentario", user.get("email", ""),
+        user.get("name", ""), body.comment.strip()
+    )
+    return {"ok": True}
 
 
 # --- Schedule (Personal Calendar) ---
