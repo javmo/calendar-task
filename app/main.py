@@ -3,6 +3,7 @@ Calendario de Tareas - FastAPI Backend
 MongoDB + Firebase Auth
 """
 import os
+import re
 import smtplib
 from contextlib import asynccontextmanager
 from datetime import date, datetime
@@ -55,20 +56,26 @@ async def lifespan(app: FastAPI):
     db_client = AsyncIOMotorClient(MONGO_URI)
     db = db_client[DB_NAME]
 
-    # Indexes
-    await db.tasks.create_index("taskId", unique=True)
-    await db.tasks.create_index("assignedTo")
-    await db.tasks.create_index("vencimiento")
-    await db.users.create_index("email", unique=True)
-    await db.schedules.create_index(
-        [("userEmail", 1), ("taskId", 1)], unique=True
-    )
-    await db.clientes.create_index("clienteId", unique=True)
-    await db.clientes.create_index("nombre", unique=True)
-    await db.clientes.create_index("cuit")
-    await db.vencimientos.create_index("periodo", unique=True)
-    await db.task_history.create_index("taskId")
-    await db.task_history.create_index("createdAt")
+    # Indexes — use try/except to handle pre-existing conflicting indexes
+    async def safe_index(coll, keys, **kwargs):
+        try:
+            await coll.create_index(keys, **kwargs)
+        except Exception as e:
+            print(f"⚠️ Index {keys} on {coll.name}: {e}")
+
+    await safe_index(db.tasks, "taskId", unique=True)
+    await safe_index(db.tasks, "assignedTo")
+    await safe_index(db.tasks, "vencimiento")
+    await safe_index(db.users, "email", unique=True)
+    await safe_index(db.schedules, [("userEmail", 1), ("taskId", 1)], unique=True)
+    await safe_index(db.clientes, "clienteId", unique=True)
+    await safe_index(db.clientes, "nombre", unique=True)
+    await safe_index(db.clientes, "cuit")
+    await safe_index(db.vencimientos, "periodo", unique=True)
+    await safe_index(db.task_history, "taskId")
+    await safe_index(db.task_history, "createdAt")
+    await safe_index(db.task_history, "mentions")
+    await safe_index(db.task_reads, [("userEmail", 1), ("taskId", 1)], unique=True)
 
     # Migrate existing tasks: add estado field if missing
     await db.tasks.update_many(
@@ -667,14 +674,108 @@ async def add_task_comment(task_id: int, body: TaskCommentBody, user=Depends(get
     if not task:
         raise HTTPException(404, "Tarea no encontrada")
 
-    if not body.comment.strip():
+    comment = body.comment.strip()
+    if not comment:
         raise HTTPException(400, "El comentario no puede estar vacío")
+
+    # Parse @mentions (match @Word or @"Name With Spaces")
+    raw_mentions = re.findall(r'@"([^"]+)"|@(\S+)', comment)
+    mention_names = [m[0] or m[1] for m in raw_mentions]
+
+    mentioned_emails = []
+    if mention_names:
+        all_users = await db.users.find(
+            {}, {"email": 1, "responsableName": 1, "displayName": 1}
+        ).to_list(200)
+        for name in mention_names:
+            name_lower = name.lower()
+            for u in all_users:
+                if (u.get("responsableName", "").lower() == name_lower or
+                    u.get("displayName", "").lower() == name_lower or
+                    u.get("email", "").lower() == name_lower):
+                    if u["email"] not in mentioned_emails:
+                        mentioned_emails.append(u["email"])
+                    break
+
+    extra = {}
+    if mentioned_emails:
+        extra["mentions"] = mentioned_emails
 
     await add_history_entry(
         task_id, "comentario", user.get("email", ""),
-        user.get("name", ""), body.comment.strip()
+        user.get("name", ""), comment, extra=extra
+    )
+    return {"ok": True, "mentions": mentioned_emails}
+
+
+# --- Unread Counts & Mentions ---
+@app.get("/api/unread-counts")
+async def get_unread_counts(user=Depends(get_current_user)):
+    """Return {taskId: unreadCount} for comment/mention history entries."""
+    email = user.get("email", "")
+
+    reads = await db.task_reads.find(
+        {"userEmail": email}, {"_id": 0}
+    ).to_list(5000)
+    read_map = {r["taskId"]: r["lastReadAt"] for r in reads}
+
+    pipeline = [
+        {"$match": {"action": {"$in": ["comentario", "mencion"]}}},
+        {"$group": {
+            "_id": "$taskId",
+            "entries": {"$push": {
+                "createdAt": "$createdAt",
+                "userEmail": "$userEmail"
+            }}
+        }},
+    ]
+    results = await db.task_history.aggregate(pipeline).to_list(5000)
+
+    counts = {}
+    for r in results:
+        task_id = r["_id"]
+        last_read = read_map.get(task_id, "")
+        unread = sum(
+            1 for e in r["entries"]
+            if e["createdAt"] > last_read and e["userEmail"] != email
+        )
+        if unread > 0:
+            counts[str(task_id)] = unread
+    return counts
+
+
+@app.put("/api/tasks/{task_id}/mark-read")
+async def mark_task_read(task_id: int, user=Depends(get_current_user)):
+    email = user.get("email", "")
+    await db.task_reads.update_one(
+        {"userEmail": email, "taskId": task_id},
+        {"$set": {"lastReadAt": datetime.utcnow().isoformat()}},
+        upsert=True,
     )
     return {"ok": True}
+
+
+@app.get("/api/mentions")
+async def get_mentions(user=Depends(get_current_user)):
+    """Get recent mentions for the current user (up to 50)."""
+    email = user.get("email", "")
+
+    entries = await db.task_history.find(
+        {"mentions": email}, {"_id": 0}
+    ).sort("createdAt", -1).to_list(50)
+
+    # Determine which are unread
+    task_ids = list(set(e["taskId"] for e in entries))
+    reads = await db.task_reads.find(
+        {"userEmail": email, "taskId": {"$in": task_ids}}, {"_id": 0}
+    ).to_list(500)
+    read_map = {r["taskId"]: r["lastReadAt"] for r in reads}
+
+    for e in entries:
+        last_read = read_map.get(e["taskId"], "")
+        e["isUnread"] = e["createdAt"] > last_read
+
+    return entries
 
 
 # --- Schedule (Personal Calendar) ---

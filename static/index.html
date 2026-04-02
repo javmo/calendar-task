@@ -202,6 +202,9 @@ body{font-family:'Inter','Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;
 
 /* =================== LIST VIEW =================== */
 .list-container{padding:20px 28px}
+.list-bulk-toolbar{display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--accent-bg);border:1px solid var(--accent);border-radius:var(--radius-sm);margin-bottom:12px;animation:fadeIn .15s ease}
+.list-bulk-toolbar .bulk-count{font-size:13px;font-weight:600;color:var(--accent);flex:1}
+.list-table tbody tr.selected-row{background:#ede9fe !important}
 .list-table{width:100%;border-collapse:separate;border-spacing:0;background:var(--surface);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
 .list-table thead th{background:var(--surface2);padding:12px 14px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);font-weight:700;border-bottom:2px solid var(--border);cursor:pointer;user-select:none;transition:color .15s}
 .list-table thead th:hover{color:var(--accent)}
@@ -356,6 +359,28 @@ body{font-family:'Inter','Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;
 .form-group select,.form-group input{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-size:14px;font-family:inherit;transition:border-color .15s}
 .form-group select:focus,.form-group input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-bg)}
 .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:22px;flex-wrap:wrap}
+.modal.with-detail{width:560px}
+/* Task Detail Panel inside modal */
+#taskDetailPanel{margin-top:20px;border-top:2px solid var(--border);padding-top:16px}
+.tdp-status{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.tdp-status-item{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:8px;font-size:11px;font-weight:600;border:1px solid var(--border)}
+.tdp-status-item.active{border-color:var(--success);background:var(--success-bg);color:var(--success)}
+.tdp-status-item.inactive{border-color:var(--border);background:var(--surface2);color:var(--text-muted)}
+.tdp-actions{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.tdp-history-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.tdp-history-body{max-height:250px;overflow-y:auto;border:1px solid var(--border-light);border-radius:var(--radius-sm);padding:8px;margin-bottom:8px;background:var(--surface2)}
+.tdp-history-body .history-entry{padding:6px 0;border-bottom:1px solid var(--border-light)}
+.tdp-history-body .history-entry:last-child{border-bottom:none}
+.tdp-history-body .he-icon{width:24px;height:24px;font-size:11px}
+.tdp-history-body .he-user{font-size:11px}
+.tdp-history-body .he-action-label{font-size:10px}
+.tdp-history-body .he-time{font-size:9px}
+.tdp-history-body .he-comment{font-size:11px;padding:4px 8px}
+.tdp-history-body .history-empty{padding:16px;font-size:12px}
+.tdp-comment-form{display:flex;gap:6px;position:relative}
+.tdp-comment-form input{flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-family:inherit}
+.tdp-comment-form input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-bg)}
+.form-group.readonly select,.form-group.readonly input{pointer-events:none;opacity:.7;background:var(--surface2)}
 
 /* =================== LEGEND =================== */
 .legend{padding:8px 28px;display:flex;gap:14px;flex-wrap:wrap;background:var(--surface);border-bottom:1px solid var(--border)}
@@ -636,6 +661,23 @@ body{font-family:'Inter','Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;
 .notif-badge.hidden{display:none}
 @keyframes badgePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
 
+/* UNREAD BADGES on task cards */
+.unread-badge{min-width:16px;height:16px;background:#dc2626;color:white;font-size:9px;font-weight:800;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;padding:0 4px;flex-shrink:0;animation:badgePulse 3s ease-in-out infinite}
+.unread-dot{width:8px;height:8px;background:#dc2626;border-radius:50%;flex-shrink:0;box-shadow:0 0 4px rgba(220,38,38,.5);animation:badgePulse 3s ease-in-out infinite}
+.check-btn.has-unread{position:relative}
+.check-btn.has-unread::after{content:attr(data-unread);position:absolute;top:-6px;right:-6px;min-width:14px;height:14px;background:#dc2626;color:white;font-size:8px;font-weight:800;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 3px}
+
+/* @MENTION styles */
+.mention-highlight{background:#ede9fe;color:#7c3aed;font-weight:600;padding:1px 4px;border-radius:4px;cursor:pointer}
+.mention-highlight.is-me{background:#dbeafe;color:#1d4ed8}
+.mention-autocomplete{position:absolute;bottom:100%;left:0;right:0;max-height:180px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);box-shadow:var(--shadow-lg);z-index:500;display:none}
+.mention-autocomplete.visible{display:block}
+.mention-option{padding:8px 12px;cursor:pointer;font-size:12px;display:flex;align-items:center;gap:8px;transition:background .1s}
+.mention-option:hover,.mention-option.active{background:var(--accent-bg);color:var(--accent)}
+.mention-option .mo-name{font-weight:600}
+.mention-option .mo-email{font-size:10px;color:var(--text-muted)}
+.history-comment-form{position:relative}
+
 /* =================== FLOATING SUMMARY PANEL =================== */
 .summary-fab{position:fixed;bottom:24px;right:24px;z-index:250;display:flex;flex-direction:column;align-items:flex-end;gap:10px}
 .summary-fab-btn{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:white;border:none;cursor:pointer;font-size:22px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(79,70,229,.4);transition:all .2s;position:relative}
@@ -895,10 +937,24 @@ body{font-family:'Inter','Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;
           <option value="4TA SEMANA">4TA SEMANA</option>
         </select>
       </div>
-      <div class="modal-actions">
+      <div class="modal-actions" id="modalFormActions">
         <button class="btn" onclick="closeModal()">Cancelar</button>
-        <button class="btn btn-primary" onclick="saveTask()">Guardar</button>
-        <button class="btn btn-danger" id="btnDelete" style="display:none" onclick="deleteTask()">🗑 Eliminar</button>
+        <button class="btn btn-primary" id="btnSave" onclick="saveTask()">Guardar</button>
+        <button class="btn btn-danger" id="btnDelete" style="display:none" onclick="deleteFromModal()">🗑 Eliminar</button>
+      </div>
+      <!-- Task detail panel: status + actions + history (shown when editing) -->
+      <div id="taskDetailPanel" style="display:none">
+        <div class="tdp-status" id="tdpStatus"></div>
+        <div class="tdp-actions" id="tdpActions"></div>
+        <div class="tdp-history">
+          <h3 class="tdp-history-title">📋 Historial <span id="tdpUnread"></span></h3>
+          <div class="tdp-history-body" id="tdpHistoryBody"></div>
+          <div class="tdp-comment-form">
+            <div class="mention-autocomplete" id="tdpMentionDropdown"></div>
+            <input type="text" id="tdpCommentInput" placeholder="Agregar comentario... (usa @nombre para mencionar)" onkeydown="onTdpCommentKeydown(event)" oninput="onTdpCommentInput(this)">
+            <button class="btn btn-primary" onclick="addTdpComment()">Enviar</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -957,7 +1013,8 @@ body{font-family:'Inter','Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;
     </div>
     <div class="history-modal-body" id="historyBody"></div>
     <div class="history-comment-form">
-      <input type="text" id="historyCommentInput" placeholder="Agregar comentario..." onkeydown="if(event.key==='Enter')addComment()">
+      <div class="mention-autocomplete" id="mentionDropdown"></div>
+      <input type="text" id="historyCommentInput" placeholder="Agregar comentario... (usa @nombre para mencionar)" onkeydown="onCommentKeydown(event)" oninput="onCommentInput(this)">
       <button class="btn btn-primary" onclick="addComment()">Enviar</button>
     </div>
   </div>
@@ -1037,6 +1094,9 @@ const state = {
   finalizedCollapsed: false,
   devMode: false,
   clientSearch: '',
+  selectedTasks: new Set(),
+  unreadCounts: {},
+  mentions: [],
 };
 
 let authToken = null;
@@ -1082,6 +1142,13 @@ async function loadAllData() {
 
     if (state.currentUser) {
       state.schedule = await api('GET', '/api/schedule');
+      // Load unread comment counts and mentions
+      try {
+        state.unreadCounts = await api('GET', '/api/unread-counts');
+      } catch(e) { console.warn('Unread counts load:', e); state.unreadCounts = {}; }
+      try {
+        state.mentions = await api('GET', '/api/mentions');
+      } catch(e) { console.warn('Mentions load:', e); state.mentions = []; }
     }
     removeToast(loadingToast);
   } catch (e) {
@@ -1468,6 +1535,7 @@ function updateStats() {
 // =================== VIEW MANAGEMENT ===================
 function setView(v) {
   state.currentView = v;
+  if (v !== 'list') state.selectedTasks.clear();
   document.querySelectorAll('.view-toggle .btn').forEach(b => b.classList.toggle('active', b.dataset.view === v));
 
 const views = { month: 'viewMonth', week: 'viewWeek', list: 'viewList', mycal: 'viewMyCal', users: 'viewUsers', clientes: 'viewClientes', vtos: 'viewVtos', assign: 'viewAssign', review: 'viewReview' };
@@ -1478,6 +1546,8 @@ const views = { month: 'viewMonth', week: 'viewWeek', list: 'viewList', mycal: '
     // Show/hide filters for special views
     document.getElementById('filterGroup').style.display = (v === 'users' || v === 'clientes' || v === 'vtos' || v === 'assign' || v === 'review') ? 'none' : '';
     document.getElementById('legend').style.display = (v === 'users' || v === 'mycal' || v === 'clientes' || v === 'vtos' || v === 'assign' || v === 'review') ? 'none' : '';
+    // Hide toolbar search in views with their own search
+    document.querySelector('.toolbar .search-wrapper').style.display = (v === 'clientes' || v === 'users' || v === 'vtos' || v === 'assign' || v === 'review') ? 'none' : '';
 
   render();
 }
@@ -1537,6 +1607,8 @@ function renderMonth() {
         const st = getTaskStatus(t);
         h += `<div class="task-card ${st==='overdue'&&!isFin?'overdue':''} ${isFin?'finalized':''}" data-type="${t.tarea}" ${isFin?'':`onclick="editTask(${t.taskId})"`} title="${t.cliente} — ${t.tarea}&#10;${t.responsable} | Vto: ${formatDateShort(t.vencimiento)}${isFin?'&#10;✅ Finalizada '+formatDateFull(t.fechaFinalizacion):''}">`;
         h += `<div class="card-text"><span class="client-name">${t.cliente}</span><span class="task-type">${t.tarea}</span></div>`;
+        const uc = getUnreadCount(t.taskId);
+        h += uc > 0 ? `<span class="unread-badge">${uc}</span>` : '';
         h += isFin ? `<span class="fin-tag">✅</span>` : `<span class="card-badge badge-${(t.responsable||'').toLowerCase()}">${(t.responsable||'')[0]||'?'}</span>`;
         h += `</div>`;
       });
@@ -1569,23 +1641,28 @@ function renderWeek() {
       const isFin = t.finalizada;
       const estado = t.estado || 'pendiente';
       h += `<div class="week-task-card ${isFin?'finalized':''}" data-type="${t.tarea}" ${isFin?'':`onclick="editTask(${t.taskId})"`}>`;
-      h += `<div class="client-name">${t.cliente}</div><div class="task-type">${t.tarea}</div>`;
+      h += `<div class="client-name">${t.cliente} ${unreadDotHtml(t.taskId)}</div><div class="task-type">${t.tarea}</div>`;
       if (isFin) {
         h += `<div class="fin-tag">✅ Finalizada ${formatDateShort(t.fechaFinalizacion)}</div>`;
+        h += `<div class="card-actions" onclick="event.stopPropagation()">`;
+        h += historyBtnHtml(t.taskId, 'action-btn', 'font-size:10px');
+        if (isAdmin()) h += `<button class="action-btn" onclick="restoreTask(${t.taskId})" title="Restaurar" style="font-size:10px">↩</button>`;
+        h += `</div>`;
       } else {
         h += `<div style="margin-top:2px"><span class="estado-badge estado-${estado}" style="font-size:9px;padding:1px 6px">${getEstadoIcon(estado)} ${getEstadoLabel(estado)}</span></div>`;
         h += `<div class="card-actions" onclick="event.stopPropagation()">`;
         if (isAdmin()) {
           h += `<button class="action-btn ${t.completado?'active':''}" onclick="toggleStatus(${t.taskId},'completado')" title="Completado">✔</button>`;
           h += `<button class="action-btn ${t.enviado?'active':''}" onclick="toggleStatus(${t.taskId},'enviado')" title="Enviado">📩</button>`;
-        } else {
+          h += `<button class="action-btn finalize-btn" onclick="finalizeTask(${t.taskId})" title="Finalizar" style="font-size:10px">✅</button>`;
+        } else if (isMyTask(t)) {
           if (estado === 'pendiente' || estado === 'devuelta') {
             h += `<button class="action-btn" onclick="submitForReview(${t.taskId})" title="Enviar a revisión" style="font-size:10px;width:auto;padding:2px 6px">📤</button>`;
           } else if (estado === 'en_revision') {
             h += `<button class="action-btn" onclick="undoSubmitReview(${t.taskId})" title="Deshacer envío" style="font-size:10px;width:auto;padding:2px 6px">↩</button>`;
           }
         }
-        h += `<button class="action-btn" onclick="openHistory(${t.taskId})" title="Historial" style="font-size:10px">📋</button>`;
+        h += historyBtnHtml(t.taskId, 'action-btn', 'font-size:10px');
         h += `</div>`;
       }
       h += `</div>`;
@@ -1598,24 +1675,36 @@ function renderWeek() {
 
 // =================== RENDER: LIST ===================
 function renderList() {
-  const year = state.currentDate.getFullYear(), month = state.currentDate.getMonth();
-  document.getElementById('monthLabel').textContent = `${MONTHS_ES[month]} ${year}`;
-
-  const currentMonth = `${year}-${String(month + 1).padStart(2, '0')}`;
-
-  // Sync filterMes display
-  const mesEl = document.getElementById('filterMes');
-  if ([...mesEl.options].some(o => o.value === currentMonth)) mesEl.value = currentMonth;
-
-  // Filter by current month directly + other active filters
   const fC = document.getElementById('filterCliente').value;
   const fT = document.getElementById('filterTarea').value;
   const fR = document.getElementById('filterResponsable').value;
   const fE = document.getElementById('filterEstado').value;
   const search = document.getElementById('searchInput').value.toLowerCase();
 
+  const mesEl = document.getElementById('filterMes');
+  const fMes = mesEl.value;
+
+  let currentMonth;
+  if (fMes) {
+    // Specific month selected from dropdown
+    currentMonth = fMes;
+    const [y, m] = fMes.split('-').map(Number);
+    state.currentDate = new Date(y, m - 1, 1);
+    document.getElementById('monthLabel').textContent = `${MONTHS_ES[m-1]} ${y}`;
+  } else if (fC) {
+    // Client selected but no month — show all months for this client
+    currentMonth = null;
+    document.getElementById('monthLabel').textContent = `${fC} — Todos los meses`;
+  } else {
+    // Default: use current navigation date
+    const year = state.currentDate.getFullYear(), month = state.currentDate.getMonth();
+    currentMonth = `${year}-${String(month + 1).padStart(2, '0')}`;
+    document.getElementById('monthLabel').textContent = `${MONTHS_ES[month]} ${year}`;
+    if ([...mesEl.options].some(o => o.value === currentMonth)) mesEl.value = currentMonth;
+  }
+
   let tasks = state.tasks.filter(t => {
-    if (!(t.vencimiento || '').startsWith(currentMonth)) return false;
+    if (currentMonth && !(t.vencimiento || '').startsWith(currentMonth)) return false;
     if (fC && t.cliente !== fC) return false;
     if (fT && t.tarea !== fT) return false;
     if (fR && t.responsable !== fR) return false;
@@ -1637,7 +1726,20 @@ function renderList() {
   });
 
   const si = c => c === state.sortCol ? (state.sortDir === 1 ? '▲' : '▼') : '';
-  let h = `<table class="list-table"><thead><tr>`;
+
+  // Bulk-delete toolbar (admin only, shown when tasks are selected)
+  const selCount = state.selectedTasks.size;
+  let h = '';
+  if (isAdmin()) {
+    h += `<div class="list-bulk-toolbar" id="bulkToolbar" style="${selCount>0?'':'display:none'}">`;
+    h += `<span class="bulk-count">${selCount} tarea${selCount!==1?'s':''} seleccionada${selCount!==1?'s':''}</span>`;
+    h += `<button class="btn btn-danger" onclick="deleteSelectedTasks()">🗑 Eliminar seleccionadas</button>`;
+    h += `<button class="btn" onclick="clearListSelection()">✕ Deseleccionar</button>`;
+    h += `</div>`;
+  }
+
+  h += `<table class="list-table"><thead><tr>`;
+  if (isAdmin()) h += `<th style="width:32px;text-align:center"><input type="checkbox" id="selectAllChk" onclick="toggleSelectAll(this.checked)" title="Seleccionar todo"></th>`;
   h += `<th onclick="sortBy('cliente')">Cliente <span class="sort-icon">${si('cliente')}</span></th>`;
   h += `<th onclick="sortBy('tarea')">Tarea <span class="sort-icon">${si('tarea')}</span></th>`;
   h += `<th onclick="sortBy('responsable')">Quién <span class="sort-icon">${si('responsable')}</span></th>`;
@@ -1652,8 +1754,10 @@ function renderList() {
     const vb = st === 'overdue' ? 'overdue' : 'upcoming';
     const isFin = t.finalizada;
     const estado = t.estado || 'pendiente';
+    const isSel = state.selectedTasks.has(t.taskId);
 
-    h += `<tr class="${isFin?'finalized':''}" ${isFin?'':`ondblclick="editTask(${t.taskId})"`}>`;
+    h += `<tr class="${isFin?'finalized':''}${isSel?' selected-row':''}" ${isFin?'':`ondblclick="editTask(${t.taskId})"`}>`;
+    if (isAdmin()) h += `<td onclick="event.stopPropagation()" style="text-align:center"><input type="checkbox" class="task-select-chk" data-id="${t.taskId}" ${isSel?'checked':''} onchange="toggleTaskSelect(${t.taskId},this.checked)"></td>`;
     h += `<td><strong>${t.cliente}</strong></td>`;
     h += `<td><span class="type-badge" style="background:${co}15;color:${co}">${t.tarea}</span></td>`;
     h += `<td><span class="card-badge badge-${(t.responsable||'').toLowerCase()}">${t.responsable}</span></td>`;
@@ -1664,7 +1768,8 @@ function renderList() {
       h += `<td><span class="fin-tag">✅ Finalizada ${formatDateFull(t.fechaFinalizacion)}</span></td>`;
       h += `<td><div class="status-checks">`;
       if (isAdmin()) h += `<button class="restore-btn" onclick="restoreTask(${t.taskId})" title="Restaurar">↩</button>`;
-      h += `<button class="check-btn" onclick="openHistory(${t.taskId})" title="Historial">📋</button>`;
+      h += historyBtnHtml(t.taskId);
+      if (isAdmin()) h += `<button class="check-btn" onclick="deleteTask(${t.taskId})" title="Eliminar tarea" style="color:var(--danger);border-color:var(--danger-border)">🗑</button>`;
       h += `</div></td>`;
     } else {
       h += `<td><span class="estado-badge estado-${estado}">${getEstadoIcon(estado)} ${getEstadoLabel(estado)}</span></td>`;
@@ -1672,15 +1777,19 @@ function renderList() {
       if (isAdmin()) {
         h += `<button class="check-btn ${t.completado?'active':''}" onclick="toggleStatus(${t.taskId},'completado')" title="Completado">✔</button>`;
         h += `<button class="check-btn ${t.enviado?'active':''}" onclick="toggleStatus(${t.taskId},'enviado')" title="Enviado">📩</button>`;
+        h += `<button class="check-btn finalize-btn" onclick="finalizeTask(${t.taskId})" title="Finalizar tarea">✅</button>`;
       } else {
-        // Non-admin workflow buttons
-        if (estado === 'pendiente' || estado === 'devuelta') {
-          h += `<button class="btn-workflow btn-submit-review" onclick="submitForReview(${t.taskId})" title="Enviar a revisión">📤 Enviar</button>`;
-        } else if (estado === 'en_revision') {
-          h += `<button class="btn-workflow btn-undo-submit" onclick="undoSubmitReview(${t.taskId})" title="Deshacer envío">↩ Deshacer</button>`;
+        // Non-admin workflow buttons — only for tasks assigned to current user
+        if (isMyTask(t)) {
+          if (estado === 'pendiente' || estado === 'devuelta') {
+            h += `<button class="btn-workflow btn-submit-review" onclick="submitForReview(${t.taskId})" title="Enviar a revisión">📤 Enviar</button>`;
+          } else if (estado === 'en_revision') {
+            h += `<button class="btn-workflow btn-undo-submit" onclick="undoSubmitReview(${t.taskId})" title="Deshacer envío">↩ Deshacer</button>`;
+          }
         }
       }
-      h += `<button class="check-btn" onclick="openHistory(${t.taskId})" title="Historial">📋</button>`;
+      h += historyBtnHtml(t.taskId);
+      if (isAdmin()) h += `<button class="check-btn" onclick="deleteTask(${t.taskId})" title="Eliminar tarea" style="color:var(--danger);border-color:var(--danger-border)">🗑</button>`;
       h += `</div></td>`;
     }
     h += `</tr>`;
@@ -1703,6 +1812,43 @@ function onFilterMesChange() {
 function sortBy(c) {
   if (state.sortCol === c) state.sortDir *= -1;
   else { state.sortCol = c; state.sortDir = 1; }
+  render();
+}
+
+function toggleTaskSelect(id, checked) {
+  if (checked) state.selectedTasks.add(id);
+  else state.selectedTasks.delete(id);
+  // Update bulk toolbar without full re-render
+  const toolbar = document.getElementById('bulkToolbar');
+  if (toolbar) {
+    const count = state.selectedTasks.size;
+    toolbar.style.display = count > 0 ? '' : 'none';
+    const span = toolbar.querySelector('.bulk-count');
+    if (span) span.textContent = `${count} tarea${count!==1?'s':''} seleccionada${count!==1?'s':''}`;
+  }
+  const allChk = document.getElementById('selectAllChk');
+  if (allChk) allChk.indeterminate = state.selectedTasks.size > 0;
+}
+
+function toggleSelectAll(checked) {
+  const checkboxes = document.querySelectorAll('#viewList input[type=checkbox].task-select-chk');
+  checkboxes.forEach(cb => {
+    const id = parseInt(cb.dataset.id);
+    cb.checked = checked;
+    if (checked) state.selectedTasks.add(id);
+    else state.selectedTasks.delete(id);
+  });
+  const toolbar = document.getElementById('bulkToolbar');
+  if (toolbar) {
+    const count = state.selectedTasks.size;
+    toolbar.style.display = count > 0 ? '' : 'none';
+    const span = toolbar.querySelector('.bulk-count');
+    if (span) span.textContent = `${count} tarea${count!==1?'s':''} seleccionada${count!==1?'s':''}`;
+  }
+}
+
+function clearListSelection() {
+  state.selectedTasks.clear();
   render();
 }
 
@@ -2012,7 +2158,7 @@ function renderClientes() {
   let h = `<div class="clients-toolbar">
     <div class="search-wrapper" style="max-width:300px">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input type="text" class="search-input" placeholder="Buscar cliente o CUIT..." value="${state.clientSearch}" oninput="state.clientSearch=this.value;renderClientes()">
+      <input type="text" class="search-input" id="clientSearchInput" placeholder="Buscar cliente o CUIT..." value="${state.clientSearch}" oninput="onClientSearch(this.value)">
     </div>
     <span class="clients-count">${filtered.length} cliente${filtered.length!==1?'s':''}</span>
     <button class="btn btn-primary" onclick="addClient()">＋ Nuevo Cliente</button>
@@ -2044,6 +2190,16 @@ function renderClientes() {
   h += `</div>`;
 
   document.getElementById('viewClientes').innerHTML = h;
+  // Restore focus after full re-render so typing is uninterrupted
+  if (state.clientSearch) {
+    const inp = document.getElementById('clientSearchInput');
+    if (inp) { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); }
+  }
+}
+
+function onClientSearch(val) {
+  state.clientSearch = val;
+  renderClientes();
 }
 
 function showClientDetail(clienteId) {
@@ -2854,7 +3010,10 @@ function renderFinalized() {
     h += `<td><span class="card-badge badge-${(t.responsable||'').toLowerCase()}">${t.responsable}</span></td>`;
     h += `<td style="font-size:11px;color:var(--text-muted)">${formatDateShort(t.vencimiento)}</td>`;
     h += `<td><span class="fin-date">${formatDateFull(t.fechaFinalizacion)}</span></td>`;
-    h += `<td><button class="restore-btn" onclick="restoreTask(${t.taskId})" title="Restaurar">↩ Restaurar</button></td>`;
+    h += `<td style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">`;
+    if (isAdmin()) h += `<button class="restore-btn" onclick="restoreTask(${t.taskId})" title="Restaurar">↩ Restaurar</button>`;
+    h += `<button class="restore-btn" onclick="openHistory(${t.taskId})" title="Ver historial">📋 Historial ${unreadDotHtml(t.taskId)}</button>`;
+    h += `</td>`;
     h += `</tr>`;
   });
   h += `</tbody></table>`;
@@ -2909,6 +3068,40 @@ async function finalizeTask(id) {
   } catch (e) { showToast('Error: ' + e.message, 'error'); }
 }
 
+async function deleteTask(id) {
+  const t = state.tasks.find(x => x.taskId === id);
+  if (!t) return;
+  const ok = await showConfirm('Eliminar tarea', `¿Eliminar "<strong>${t.cliente} — ${t.tarea}</strong>"?<br>Esta acción no se puede deshacer.`, { icon: '🗑', confirmText: 'Eliminar', danger: true });
+  if (!ok) return;
+  try {
+    await api('DELETE', `/api/tasks/${id}`);
+    state.tasks = state.tasks.filter(x => x.taskId !== id);
+    state.selectedTasks.delete(id);
+    delete state.unreadCounts[String(id)];
+    populateFilters();
+    render();
+    showToast('Tarea eliminada', 'success');
+  } catch (e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+async function deleteSelectedTasks() {
+  if (state.selectedTasks.size === 0) return;
+  const count = state.selectedTasks.size;
+  const ok = await showConfirm('Eliminar tareas seleccionadas', `¿Eliminar <strong>${count} tarea${count>1?'s':''}</strong>?<br>Esta acción no se puede deshacer.`, { icon: '🗑', confirmText: `Eliminar ${count}`, danger: true });
+  if (!ok) return;
+  try {
+    for (const id of [...state.selectedTasks]) {
+      await api('DELETE', `/api/tasks/${id}`);
+      delete state.unreadCounts[String(id)];
+    }
+    state.tasks = state.tasks.filter(t => !state.selectedTasks.has(t.taskId));
+    state.selectedTasks.clear();
+    populateFilters();
+    render();
+    showToast(`${count} tarea${count>1?'s':''} eliminada${count>1?'s':''}`, 'success');
+  } catch (e) { showToast('Error: ' + e.message, 'error'); }
+}
+
 async function restoreTask(id) {
   try {
     const updated = await api('PUT', `/api/tasks/${id}/restore`);
@@ -2919,10 +3112,16 @@ async function restoreTask(id) {
   } catch (e) { showToast('Error: ' + e.message, 'error'); }
 }
 
-function finalizeFromModal() {
+async function finalizeFromModal() {
   if (state.editingId === null) return;
-  finalizeTask(state.editingId);
-  closeModal();
+  try {
+    const updated = await api('PUT', `/api/tasks/${state.editingId}/finalize`);
+    const idx = state.tasks.findIndex(t => t.taskId === state.editingId);
+    if (idx >= 0) state.tasks[idx] = updated;
+    editTask(state.editingId);
+    render();
+    showToast(`Tarea finalizada`, 'success');
+  } catch (e) { showToast('Error: ' + e.message, 'error'); }
 }
 
 // =================== TASK CRUD ===================
@@ -2936,6 +3135,11 @@ function addTask() {
   document.getElementById('formVencimiento').value = '';
   document.getElementById('formSemana').value = '1ER SEMANA';
   document.getElementById('btnDelete').style.display = 'none';
+  document.getElementById('btnSave').style.display = '';
+  // Reset: show form, hide detail panel, remove readonly
+  document.getElementById('taskDetailPanel').style.display = 'none';
+  document.querySelector('#modalOverlay .modal').classList.remove('with-detail');
+  document.querySelectorAll('#modalOverlay .form-group').forEach(fg => fg.classList.remove('readonly'));
   document.getElementById('modalOverlay').classList.add('active');
 }
 
@@ -2943,21 +3147,243 @@ function editTask(id) {
   const t = state.tasks.find(x => x.taskId === id);
   if (!t) return;
 
-  if (!isAdmin()) {
-    // Non-admin: open history panel instead of edit modal
-    openHistory(id);
-    return;
-  }
-
   state.editingId = id;
-  document.getElementById('modalTitle').innerHTML = '✏️ Editar Tarea <button class="modal-close" onclick="closeModal()">✕</button>';
+  const admin = isAdmin();
+  const isFin = t.finalizada;
+  const estado = t.estado || 'pendiente';
+
+  // Title
+  document.getElementById('modalTitle').innerHTML = `${admin ? '✏️ Editar' : '📋'} Tarea <button class="modal-close" onclick="closeModal()">✕</button>`;
+
+  // Populate form
   document.getElementById('formCliente').value = t.cliente;
   document.getElementById('formTarea').value = t.tarea;
   document.getElementById('formResponsable').value = t.responsable;
   document.getElementById('formVencimiento').value = t.vencimiento;
   document.getElementById('formSemana').value = t.semana;
-  document.getElementById('btnDelete').style.display = '';
+
+  // Form editability
+  const formGroups = document.querySelectorAll('#modalOverlay .form-group');
+  formGroups.forEach(fg => fg.classList.toggle('readonly', !admin));
+  document.getElementById('btnSave').style.display = admin ? '' : 'none';
+  document.getElementById('btnDelete').style.display = admin ? '' : 'none';
+
+  // Widen modal for detail panel
+  document.querySelector('#modalOverlay .modal').classList.add('with-detail');
+
+  // ---- Status section ----
+  let statusH = '';
+  statusH += `<span class="tdp-status-item ${t.completado ? 'active' : 'inactive'}">✔ Completado</span>`;
+  statusH += `<span class="tdp-status-item ${t.enviado ? 'active' : 'inactive'}">📩 Enviado</span>`;
+  statusH += `<span class="tdp-status-item ${isFin ? 'active' : 'inactive'}">✅ Finalizada</span>`;
+  statusH += `<span class="estado-badge estado-${estado}" style="font-size:11px;padding:4px 10px">${getEstadoIcon(estado)} ${getEstadoLabel(estado)}</span>`;
+  document.getElementById('tdpStatus').innerHTML = statusH;
+
+  // ---- Actions section ----
+  let actH = '';
+  if (!isFin) {
+    if (admin) {
+      actH += `<button class="btn ${t.completado?'btn-primary':''}" onclick="toggleStatusFromModal('completado')" style="font-size:12px">${t.completado?'✔ Completado':'Marcar completado'}</button>`;
+      actH += `<button class="btn ${t.enviado?'btn-primary':''}" onclick="toggleStatusFromModal('enviado')" style="font-size:12px">${t.enviado?'📩 Enviado':'Marcar enviado'}</button>`;
+      actH += `<button class="btn btn-primary" onclick="finalizeFromModal()" style="font-size:12px">✅ Finalizar</button>`;
+    } else if (isMyTask(t)) {
+      if (estado === 'pendiente' || estado === 'devuelta') {
+        actH += `<button class="btn-workflow btn-submit-review" onclick="submitForReviewFromModal()" style="font-size:12px">📤 Enviar a revisión</button>`;
+      } else if (estado === 'en_revision') {
+        actH += `<button class="btn-workflow btn-undo-submit" onclick="undoSubmitFromModal()" style="font-size:12px">↩ Deshacer envío</button>`;
+      }
+    }
+  } else {
+    if (admin) {
+      actH += `<button class="btn" onclick="restoreFromModal()" style="font-size:12px">↩ Restaurar tarea</button>`;
+    }
+  }
+  document.getElementById('tdpActions').innerHTML = actH;
+
+  // Show detail panel
+  document.getElementById('taskDetailPanel').style.display = '';
+
+  // ---- History section ----
+  const uc = getUnreadCount(id);
+  document.getElementById('tdpUnread').innerHTML = uc > 0 ? `<span class="unread-badge">${uc}</span>` : '';
+  document.getElementById('tdpHistoryBody').innerHTML = '<div class="history-empty">Cargando...</div>';
+  document.getElementById('tdpCommentInput').value = '';
+
+  loadTdpHistory(id);
+
   document.getElementById('modalOverlay').classList.add('active');
+}
+
+async function loadTdpHistory(taskId) {
+  try {
+    const entries = await api('GET', `/api/tasks/${taskId}/history`);
+    renderTdpHistoryEntries(entries);
+    // Mark as read
+    await api('PUT', `/api/tasks/${taskId}/mark-read`);
+    delete state.unreadCounts[String(taskId)];
+    state.mentions = state.mentions.map(m => m.taskId === taskId ? {...m, isUnread: false} : m);
+  } catch (e) {
+    document.getElementById('tdpHistoryBody').innerHTML = `<div class="history-empty">Error: ${e.message}</div>`;
+  }
+}
+
+function renderTdpHistoryEntries(entries) {
+  const body = document.getElementById('tdpHistoryBody');
+  if (!entries.length) {
+    body.innerHTML = '<div class="history-empty">Sin historial. Agregá un comentario.</div>';
+    return;
+  }
+  // Reuse the same rendering logic
+  const actionLabels = {
+    'creada':'creó la tarea','enviada_a_revision':'envió a revisión','revision_deshecha':'deshizo envío',
+    'aprobada':'aprobó','devuelta':'devolvió','finalizada':'finalizó','restaurada':'restauró','comentario':'comentó'
+  };
+  const actionIcons = {
+    'creada':'🆕','enviada_a_revision':'📤','revision_deshecha':'↩️','aprobada':'✅',
+    'devuelta':'🔄','finalizada':'✔️','restaurada':'🔁','comentario':'💬'
+  };
+  let h = '';
+  entries.forEach(e => {
+    h += `<div class="history-entry">`;
+    h += `<div class="he-icon action-${e.action}">${actionIcons[e.action]||'📝'}</div>`;
+    h += `<div class="he-content">`;
+    h += `<div class="he-header"><span class="he-user">${e.userName||e.userEmail||'Usuario'}</span> <span class="he-action-label">${actionLabels[e.action]||e.action}</span> <span class="he-time">${formatTimeAgo(e.createdAt)}</span></div>`;
+    if (e.comment) h += `<div class="he-comment">${formatCommentWithMentions(e.comment)}</div>`;
+    h += `</div></div>`;
+  });
+  body.innerHTML = h;
+  body.scrollTop = body.scrollHeight;
+}
+
+async function addTdpComment() {
+  if (!state.editingId) return;
+  const input = document.getElementById('tdpCommentInput');
+  const comment = input.value.trim();
+  if (!comment) return;
+
+  try {
+    await api('POST', `/api/tasks/${state.editingId}/comments`, { comment });
+    input.value = '';
+    await loadTdpHistory(state.editingId);
+    try { state.unreadCounts = await api('GET', '/api/unread-counts'); } catch(e) {}
+    showToast('Comentario agregado', 'success');
+  } catch (e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+function onTdpCommentKeydown(e) {
+  // Reuse mention logic with tdp-specific dropdown
+  if (mentionActive) {
+    const dropdown = document.getElementById('tdpMentionDropdown');
+    const options = dropdown.querySelectorAll('.mention-option');
+    if (e.key === 'ArrowDown') { e.preventDefault(); mentionSelectedIdx = Math.min(mentionSelectedIdx+1, options.length-1); options.forEach((o,i) => o.classList.toggle('active', i===mentionSelectedIdx)); return; }
+    if (e.key === 'ArrowUp') { e.preventDefault(); mentionSelectedIdx = Math.max(mentionSelectedIdx-1, 0); options.forEach((o,i) => o.classList.toggle('active', i===mentionSelectedIdx)); return; }
+    if ((e.key === 'Enter' || e.key === 'Tab') && options.length > 0) { e.preventDefault(); options[mentionSelectedIdx]?.onmousedown(); return; }
+    if (e.key === 'Escape') { closeTdpMentionDropdown(); return; }
+  }
+  if (e.key === 'Enter' && !mentionActive) addTdpComment();
+}
+
+function onTdpCommentInput(input) {
+  const val = input.value, cursor = input.selectionStart;
+  const before = val.substring(0, cursor);
+  const atIdx = before.lastIndexOf('@');
+  if (atIdx >= 0 && (atIdx === 0 || before[atIdx-1] === ' ')) {
+    const query = before.substring(atIdx + 1);
+    if (!query.includes(' ') || query.startsWith('"')) {
+      mentionActive = true; mentionStart = atIdx; mentionQuery = query.replace(/^"/, ''); mentionSelectedIdx = 0;
+      showTdpMentionDropdown(mentionQuery, input);
+      return;
+    }
+  }
+  closeTdpMentionDropdown();
+}
+
+function showTdpMentionDropdown(query, input) {
+  const dropdown = document.getElementById('tdpMentionDropdown');
+  const q = query.toLowerCase();
+  const matches = state.users.filter(u => {
+    const name = (u.responsableName || u.displayName || '').toLowerCase();
+    return name.includes(q) || (u.email||'').toLowerCase().includes(q);
+  }).slice(0, 8);
+  if (!matches.length) { closeTdpMentionDropdown(); return; }
+  let h = '';
+  matches.forEach((u, i) => {
+    const name = u.responsableName || u.displayName || u.email;
+    h += `<div class="mention-option${i===mentionSelectedIdx?' active':''}" onmousedown="insertTdpMention('${escapeHtml(name)}')"><span>${u.role==='admin'?'👑':'👤'}</span><span class="mo-name">${name}</span><span class="mo-email">${u.email}</span></div>`;
+  });
+  dropdown.innerHTML = h;
+  dropdown.classList.add('visible');
+}
+
+function closeTdpMentionDropdown() {
+  mentionActive = false;
+  const d = document.getElementById('tdpMentionDropdown');
+  if (d) d.classList.remove('visible');
+}
+
+function insertTdpMention(name) {
+  const input = document.getElementById('tdpCommentInput');
+  const val = input.value;
+  const needsQ = name.includes(' ');
+  const txt = needsQ ? `@"${name}" ` : `@${name} `;
+  input.value = val.substring(0, mentionStart) + txt + val.substring(input.selectionStart);
+  input.focus();
+  const c = mentionStart + txt.length;
+  input.setSelectionRange(c, c);
+  closeTdpMentionDropdown();
+}
+
+// Modal action helpers that refresh the detail panel
+async function toggleStatusFromModal(field) {
+  if (!state.editingId) return;
+  try {
+    const updated = await api('PUT', `/api/tasks/${state.editingId}/status`, { field });
+    const idx = state.tasks.findIndex(t => t.taskId === state.editingId);
+    if (idx >= 0) state.tasks[idx] = updated;
+    // Re-open to refresh UI
+    editTask(state.editingId);
+    render();
+  } catch (e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+async function submitForReviewFromModal() {
+  if (!state.editingId) return;
+  const comment = await showPromptDialog('Enviar a revisión', '¿Querés agregar un comentario? (opcional)', {
+    icon: '📤', placeholder: 'Comentario opcional...', confirmText: 'Enviar', cancelText: 'Cancelar'
+  });
+  if (comment === null) return;
+  try {
+    const updated = await api('PUT', `/api/tasks/${state.editingId}/submit-review`, { comment: comment || '' });
+    const idx = state.tasks.findIndex(t => t.taskId === state.editingId);
+    if (idx >= 0) state.tasks[idx] = updated;
+    editTask(state.editingId);
+    render();
+    showToast('Tarea enviada a revisión', 'success');
+  } catch (e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+async function undoSubmitFromModal() {
+  if (!state.editingId) return;
+  try {
+    const updated = await api('PUT', `/api/tasks/${state.editingId}/undo-submit`);
+    const idx = state.tasks.findIndex(t => t.taskId === state.editingId);
+    if (idx >= 0) state.tasks[idx] = updated;
+    editTask(state.editingId);
+    render();
+    showToast('Envío deshecho', 'success');
+  } catch (e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+async function restoreFromModal() {
+  if (!state.editingId) return;
+  try {
+    const updated = await api('PUT', `/api/tasks/${state.editingId}/restore`);
+    const idx = state.tasks.findIndex(t => t.taskId === state.editingId);
+    if (idx >= 0) state.tasks[idx] = updated;
+    editTask(state.editingId);
+    render();
+    showToast('Tarea restaurada', 'success');
+  } catch (e) { showToast('Error: ' + e.message, 'error'); }
 }
 
 async function saveTask() {
@@ -2997,12 +3423,13 @@ async function saveTask() {
   } catch (e) { showToast('Error: ' + e.message, 'error'); }
 }
 
-async function deleteTask() {
+async function deleteFromModal() {
   if (state.editingId === null) return;
   if (!await showConfirm('Eliminar tarea', 'Esta accion no se puede deshacer.', { icon: '🗑️', confirmText: 'Eliminar', danger: true })) return;
   try {
     await api('DELETE', `/api/tasks/${state.editingId}`);
     state.tasks = state.tasks.filter(t => t.taskId !== state.editingId);
+    state.selectedTasks.delete(state.editingId);
     populateFilters();
     closeModal();
     render();
@@ -3012,6 +3439,10 @@ async function deleteTask() {
 
 function closeModal() {
   document.getElementById('modalOverlay').classList.remove('active');
+  document.getElementById('taskDetailPanel').style.display = 'none';
+  document.querySelector('#modalOverlay .modal').classList.remove('with-detail');
+  document.querySelectorAll('#modalOverlay .form-group').forEach(fg => fg.classList.remove('readonly'));
+  closeTdpMentionDropdown();
   state.editingId = null;
 }
 
@@ -3206,16 +3637,23 @@ let historyTaskId = null;
 async function openHistory(taskId) {
   historyTaskId = taskId;
   const task = state.tasks.find(t => t.taskId === taskId);
-  if (!task) return;
+  if (!task) { showToast('Tarea no encontrada', 'error'); return; }
 
   document.getElementById('historyTitle').innerHTML = `📋 ${task.cliente} — ${task.tarea}`;
   document.getElementById('historyBody').innerHTML = '<div class="history-empty">Cargando...</div>';
   document.getElementById('historyOverlay').classList.add('active');
   document.getElementById('historyCommentInput').value = '';
+  closeMentionDropdown();
 
   try {
     const entries = await api('GET', `/api/tasks/${taskId}/history`);
     renderHistoryEntries(entries);
+    // Mark as read
+    await api('PUT', `/api/tasks/${taskId}/mark-read`);
+    delete state.unreadCounts[String(taskId)];
+    // Remove this task from unread mentions
+    state.mentions = state.mentions.map(m => m.taskId === taskId ? {...m, isUnread: false} : m);
+    render();
   } catch (e) {
     document.getElementById('historyBody').innerHTML = `<div class="history-empty">Error cargando historial: ${e.message}</div>`;
   }
@@ -3262,11 +3700,27 @@ function renderHistoryEntries(entries) {
     h += `<span class="he-time">${timeAgo}</span>`;
     h += `</div>`;
     if (e.comment) {
-      h += `<div class="he-comment">${escapeHtml(e.comment)}</div>`;
+      h += `<div class="he-comment">${formatCommentWithMentions(e.comment)}</div>`;
     }
     h += `</div></div>`;
   });
   body.innerHTML = h;
+  // Scroll to bottom (newest comments)
+  body.scrollTop = body.scrollHeight;
+}
+
+function formatCommentWithMentions(text) {
+  const safe = escapeHtml(text);
+  const myEmail = state.currentUser?.email || '';
+  const myName = state.currentUser?.responsableName || '';
+  // Highlight @mentions
+  return safe.replace(/@&quot;([^&]+)&quot;|@(\S+)/g, (match, quoted, word) => {
+    const name = quoted || word;
+    const isMe = name.toLowerCase() === myName.toLowerCase() ||
+                 name.toLowerCase() === myEmail.toLowerCase() ||
+                 name.toLowerCase() === (state.currentUser?.displayName || '').toLowerCase();
+    return `<span class="mention-highlight${isMe ? ' is-me' : ''}">@${name}</span>`;
+  });
 }
 
 function formatTimeAgo(isoStr) {
@@ -3286,24 +3740,147 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
+// ---- @Mention Autocomplete ----
+let mentionActive = false;
+let mentionQuery = '';
+let mentionStart = -1;
+let mentionSelectedIdx = 0;
+
+function onCommentInput(input) {
+  const val = input.value;
+  const cursor = input.selectionStart;
+
+  // Find @ before cursor
+  const before = val.substring(0, cursor);
+  const atIdx = before.lastIndexOf('@');
+
+  if (atIdx >= 0 && (atIdx === 0 || before[atIdx - 1] === ' ')) {
+    const query = before.substring(atIdx + 1);
+    if (!query.includes(' ') || query.startsWith('"')) {
+      mentionActive = true;
+      mentionStart = atIdx;
+      mentionQuery = query.replace(/^"/, '');
+      mentionSelectedIdx = 0;
+      showMentionDropdown(mentionQuery);
+      return;
+    }
+  }
+  closeMentionDropdown();
+}
+
+function showMentionDropdown(query) {
+  const dropdown = document.getElementById('mentionDropdown');
+  const q = query.toLowerCase();
+  const matches = state.users.filter(u => {
+    if (!u.responsableName && !u.displayName) return false;
+    const name = (u.responsableName || u.displayName || '').toLowerCase();
+    const email = (u.email || '').toLowerCase();
+    return name.includes(q) || email.includes(q);
+  }).slice(0, 8);
+
+  if (matches.length === 0) { closeMentionDropdown(); return; }
+
+  let h = '';
+  matches.forEach((u, i) => {
+    const name = u.responsableName || u.displayName || u.email;
+    const role = u.role === 'admin' ? '👑' : '👤';
+    h += `<div class="mention-option${i === mentionSelectedIdx ? ' active' : ''}" onmousedown="insertMention('${escapeHtml(name)}')">`;
+    h += `<span>${role}</span>`;
+    h += `<span class="mo-name">${name}</span>`;
+    h += `<span class="mo-email">${u.email}</span>`;
+    h += `</div>`;
+  });
+  dropdown.innerHTML = h;
+  dropdown.classList.add('visible');
+}
+
+function closeMentionDropdown() {
+  mentionActive = false;
+  const dropdown = document.getElementById('mentionDropdown');
+  if (dropdown) dropdown.classList.remove('visible');
+}
+
+function insertMention(name) {
+  const input = document.getElementById('historyCommentInput');
+  const val = input.value;
+  const needsQuotes = name.includes(' ');
+  const mentionText = needsQuotes ? `@"${name}" ` : `@${name} `;
+  input.value = val.substring(0, mentionStart) + mentionText + val.substring(input.selectionStart);
+  input.focus();
+  const newCursor = mentionStart + mentionText.length;
+  input.setSelectionRange(newCursor, newCursor);
+  closeMentionDropdown();
+}
+
+function onCommentKeydown(e) {
+  if (mentionActive) {
+    const dropdown = document.getElementById('mentionDropdown');
+    const options = dropdown.querySelectorAll('.mention-option');
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      mentionSelectedIdx = Math.min(mentionSelectedIdx + 1, options.length - 1);
+      options.forEach((o, i) => o.classList.toggle('active', i === mentionSelectedIdx));
+      return;
+    }
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      mentionSelectedIdx = Math.max(mentionSelectedIdx - 1, 0);
+      options.forEach((o, i) => o.classList.toggle('active', i === mentionSelectedIdx));
+      return;
+    }
+    if ((e.key === 'Enter' || e.key === 'Tab') && options.length > 0) {
+      e.preventDefault();
+      const active = options[mentionSelectedIdx];
+      if (active) active.onmousedown();
+      return;
+    }
+    if (e.key === 'Escape') {
+      closeMentionDropdown();
+      return;
+    }
+  }
+  if (e.key === 'Enter' && !mentionActive) addComment();
+}
+
 async function addComment() {
   if (!historyTaskId) return;
   const input = document.getElementById('historyCommentInput');
   const comment = input.value.trim();
   if (!comment) return;
+  closeMentionDropdown();
 
   try {
     await api('POST', `/api/tasks/${historyTaskId}/comments`, { comment });
     input.value = '';
     const entries = await api('GET', `/api/tasks/${historyTaskId}/history`);
     renderHistoryEntries(entries);
+    // Refresh unread counts (for other users' views)
+    try { state.unreadCounts = await api('GET', '/api/unread-counts'); } catch(e) {}
+    try { state.mentions = await api('GET', '/api/mentions'); } catch(e) {}
     showToast('Comentario agregado', 'success');
   } catch (e) { showToast('Error: ' + e.message, 'error'); }
 }
 
 function closeHistory() {
   document.getElementById('historyOverlay').classList.remove('active');
+  closeMentionDropdown();
   historyTaskId = null;
+}
+
+function getUnreadCount(taskId) {
+  return state.unreadCounts[String(taskId)] || 0;
+}
+
+function historyBtnHtml(taskId, cssClass = 'check-btn', extraStyle = '') {
+  const uc = getUnreadCount(taskId);
+  const badge = uc > 0 ? ` has-unread" data-unread="${uc}` : '';
+  return `<button class="${cssClass}${badge}" onclick="openHistory(${taskId})" title="Historial${uc > 0 ? ` (${uc} sin leer)` : ''}" style="${extraStyle}">📋</button>`;
+}
+
+function unreadDotHtml(taskId) {
+  const uc = getUnreadCount(taskId);
+  if (uc === 0) return '';
+  return `<span class="unread-badge">${uc}</span>`;
 }
 
 // =================== ADMIN REVIEW DASHBOARD ===================
@@ -3456,6 +4033,52 @@ function renderSummaryPanel() {
     }
   }
 
+  // Both roles: unread mentions
+  const unreadMentions = state.mentions.filter(m => m.isUnread);
+  if (unreadMentions.length > 0) {
+    h += `<div class="summary-section">`;
+    h += `<div class="summary-section-header">💬 Menciones sin leer <span class="ss-count red">${unreadMentions.length}</span></div>`;
+    unreadMentions.slice(0, 8).forEach(m => {
+      const task = state.tasks.find(t => t.taskId === m.taskId);
+      const taskName = task ? `${task.cliente} — ${task.tarea}` : `Tarea #${m.taskId}`;
+      const co = task ? (TASK_COLORS[task.tarea] || '#64748b') : '#64748b';
+      h += `<div class="summary-item" onclick="openHistory(${m.taskId});closeSummaryPanel()">`;
+      h += `<div class="si-dot" style="background:${co}"></div>`;
+      h += `<div class="si-info">`;
+      h += `<div class="si-client">${taskName}</div>`;
+      h += `<div class="si-meta"><span>💬 ${m.userName || m.userEmail} te mencionó</span><span>${formatTimeAgo(m.createdAt)}</span></div>`;
+      if (m.comment) h += `<div style="font-size:10px;color:var(--text-muted);margin-top:2px;max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">"${m.comment}"</div>`;
+      h += `</div>`;
+      h += `</div>`;
+    });
+    if (unreadMentions.length > 8) {
+      h += `<div class="summary-item"><div class="si-info"><div class="si-client" style="color:var(--accent)">...y ${unreadMentions.length - 8} más</div></div></div>`;
+    }
+    h += `</div>`;
+  }
+
+  // Both roles: tasks with unread comments
+  const unreadTaskIds = Object.entries(state.unreadCounts).filter(([,c]) => c > 0).sort((a,b) => b[1] - a[1]).slice(0, 8);
+  if (unreadTaskIds.length > 0) {
+    const totalUnread = Object.values(state.unreadCounts).reduce((s, c) => s + c, 0);
+    h += `<div class="summary-section">`;
+    h += `<div class="summary-section-header">📋 Mensajes sin leer <span class="ss-count red">${totalUnread}</span></div>`;
+    unreadTaskIds.forEach(([tid, count]) => {
+      const task = state.tasks.find(t => t.taskId === parseInt(tid));
+      if (!task) return;
+      const co = TASK_COLORS[task.tarea] || '#64748b';
+      h += `<div class="summary-item" onclick="openHistory(${task.taskId});closeSummaryPanel()">`;
+      h += `<div class="si-dot" style="background:${co}"></div>`;
+      h += `<div class="si-info">`;
+      h += `<div class="si-client">${task.cliente} — ${task.tarea}</div>`;
+      h += `<div class="si-meta"><span>${count} mensaje${count > 1 ? 's' : ''} sin leer</span></div>`;
+      h += `</div>`;
+      h += `<span class="unread-badge">${count}</span>`;
+      h += `</div>`;
+    });
+    h += `</div>`;
+  }
+
   // Both roles: upcoming deadlines (within 2 days, not finalized)
   const urgentTasks = state.tasks.filter(t => {
     if (t.finalizada || t.estado === 'aprobada') return false;
@@ -3589,6 +4212,11 @@ function updateSummaryBadges() {
     const returned = state.tasks.filter(t => t.estado === 'devuelta' && isMyTask(t)).length;
     totalAlerts += returned;
   }
+
+  // Count unread comments and mentions
+  const totalUnreadComments = Object.values(state.unreadCounts).reduce((s, c) => s + c, 0);
+  const totalUnreadMentions = state.mentions.filter(m => m.isUnread).length;
+  totalAlerts += totalUnreadComments + totalUnreadMentions;
 
   fabBadge.textContent = totalAlerts;
   fabBadge.classList.toggle('hidden', totalAlerts === 0);
