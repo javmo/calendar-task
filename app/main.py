@@ -6,7 +6,7 @@ import os
 import re
 import smtplib
 from contextlib import asynccontextmanager
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from typing import Optional, Dict, List
@@ -40,6 +40,10 @@ ESTADO_EN_REVISION = "en_revision"
 ESTADO_APROBADA = "aprobada"
 ESTADO_DEVUELTA = "devuelta"
 ESTADOS_VALIDOS = [ESTADO_PENDIENTE, ESTADO_EN_REVISION, ESTADO_APROBADA, ESTADO_DEVUELTA]
+MES_NOMBRES = [
+    "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
+]
 
 # --------------- Globals ---------------
 db_client: AsyncIOMotorClient = None
@@ -215,6 +219,7 @@ class ClienteIn(BaseModel):
     claveArba: Optional[str] = ""
     otraClave: Optional[str] = ""
     formaPago: Optional[str] = ""
+    categorias: Optional[List[str]] = []  # task types: ["IIBB CM", "IVA", ...]
 
 
 class ClienteUpdate(BaseModel):
@@ -226,6 +231,7 @@ class ClienteUpdate(BaseModel):
     claveArba: Optional[str] = None
     otraClave: Optional[str] = None
     formaPago: Optional[str] = None
+    categorias: Optional[List[str]] = None
 
 
 class UserUpdate(BaseModel):
@@ -324,6 +330,12 @@ async def create_task(task: TaskIn, user=Depends(get_current_user)):
     doc["fechaFinalizacion"] = None
     doc["estado"] = ESTADO_PENDIENTE
     doc["createdAt"] = datetime.utcnow().isoformat()
+    # Derive mes from vencimiento
+    try:
+        vto_parts = doc["vencimiento"].split("-")
+        doc["mes"] = MES_NOMBRES[int(vto_parts[1]) - 1]
+    except (IndexError, ValueError):
+        doc["mes"] = ""
 
     await db.tasks.insert_one(doc)
     doc.pop("_id", None)
@@ -902,6 +914,181 @@ async def get_cliente_tasks(
         {"cliente": cliente["nombre"]}, {"_id": 0}
     ).sort("vencimiento", 1).to_list(5000)
     return tasks
+
+
+# --- Task Generation ---
+class GenerateTasksBody(BaseModel):
+    fromMonth: str  # "2026-04"
+    toMonth: str    # "2026-12"
+    responsable: Optional[str] = "PERSONA"
+    semana: Optional[str] = "1ER SEMANA"
+
+
+class GenerateFiscalPeriodBody(BaseModel):
+    year: int  # 2027
+    clienteIds: Optional[List[int]] = None  # None = all clients with categorias
+    responsable: Optional[str] = "PERSONA"
+    semana: Optional[str] = "1ER SEMANA"
+
+
+@app.post("/api/clientes/{cliente_id}/generate-tasks")
+async def generate_client_tasks(
+    cliente_id: int, body: GenerateTasksBody, user=Depends(get_current_user)
+):
+    """Generate tasks for a client's categories from a month range."""
+    caller = await db.users.find_one({"email": user["email"]})
+    if not caller or caller.get("role") != "admin":
+        raise HTTPException(403, "Solo admin puede generar tareas")
+
+    cliente = await db.clientes.find_one({"clienteId": cliente_id}, {"_id": 0})
+    if not cliente:
+        raise HTTPException(404, "Cliente no encontrado")
+
+    categorias = cliente.get("categorias", [])
+    if not categorias:
+        raise HTTPException(400, "El cliente no tiene categorías asignadas")
+
+    # Parse month range
+    from_y, from_m = map(int, body.fromMonth.split("-"))
+    to_y, to_m = map(int, body.toMonth.split("-"))
+
+    # Get next taskId
+    last = await db.tasks.find_one(sort=[("taskId", -1)], projection={"taskId": 1})
+    next_id = (last["taskId"] + 1) if last else 1
+
+    created = 0
+    current = date(from_y, from_m, 1)
+    end = date(to_y, to_m, 1)
+
+    while current <= end:
+        periodo = f"{current.year}-{current.month:02d}"
+        mes_nombre = MES_NOMBRES[current.month - 1]
+
+        for tarea in categorias:
+            # Check if task already exists for this client+type+month
+            existing = await db.tasks.find_one({
+                "cliente": cliente["nombre"],
+                "tarea": tarea,
+                "mes": mes_nombre,
+                "vencimiento": {"$regex": f"^{periodo}"}
+            })
+            if existing:
+                continue
+
+            # Default vencimiento: last day of month
+            if current.month == 12:
+                last_day = date(current.year, 12, 31)
+            else:
+                last_day = date(current.year, current.month + 1, 1) - timedelta(days=1)
+
+            doc = {
+                "taskId": next_id,
+                "cliente": cliente["nombre"],
+                "tarea": tarea,
+                "responsable": body.responsable,
+                "assignedTo": None,
+                "semana": body.semana,
+                "vencimiento": last_day.isoformat(),
+                "mes": mes_nombre,
+                "completado": False,
+                "revisado": False,
+                "enviado": False,
+                "finalizada": False,
+                "fechaFinalizacion": None,
+                "estado": ESTADO_PENDIENTE,
+                "createdAt": datetime.utcnow().isoformat(),
+            }
+            await db.tasks.insert_one(doc)
+            doc.pop("_id", None)
+            next_id += 1
+            created += 1
+
+        # Advance month
+        if current.month == 12:
+            current = date(current.year + 1, 1, 1)
+        else:
+            current = date(current.year, current.month + 1, 1)
+
+    return {"ok": True, "created": created, "cliente": cliente["nombre"]}
+
+
+@app.post("/api/generate-fiscal-period")
+async def generate_fiscal_period(
+    body: GenerateFiscalPeriodBody, user=Depends(get_current_user)
+):
+    """Bulk-generate tasks for a fiscal year for all (or selected) clients with categorias."""
+    caller = await db.users.find_one({"email": user["email"]})
+    if not caller or caller.get("role") != "admin":
+        raise HTTPException(403, "Solo admin puede generar tareas")
+
+    year = body.year
+    query = {"categorias": {"$exists": True, "$ne": []}}
+    if body.clienteIds:
+        query["clienteId"] = {"$in": body.clienteIds}
+
+    clientes = await db.clientes.find(query, {"_id": 0}).to_list(500)
+    if not clientes:
+        raise HTTPException(400, "No hay clientes con categorías asignadas")
+
+    last = await db.tasks.find_one(sort=[("taskId", -1)], projection={"taskId": 1})
+    next_id = (last["taskId"] + 1) if last else 1
+
+    total_created = 0
+    clients_processed = 0
+
+    for cliente in clientes:
+        categorias = cliente.get("categorias", [])
+        if not categorias:
+            continue
+
+        clients_processed += 1
+        for month in range(1, 13):
+            periodo = f"{year}-{month:02d}"
+            mes_nombre = MES_NOMBRES[month - 1]
+
+            for tarea in categorias:
+                existing = await db.tasks.find_one({
+                    "cliente": cliente["nombre"],
+                    "tarea": tarea,
+                    "mes": mes_nombre,
+                    "vencimiento": {"$regex": f"^{periodo}"}
+                })
+                if existing:
+                    continue
+
+                if month == 12:
+                    last_day = date(year, 12, 31)
+                else:
+                    last_day = date(year, month + 1, 1) - timedelta(days=1)
+
+                doc = {
+                    "taskId": next_id,
+                    "cliente": cliente["nombre"],
+                    "tarea": tarea,
+                    "responsable": body.responsable,
+                    "assignedTo": None,
+                    "semana": body.semana,
+                    "vencimiento": last_day.isoformat(),
+                    "mes": mes_nombre,
+                    "completado": False,
+                    "revisado": False,
+                    "enviado": False,
+                    "finalizada": False,
+                    "fechaFinalizacion": None,
+                    "estado": ESTADO_PENDIENTE,
+                    "createdAt": datetime.utcnow().isoformat(),
+                }
+                await db.tasks.insert_one(doc)
+                doc.pop("_id", None)
+                next_id += 1
+                total_created += 1
+
+    return {
+        "ok": True,
+        "year": year,
+        "clientsProcessed": clients_processed,
+        "totalCreated": total_created,
+    }
 
 
 # --- Vencimientos ---

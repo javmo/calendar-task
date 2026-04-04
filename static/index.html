@@ -381,6 +381,33 @@ body{font-family:'Inter','Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;
 .tdp-comment-form input{flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-family:inherit}
 .tdp-comment-form input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-bg)}
 .form-group.readonly select,.form-group.readonly input{pointer-events:none;opacity:.7;background:var(--surface2)}
+/* Client category checkboxes */
+.cc-cats{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.cc-cat-tag{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;white-space:nowrap}
+.ce-categorias{display:flex;flex-wrap:wrap;gap:6px}
+.ce-cat-item{display:flex;align-items:center;gap:4px;padding:4px 10px;border:1px solid var(--border);border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;transition:all .15s;user-select:none}
+.ce-cat-item:hover{border-color:var(--accent);background:var(--accent-bg)}
+.ce-cat-item.checked{border-color:var(--accent);background:var(--accent-bg);color:var(--accent);font-weight:600}
+.ce-cat-item input[type=checkbox]{display:none}
+.ce-cat-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.ce-generate-section{margin-top:14px;padding:12px;border:1px dashed var(--border);border-radius:var(--radius-sm);background:var(--surface2)}
+/* Fiscal period panel */
+.fiscal-panel{max-width:800px;margin:20px auto;padding:24px;background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow)}
+.fiscal-panel h2{font-size:18px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.fiscal-container{padding:20px}
+.fiscal-clients-list{display:flex;flex-direction:column;gap:6px}
+.fiscal-client-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;background:var(--surface2);border-radius:var(--radius-sm);border:1px solid var(--border-light);transition:all .15s}
+.fiscal-client-row.selected{border-color:var(--accent);background:var(--accent-bg)}
+.fiscal-client-row:hover{border-color:var(--accent)}
+.fiscal-client-list{display:flex;flex-direction:column;gap:6px;max-height:400px;overflow-y:auto;margin:12px 0}
+.fiscal-client-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--border-light);border-radius:var(--radius-sm);transition:background .1s}
+.fiscal-client-row:hover{background:var(--surface2)}
+.fiscal-client-row .fc-name{font-weight:600;font-size:13px;flex:1}
+.fiscal-client-row .fc-cats{font-size:10px;color:var(--text-muted);display:flex;gap:4px;flex-wrap:wrap}
+.fiscal-client-row .fc-cat-tag{padding:1px 6px;border-radius:4px;font-weight:600;font-size:9px}
+.fiscal-controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+.fiscal-controls input,.fiscal-controls select{padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit}
+.fiscal-result{margin-top:12px;padding:12px;border-radius:var(--radius-sm);background:var(--success-bg);border:1px solid var(--success-border);font-size:13px;color:var(--success);display:none}
 
 /* =================== LEGEND =================== */
 .legend{padding:8px 28px;display:flex;gap:14px;flex-wrap:wrap;background:var(--surface);border-bottom:1px solid var(--border)}
@@ -896,6 +923,7 @@ body{font-family:'Inter','Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;
         <button class="btn" data-view="vtos" id="btnVtosTab" onclick="setView('vtos')" style="display:none">📅 Vtos</button>
         <button class="btn" data-view="assign" id="btnAssignTab" onclick="setView('assign')" style="display:none">📋 Asignar</button>
         <button class="btn btn-with-badge" data-view="review" id="btnReviewTab" onclick="setView('review')" style="display:none">📝 Revisión<span class="notif-badge hidden" id="reviewBadge">0</span></button>
+        <button class="btn" data-view="fiscal" id="btnFiscalTab" onclick="setView('fiscal')" style="display:none">📆 Período Fiscal</button>
         <button class="btn" data-view="users" id="btnUsersTab" onclick="setView('users')" style="display:none">👥</button>
       </div>
     </div>
@@ -912,6 +940,7 @@ body{font-family:'Inter','Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;
   <div id="viewVtos" class="vtos-container" style="display:none"></div>
   <div id="viewAssign" class="assign-container" style="display:none"></div>
   <div id="viewReview" class="review-container" style="display:none"></div>
+  <div id="viewFiscal" class="fiscal-container" style="display:none"></div>
 
   <div class="finalized-panel" id="finalizedPanel" style="display:none">
     <div class="finalized-header" id="finalizedHeader" onclick="toggleFinalized()">
@@ -994,6 +1023,21 @@ body{font-family:'Inter','Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;
           <option value="QR">QR</option>
           <option value="-">-</option>
         </select>
+      </div>
+      <div class="form-group">
+        <label>Categorías de Tareas</label>
+        <div class="ce-categorias" id="ceCategorias"></div>
+      </div>
+      <div class="ce-generate-section" id="ceGenerateSection" style="display:none">
+        <label style="font-size:11px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:6px">Generar tareas automáticas</label>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <span style="font-size:12px">Desde</span>
+          <input type="month" id="ceGenFrom" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit">
+          <span style="font-size:12px">hasta</span>
+          <input type="month" id="ceGenTo" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit">
+          <button class="btn btn-primary" onclick="generateClientTasks()" style="font-size:12px">⚡ Generar</button>
+        </div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:4px">Se crean tareas de las categorías seleccionadas. No duplica las existentes.</div>
       </div>
       <div class="modal-actions">
         <button class="btn" onclick="closeClientEdit()">Cancelar</button>
@@ -1349,6 +1393,7 @@ function updateUserMenu() {
   document.getElementById('btnVtosTab').style.display = isAdmin ? '' : 'none';
   document.getElementById('btnAssignTab').style.display = isAdmin ? '' : 'none';
   document.getElementById('btnReviewTab').style.display = isAdmin ? '' : 'none';
+  document.getElementById('btnFiscalTab').style.display = isAdmin ? '' : 'none';
 }
 
 function toggleUserMenu() {
@@ -1486,16 +1531,23 @@ function populateFilters() {
 }
 
 function populateFormSelects() {
+  // Clients: merge from state.clientes + any in tasks (covers all)
+  const clienteNames = new Set(state.clientes.map(c => c.nombre));
+  state.tasks.forEach(t => clienteNames.add(t.cliente));
   document.getElementById('formCliente').innerHTML =
     `<option value="">-- Nuevo cliente --</option>` +
-    [...new Set(state.tasks.map(t => t.cliente))].sort().map(c => `<option value="${c}">${c}</option>`).join('');
+    [...clienteNames].sort().map(c => `<option value="${c}">${c}</option>`).join('');
+
+  // Task types: all from TASK_COLORS + any in existing tasks
+  const allTypes = new Set(Object.keys(TASK_COLORS));
+  state.tasks.forEach(t => allTypes.add(t.tarea));
   document.getElementById('formTarea').innerHTML =
-    [...new Set(state.tasks.map(t => t.tarea))].sort().map(t => `<option value="${t}">${t}</option>`).join('');
+    [...allTypes].sort().map(t => `<option value="${t}">${t}</option>`).join('');
 
   // Responsable: show registered users + legacy names
   const userNames = state.users.filter(u => u.responsableName).map(u => u.responsableName);
   const taskNames = [...new Set(state.tasks.map(t => t.responsable))];
-  const allNames = [...new Set([...userNames, ...taskNames])].sort();
+  const allNames = [...new Set([...userNames, ...taskNames])].filter(Boolean).sort();
   document.getElementById('formResponsable').innerHTML =
     allNames.map(n => `<option value="${n}">${n}</option>`).join('');
 }
@@ -1538,16 +1590,18 @@ function setView(v) {
   if (v !== 'list') state.selectedTasks.clear();
   document.querySelectorAll('.view-toggle .btn').forEach(b => b.classList.toggle('active', b.dataset.view === v));
 
-const views = { month: 'viewMonth', week: 'viewWeek', list: 'viewList', mycal: 'viewMyCal', users: 'viewUsers', clientes: 'viewClientes', vtos: 'viewVtos', assign: 'viewAssign', review: 'viewReview' };
+const views = { month: 'viewMonth', week: 'viewWeek', list: 'viewList', mycal: 'viewMyCal', users: 'viewUsers', clientes: 'viewClientes', vtos: 'viewVtos', assign: 'viewAssign', review: 'viewReview', fiscal: 'viewFiscal' };
     for (const [key, id] of Object.entries(views)) {
       document.getElementById(id).style.display = key === v ? '' : 'none';
     }
 
     // Show/hide filters for special views
-    document.getElementById('filterGroup').style.display = (v === 'users' || v === 'clientes' || v === 'vtos' || v === 'assign' || v === 'review') ? 'none' : '';
-    document.getElementById('legend').style.display = (v === 'users' || v === 'mycal' || v === 'clientes' || v === 'vtos' || v === 'assign' || v === 'review') ? 'none' : '';
-    // Hide toolbar search in views with their own search
-    document.querySelector('.toolbar .search-wrapper').style.display = (v === 'clientes' || v === 'users' || v === 'vtos' || v === 'assign' || v === 'review') ? 'none' : '';
+    const hideFilter = ['users','clientes','vtos','assign','review','fiscal'];
+    const hideLegend = ['users','mycal','clientes','vtos','assign','review','fiscal'];
+    const hideSearch = ['clientes','users','vtos','assign','review','fiscal'];
+    document.getElementById('filterGroup').style.display = hideFilter.includes(v) ? 'none' : '';
+    document.getElementById('legend').style.display = hideLegend.includes(v) ? 'none' : '';
+    document.querySelector('.toolbar .search-wrapper').style.display = hideSearch.includes(v) ? 'none' : '';
 
   render();
 }
@@ -2185,6 +2239,14 @@ function renderClientes() {
     h += `</div>`;
     const pago = c.formaPago && c.formaPago !== '-' && c.formaPago !== '';
     h += `<span class="cc-pago ${pago?'':'no-pago'}">${pago ? '💳 '+c.formaPago : 'Sin forma de pago'}</span>`;
+    if (c.categorias && c.categorias.length > 0) {
+      h += `<div class="cc-cats">`;
+      c.categorias.forEach(cat => {
+        const co = TASK_COLORS[cat] || '#64748b';
+        h += `<span class="cc-cat-tag" style="background:${co}20;color:${co};border:1px solid ${co}40">${cat}</span>`;
+      });
+      h += `</div>`;
+    }
     h += `</div>`;
   });
   h += `</div>`;
@@ -2237,6 +2299,16 @@ function showClientDetail(clienteId) {
   h += `<div class="cd-info-item"><label>Otra Clave</label>${maskVal(c.otraClave)}</div>`;
   h += `</div>`;
 
+  if (c.categorias && c.categorias.length > 0) {
+    h += `<div style="margin-bottom:16px"><label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Categorías de tareas</label>`;
+    h += `<div class="ce-categorias">`;
+    c.categorias.forEach(cat => {
+      const co = TASK_COLORS[cat] || '#64748b';
+      h += `<span class="cc-cat-tag" style="background:${co}20;color:${co};border:1px solid ${co}40">${cat}</span>`;
+    });
+    h += `</div></div>`;
+  }
+
   h += `<div class="cd-tasks-section">`;
   h += `<h3>📋 Tareas asignadas <span style="font-size:12px;color:var(--text-muted);font-weight:400">(${clientTasks.length})</span></h3>`;
   h += `<div class="cd-tasks-list">`;
@@ -2272,6 +2344,30 @@ function closeClientDetail() {
   document.getElementById('clientDetailOverlay').classList.remove('active');
 }
 
+const ALL_TASK_CATEGORIES = Object.keys(TASK_COLORS);
+
+function renderCeCategorias(selected = []) {
+  const container = document.getElementById('ceCategorias');
+  let h = '';
+  ALL_TASK_CATEGORIES.forEach(cat => {
+    const checked = selected.includes(cat);
+    const co = TASK_COLORS[cat] || '#64748b';
+    h += `<label class="ce-cat-item ${checked ? 'checked' : ''}" onclick="this.classList.toggle('checked')">`;
+    h += `<input type="checkbox" value="${cat}" ${checked ? 'checked' : ''} onchange="this.parentElement.classList.toggle('checked',this.checked);updateCeGenerateSection()">`;
+    h += `<span class="ce-cat-dot" style="background:${co}"></span>${cat}</label>`;
+  });
+  container.innerHTML = h;
+}
+
+function getSelectedCategorias() {
+  return [...document.querySelectorAll('#ceCategorias input:checked')].map(cb => cb.value);
+}
+
+function updateCeGenerateSection() {
+  const cats = getSelectedCategorias();
+  document.getElementById('ceGenerateSection').style.display = (cats.length > 0 && state.editingClientId !== null) ? '' : 'none';
+}
+
 function addClient() {
   state.editingClientId = null;
   document.getElementById('clientEditTitle').innerHTML = '➕ Nuevo Cliente <button class="modal-close" onclick="closeClientEdit()">✕</button>';
@@ -2284,6 +2380,8 @@ function addClient() {
   document.getElementById('ceOtraClave').value = '';
   document.getElementById('ceFormaPago').value = '';
   document.getElementById('ceDeleteBtn').style.display = 'none';
+  renderCeCategorias([]);
+  document.getElementById('ceGenerateSection').style.display = 'none';
   document.getElementById('clientEditOverlay').classList.add('active');
 }
 
@@ -2302,7 +2400,38 @@ function editClientFromDetail() {
   document.getElementById('ceOtraClave').value = c.otraClave || '';
   document.getElementById('ceFormaPago').value = c.formaPago || '';
   document.getElementById('ceDeleteBtn').style.display = '';
+  renderCeCategorias(c.categorias || []);
+  // Default generate range: current month to December
+  const now = new Date();
+  document.getElementById('ceGenFrom').value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  document.getElementById('ceGenTo').value = `${now.getFullYear()}-12`;
+  updateCeGenerateSection();
   document.getElementById('clientEditOverlay').classList.add('active');
+}
+
+async function generateClientTasks() {
+  if (!state.editingClientId) return;
+  const cats = getSelectedCategorias();
+  if (!cats.length) { showToast('Seleccioná al menos una categoría', 'error'); return; }
+
+  // First save categories
+  await api('PUT', `/api/clientes/${state.editingClientId}`, { categorias: cats });
+  const idx = state.clientes.findIndex(c => c.clienteId === state.editingClientId);
+  if (idx >= 0) state.clientes[idx].categorias = cats;
+
+  const from = document.getElementById('ceGenFrom').value;
+  const to = document.getElementById('ceGenTo').value;
+  if (!from || !to) { showToast('Seleccioná rango de meses', 'error'); return; }
+
+  try {
+    const result = await api('POST', `/api/clientes/${state.editingClientId}/generate-tasks`, {
+      fromMonth: from, toMonth: to
+    });
+    state.tasks = await api('GET', '/api/tasks');
+    populateFilters();
+    render();
+    showToast(`${result.created} tarea${result.created !== 1 ? 's' : ''} creada${result.created !== 1 ? 's' : ''} para ${result.cliente}`, 'success');
+  } catch (e) { showToast('Error: ' + e.message, 'error'); }
 }
 
 async function saveClientEdit() {
@@ -2318,6 +2447,7 @@ async function saveClientEdit() {
     claveArba: document.getElementById('ceClaveArba').value.trim(),
     otraClave: document.getElementById('ceOtraClave').value.trim(),
     formaPago: document.getElementById('ceFormaPago').value,
+    categorias: getSelectedCategorias(),
   };
 
   try {
@@ -2355,6 +2485,144 @@ async function deleteClient() {
 
 function closeClientEdit() {
   document.getElementById('clientEditOverlay').classList.remove('active');
+}
+
+// =================== RENDER: FISCAL PERIOD ===================
+function renderFiscal() {
+  document.getElementById('monthLabel').textContent = 'Generar Período Fiscal';
+
+  const clientsWithCats = state.clientes.filter(c => c.categorias && c.categorias.length > 0);
+  const now = new Date();
+  const defaultYear = now.getFullYear() + (now.getMonth() >= 10 ? 1 : 0);
+
+  if (!state.fiscalYear) state.fiscalYear = defaultYear;
+  if (!state.fiscalSelectedClients) state.fiscalSelectedClients = new Set();
+  const selAll = state.fiscalSelectedClients.size === 0;
+
+  let h = `<div class="fiscal-panel">`;
+  h += `<h2>📆 Generar Período Fiscal</h2>`;
+  h += `<p style="color:var(--text-secondary);font-size:13px;margin-bottom:20px">Generá tareas automáticamente para todos los meses del año fiscal, basándote en las categorías asignadas a cada cliente.</p>`;
+
+  h += `<div style="display:flex;gap:16px;align-items:flex-end;margin-bottom:24px;flex-wrap:wrap">`;
+  h += `<div><label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Año fiscal</label>`;
+  h += `<input type="number" id="fiscalYearInput" value="${state.fiscalYear}" min="2024" max="2040" style="padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;width:100px;font-family:inherit" onchange="state.fiscalYear=+this.value"></div>`;
+
+  // Responsable select
+  h += `<div><label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Responsable por defecto</label>`;
+  h += `<select id="fiscalResponsable" style="padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit">`;
+  state.users.filter(u => u.responsableName || u.displayName).forEach(u => {
+    const name = u.responsableName || u.displayName;
+    h += `<option value="${name}">${name}</option>`;
+  });
+  h += `</select></div>`;
+
+  h += `<div><label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Semana</label>`;
+  h += `<select id="fiscalSemana" style="padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit">`;
+  ['1ER SEMANA','2DA SEMANA','3ER SEMANA','4TA SEMANA'].forEach(s => {
+    h += `<option value="${s}">${s}</option>`;
+  });
+  h += `</select></div>`;
+
+  h += `<button class="btn btn-primary" onclick="generateFiscalPeriod()" style="height:38px">⚡ Generar Tareas</button>`;
+  h += `</div>`;
+
+  // Clients list
+  if (clientsWithCats.length === 0) {
+    h += `<div style="padding:32px;text-align:center;color:var(--text-muted);background:var(--surface2);border-radius:var(--radius-sm)">`;
+    h += `<div style="font-size:24px;margin-bottom:8px">📋</div>`;
+    h += `<p>No hay clientes con categorías asignadas.</p>`;
+    h += `<p style="font-size:12px;margin-top:4px">Editá un cliente y asignale categorías de tareas primero.</p>`;
+    h += `</div>`;
+  } else {
+    h += `<div style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">`;
+    h += `<span style="font-size:13px;font-weight:600">${clientsWithCats.length} cliente${clientsWithCats.length !== 1 ? 's' : ''} con categorías</span>`;
+    h += `<label style="font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer">`;
+    h += `<input type="checkbox" ${selAll ? 'checked' : ''} onchange="toggleFiscalSelectAll(this.checked)"> Todos`;
+    h += `</label></div>`;
+
+    h += `<div class="fiscal-clients-list">`;
+    clientsWithCats.forEach(c => {
+      const isSelected = selAll || state.fiscalSelectedClients.has(c.clienteId);
+      h += `<div class="fiscal-client-row ${isSelected ? 'selected' : ''}">`;
+      h += `<label style="display:flex;align-items:center;gap:10px;cursor:pointer;flex:1">`;
+      h += `<input type="checkbox" class="fiscal-client-cb" value="${c.clienteId}" ${isSelected ? 'checked' : ''} onchange="toggleFiscalClient(${c.clienteId}, this.checked)">`;
+      h += `<div>`;
+      h += `<div style="font-weight:600;font-size:13px">${c.nombre}</div>`;
+      h += `<div style="font-size:11px;color:var(--text-muted)">CUIT: ${c.cuit || '-'}</div>`;
+      h += `</div></label>`;
+      h += `<div class="ce-categorias" style="justify-content:flex-end">`;
+      c.categorias.forEach(cat => {
+        const co = TASK_COLORS[cat] || '#64748b';
+        h += `<span class="cc-cat-tag" style="background:${co}20;color:${co};border:1px solid ${co}40">${cat}</span>`;
+      });
+      h += `</div></div>`;
+    });
+    h += `</div>`;
+  }
+
+  h += `</div>`;
+  document.getElementById('viewFiscal').innerHTML = h;
+}
+
+function toggleFiscalSelectAll(checked) {
+  if (checked) {
+    state.fiscalSelectedClients = new Set();
+  } else {
+    state.fiscalSelectedClients = new Set([-1]); // sentinel: none selected
+  }
+  renderFiscal();
+}
+
+function toggleFiscalClient(clienteId, checked) {
+  if (state.fiscalSelectedClients.size === 0) {
+    // Was "all selected" — switch to explicit selection
+    const allIds = state.clientes.filter(c => c.categorias && c.categorias.length > 0).map(c => c.clienteId);
+    state.fiscalSelectedClients = new Set(allIds);
+  }
+  if (checked) {
+    state.fiscalSelectedClients.add(clienteId);
+    state.fiscalSelectedClients.delete(-1);
+  } else {
+    state.fiscalSelectedClients.delete(clienteId);
+    if (state.fiscalSelectedClients.size === 0) state.fiscalSelectedClients.add(-1);
+  }
+  // Check if all are selected again
+  const allIds = state.clientes.filter(c => c.categorias && c.categorias.length > 0).map(c => c.clienteId);
+  if (allIds.every(id => state.fiscalSelectedClients.has(id))) {
+    state.fiscalSelectedClients = new Set();
+  }
+  renderFiscal();
+}
+
+async function generateFiscalPeriod() {
+  const year = state.fiscalYear || new Date().getFullYear();
+  const responsable = document.getElementById('fiscalResponsable')?.value || 'PERSONA';
+  const semana = document.getElementById('fiscalSemana')?.value || '1ER SEMANA';
+
+  const clientsWithCats = state.clientes.filter(c => c.categorias && c.categorias.length > 0);
+  if (clientsWithCats.length === 0) { showToast('No hay clientes con categorías', 'error'); return; }
+
+  let clienteIds = null;
+  if (state.fiscalSelectedClients.size > 0 && !state.fiscalSelectedClients.has(-1)) {
+    clienteIds = [...state.fiscalSelectedClients];
+  } else if (state.fiscalSelectedClients.has(-1)) {
+    showToast('Seleccioná al menos un cliente', 'error'); return;
+  }
+
+  const count = clienteIds ? clienteIds.length : clientsWithCats.length;
+  if (!await showConfirm('Generar Período Fiscal',
+    `Se generarán tareas para <strong>${count} cliente${count !== 1 ? 's' : ''}</strong> durante todo el año <strong>${year}</strong>.<br><br>Las tareas duplicadas se omitirán automáticamente.`,
+    { icon: '📆', confirmText: 'Generar' })) return;
+
+  try {
+    const body = { year, responsable, semana };
+    if (clienteIds) body.clienteIds = clienteIds;
+    const result = await api('POST', '/api/generate-fiscal-period', body);
+    state.tasks = await api('GET', '/api/tasks');
+    populateFilters();
+    render();
+    showToast(`${result.totalCreated} tarea${result.totalCreated !== 1 ? 's' : ''} creada${result.totalCreated !== 1 ? 's' : ''} para ${result.clientsProcessed} cliente${result.clientsProcessed !== 1 ? 's' : ''}`, 'success');
+  } catch (e) { showToast('Error: ' + e.message, 'error'); }
 }
 
 // =================== RENDER: VENCIMIENTOS ===================
@@ -3040,6 +3308,7 @@ function render() {
   else if (state.currentView === 'vtos') renderVencimientos();
   else if (state.currentView === 'assign') renderAssign();
   else if (state.currentView === 'review') renderReview();
+  else if (state.currentView === 'fiscal') renderFiscal();
   renderFinalized();
   updateSummaryBadges();
 }
@@ -4057,10 +4326,13 @@ function renderSummaryPanel() {
     h += `</div>`;
   }
 
-  // Both roles: tasks with unread comments
-  const unreadTaskIds = Object.entries(state.unreadCounts).filter(([,c]) => c > 0).sort((a,b) => b[1] - a[1]).slice(0, 8);
+  // Both roles: tasks with unread comments (excluding tasks already shown as mentions)
+  const mentionTaskIds = new Set(unreadMentions.map(m => String(m.taskId)));
+  const unreadTaskIds = Object.entries(state.unreadCounts)
+    .filter(([tid, c]) => c > 0 && !mentionTaskIds.has(tid))
+    .sort((a,b) => b[1] - a[1]).slice(0, 8);
   if (unreadTaskIds.length > 0) {
-    const totalUnread = Object.values(state.unreadCounts).reduce((s, c) => s + c, 0);
+    const totalUnread = unreadTaskIds.reduce((s, [,c]) => s + c, 0);
     h += `<div class="summary-section">`;
     h += `<div class="summary-section-header">📋 Mensajes sin leer <span class="ss-count red">${totalUnread}</span></div>`;
     unreadTaskIds.forEach(([tid, count]) => {
@@ -4213,9 +4485,12 @@ function updateSummaryBadges() {
     totalAlerts += returned;
   }
 
-  // Count unread comments and mentions
-  const totalUnreadComments = Object.values(state.unreadCounts).reduce((s, c) => s + c, 0);
+  // Count unread comments and mentions (deduplicated: mentions take priority)
   const totalUnreadMentions = state.mentions.filter(m => m.isUnread).length;
+  const mentionTids = new Set(state.mentions.filter(m => m.isUnread).map(m => String(m.taskId)));
+  const totalUnreadComments = Object.entries(state.unreadCounts)
+    .filter(([tid, c]) => c > 0 && !mentionTids.has(tid))
+    .reduce((s, [,c]) => s + c, 0);
   totalAlerts += totalUnreadComments + totalUnreadMentions;
 
   fabBadge.textContent = totalAlerts;
