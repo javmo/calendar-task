@@ -15,6 +15,7 @@ state.myCalExpandedDays = new Set(); // days with all tasks shown
 
 // Reorder drag state
 let reorderDropTarget = null; // { dateStr, beforeTaskId } or null
+let didDrag = false; // distinguish click from drag
 
 // =================== RENDER: MY CALENDAR ===================
 export function renderMyCalendar() {
@@ -129,8 +130,8 @@ export function renderMyCalendar() {
     // Scheduled tasks
     dayTasks.forEach(t => {
       const isFin = t.finalizada;
-      let card = `<div class="my-sched-card ${isFin?'finalized':''}" data-type="${t.tarea}" data-taskid="${t.taskId}" data-date="${ds}" draggable="${!isFin}" ${!isFin?`ondragstart="onDragStart(event, ${t.taskId})" ondragend="onDragEnd(event)"`:''} ondragover="onCardDragOver(event, ${t.taskId}, '${ds}')" ondragleave="onCardDragLeave(event)">`;
-      card += `<button class="sc-remove" onclick="removeSchedule(${t.taskId})" title="Quitar">✕</button>`;
+      let card = `<div class="my-sched-card ${isFin?'finalized':''}" data-type="${t.tarea}" data-taskid="${t.taskId}" data-date="${ds}" draggable="${!isFin}" ${!isFin?`ondragstart="onDragStart(event, ${t.taskId})" ondragend="onDragEnd(event)"`:''} ondragover="onCardDragOver(event, ${t.taskId}, '${ds}')" ondragleave="onCardDragLeave(event)" onclick="onSchedCardClick(event, ${t.taskId})">`;
+      card += `<button class="sc-remove" onclick="event.stopPropagation();removeSchedule(${t.taskId})" title="Quitar">✕</button>`;
       card += `<div class="sc-client">${t.cliente}</div>`;
       card += `<div class="sc-type">${t.tarea}</div>`;
       card += `<div class="sc-meta"><span class="sc-vto">Vto: ${formatDateShort(t.vencimiento)}</span>`;
@@ -142,7 +143,7 @@ export function renderMyCalendar() {
     // Due tasks (not scheduled, shown as ghost)
     dueTasks.forEach(t => {
       if (t.finalizada) return;
-      let card = `<div class="my-sched-card" data-type="${t.tarea}" style="opacity:.6;border-style:dashed" draggable="true" ondragstart="onDragStart(event, ${t.taskId})" ondragend="onDragEnd(event)">`;
+      let card = `<div class="my-sched-card" data-type="${t.tarea}" style="opacity:.6;border-style:dashed" draggable="true" ondragstart="onDragStart(event, ${t.taskId})" ondragend="onDragEnd(event)" onclick="onSchedCardClick(event, ${t.taskId})">`;
       card += `<div class="sc-client">${t.cliente}</div>`;
       card += `<div class="sc-type">${t.tarea} <small style="color:var(--warning)">(vence)</small></div>`;
       card += `<div class="sc-meta"><span class="sc-vto">Vto: ${formatDateShort(t.vencimiento)}</span></div>`;
@@ -202,14 +203,21 @@ export function toggleMyCalGroup(tipo) {
 
 // =================== DRAG & DROP ===================
 export function onDragStart(e, taskId) {
+  didDrag = true;
   e.dataTransfer.setData('text/plain', taskId.toString());
   e.dataTransfer.effectAllowed = 'move';
   e.target.classList.add('dragging');
 }
 
+export function onSchedCardClick(e, taskId) {
+  if (didDrag) { didDrag = false; return; }
+  if (window.editTask) window.editTask(taskId);
+}
+
 export function onDragEnd(e) {
   e.target.classList.remove('dragging');
   reorderDropTarget = null;
+  setTimeout(() => { didDrag = false; }, 0);
   document.querySelectorAll('.my-day-body').forEach(el => el.classList.remove('drag-over'));
   document.querySelectorAll('.my-sched-card').forEach(el => {
     el.classList.remove('drop-above', 'drop-below');

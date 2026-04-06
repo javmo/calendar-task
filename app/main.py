@@ -962,14 +962,14 @@ async def get_cliente_tasks(
 class GenerateTasksBody(BaseModel):
     fromMonth: str  # "2026-04"
     toMonth: str    # "2026-12"
-    responsable: Optional[str] = "PERSONA"
+    responsable: Optional[str] = ""
     semana: Optional[str] = "1ER SEMANA"
 
 
 class GenerateFiscalPeriodBody(BaseModel):
     year: int  # 2027
     clienteIds: Optional[List[int]] = None  # None = all clients with categorias
-    responsable: Optional[str] = "PERSONA"
+    responsable: Optional[str] = ""
     semana: Optional[str] = "1ER SEMANA"
 
 

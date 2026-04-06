@@ -103,6 +103,7 @@ Object.assign(window, {
   onDrop: myCal.onDrop,
   onCardDragOver: myCal.onCardDragOver,
   onCardDragLeave: myCal.onCardDragLeave,
+  onSchedCardClick: myCal.onSchedCardClick,
   removeSchedule: myCal.removeSchedule,
 
   // users admin
