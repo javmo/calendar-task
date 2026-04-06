@@ -1,0 +1,65 @@
+/* =================== BASE =================== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f0f2f5;--surface:#ffffff;--surface2:#f8f9fb;--surface-hover:#f1f3f8;
+  --border:#e2e5eb;--border-light:#eef0f4;
+  --text:#1a1d26;--text-secondary:#4a5068;--text-muted:#8b92a5;
+  --accent:#4f46e5;--accent-light:#6366f1;--accent-bg:#eef2ff;
+  --danger:#dc2626;--danger-bg:#fef2f2;--danger-border:#fecaca;
+  --warning:#d97706;--warning-bg:#fffbeb;--warning-border:#fde68a;
+  --success:#059669;--success-bg:#ecfdf5;--success-border:#a7f3d0;
+  --color-casas:#ec4899;--color-vep-mono:#f97316;--color-vep-auto:#eab308;
+  --color-iva:#3b82f6;--color-libro:#10b981;--color-iibb-cm:#8b5cf6;
+  --color-iibb-arba:#a855f7;--color-iibb-agip:#d946ef;--color-lsd:#ef4444;
+  --color-tareas:#64748b;
+  --radius:12px;--radius-sm:8px;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow:0 4px 12px rgba(0,0,0,.08);--shadow-lg:0 12px 40px rgba(0,0,0,.12);
+}
+html{scroll-behavior:smooth}
+body{font-family:'Inter','Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
+
+/* =================== LOGIN SCREEN =================== */
+.login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 50%,#a855f7 100%)}
+.login-card{background:white;border-radius:20px;padding:48px 40px;text-align:center;box-shadow:0 25px 80px rgba(0,0,0,.2);max-width:420px;width:90%}
+.login-card .logo-big{font-size:48px;margin-bottom:16px}
+.login-card h1{font-size:24px;font-weight:800;margin-bottom:8px;color:var(--text)}
+.login-card p{color:var(--text-muted);font-size:14px;margin-bottom:32px;line-height:1.5}
+.btn-google{display:inline-flex;align-items:center;gap:10px;padding:12px 28px;border:2px solid var(--border);border-radius:var(--radius);background:white;color:var(--text);font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .2s}
+.btn-google:hover{border-color:var(--accent);box-shadow:var(--shadow);transform:translateY(-1px)}
+.btn-google img{width:20px;height:20px}
+.login-error{margin-top:16px;padding:10px;border-radius:8px;background:var(--danger-bg);color:var(--danger);font-size:13px;display:none}
+
+/* =================== SETUP SCREEN =================== */
+.setup-screen{display:none;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 50%,#a855f7 100%)}
+.setup-card{background:white;border-radius:20px;padding:40px;max-width:520px;width:90%;box-shadow:0 25px 80px rgba(0,0,0,.2)}
+.setup-card h2{font-size:20px;font-weight:800;margin-bottom:20px;display:flex;align-items:center;gap:10px}
+.setup-card .step{margin-bottom:16px;padding:14px;background:var(--surface2);border-radius:var(--radius-sm);border-left:3px solid var(--accent)}
+.setup-card .step h4{font-size:13px;font-weight:700;color:var(--accent);margin-bottom:6px}
+.setup-card .step p{font-size:12px;color:var(--text-secondary);line-height:1.6}
+.setup-card .step code{background:var(--bg);padding:2px 6px;border-radius:4px;font-size:11px}
+.setup-card a{color:var(--accent);text-decoration:none;font-weight:600}
+.setup-card a:hover{text-decoration:underline}
+
+/* =================== PROFILE SETUP =================== */
+.profile-setup-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:500;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
+.profile-setup-overlay.active{display:flex}
+.profile-setup-card{background:white;border-radius:16px;padding:32px;max-width:400px;width:90%;box-shadow:var(--shadow-lg)}
+.profile-setup-card h2{font-size:18px;font-weight:700;margin-bottom:8px}
+.profile-setup-card p{font-size:13px;color:var(--text-muted);margin-bottom:20px}
+.profile-setup-card .form-group{margin-bottom:16px}
+.profile-setup-card .form-group label{display:block;font-size:11px;color:var(--text-muted);margin-bottom:5px;font-weight:700;text-transform:uppercase;letter-spacing:.8px}
+.profile-setup-card .form-group input,.profile-setup-card .form-group select{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:inherit}
+.profile-setup-card .form-group input:focus,.profile-setup-card .form-group select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-bg)}
+
+/* =================== LOADING =================== */
+.loading-overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg);z-index:1000}
+.loading-spinner{width:40px;height:40px;border:3px solid var(--border);border-top:3px solid var(--accent);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* =================== SCROLLBAR =================== */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--text-muted)}
+
