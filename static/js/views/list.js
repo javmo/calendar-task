@@ -39,7 +39,7 @@ export function getFilteredTasks() {
         if (getTaskStatus(t) !== 'overdue') return false;
       }
     }
-    if (search && !t.cliente.toLowerCase().includes(search) && !t.tarea.toLowerCase().includes(search)) return false;
+    if (search && !t.cliente.toLowerCase().includes(search) && !t.tarea.toLowerCase().includes(search) && !(t.responsable||'').toLowerCase().includes(search)) return false;
     return true;
   });
 }
@@ -126,6 +126,10 @@ export function updateStats() {
 
 // =================== RENDER: LIST ===================
 export function renderList() {
+  // Show/hide the "Limpiar filtros" button based on whether any filter is active
+  const clearBtn = document.getElementById('btnClearFilters');
+  if (clearBtn) clearBtn.style.display = hasActiveFilters() ? '' : 'none';
+
   const fC = document.getElementById('filterCliente').value;
   const fT = document.getElementById('filterTarea').value;
   const fR = document.getElementById('filterResponsable').value;
@@ -166,7 +170,7 @@ export function renderList() {
       if (fE === 'pending') { if (t.finalizada || t.estado === 'en_revision' || t.estado === 'devuelta' || getTaskStatus(t) === 'overdue') return false; }
       if (fE === 'overdue') { if (t.finalizada || getTaskStatus(t) !== 'overdue') return false; }
     }
-    if (search && !t.cliente.toLowerCase().includes(search) && !t.tarea.toLowerCase().includes(search)) return false;
+    if (search && !t.cliente.toLowerCase().includes(search) && !t.tarea.toLowerCase().includes(search) && !(t.responsable||'').toLowerCase().includes(search)) return false;
     return true;
   });
   tasks.sort((a, b) => {
@@ -177,6 +181,7 @@ export function renderList() {
   });
 
   const si = c => c === state.sortCol ? (state.sortDir === 1 ? '▲' : '▼') : '';
+  const ariaSort = c => c === state.sortCol ? (state.sortDir === 1 ? 'ascending' : 'descending') : 'none';
 
   // Bulk-delete toolbar (admin only, shown when tasks are selected)
   const selCount = state.selectedTasks.size;
@@ -189,13 +194,30 @@ export function renderList() {
     h += `</div>`;
   }
 
+  // Empty state
+  if (tasks.length === 0) {
+    const filtersActive = hasActiveFilters();
+    h += `<div class="list-empty-state">`;
+    h += `<div class="list-empty-icon">📋</div>`;
+    h += `<div class="list-empty-title">No se encontraron tareas</div>`;
+    if (filtersActive) {
+      h += `<div class="list-empty-hint">Los filtros activos no coinciden con ninguna tarea.</div>`;
+      h += `<button class="btn btn-primary" onclick="clearAllFilters()" style="margin-top:12px">Limpiar filtros</button>`;
+    } else {
+      h += `<div class="list-empty-hint">No hay tareas para este período.</div>`;
+    }
+    h += `</div>`;
+    document.getElementById('viewList').innerHTML = h;
+    return;
+  }
+
   h += `<table class="list-table"><thead><tr>`;
   if (isAdmin()) h += `<th style="width:32px;text-align:center"><input type="checkbox" id="selectAllChk" onclick="toggleSelectAll(this.checked)" title="Seleccionar todo"></th>`;
-  h += `<th onclick="sortBy('cliente')">Cliente <span class="sort-icon">${si('cliente')}</span></th>`;
-  h += `<th onclick="sortBy('tarea')">Tarea <span class="sort-icon">${si('tarea')}</span></th>`;
-  h += `<th onclick="sortBy('responsable')">Quién <span class="sort-icon">${si('responsable')}</span></th>`;
-  h += `<th onclick="sortBy('vencimiento')">Vto <span class="sort-icon">${si('vencimiento')}</span></th>`;
-  h += `<th onclick="sortBy('semana')">Sem <span class="sort-icon">${si('semana')}</span></th>`;
+  h += `<th onclick="sortBy('cliente')" aria-sort="${ariaSort('cliente')}">Cliente <span class="sort-icon">${si('cliente')}</span></th>`;
+  h += `<th onclick="sortBy('tarea')" aria-sort="${ariaSort('tarea')}">Tarea <span class="sort-icon">${si('tarea')}</span></th>`;
+  h += `<th onclick="sortBy('responsable')" aria-sort="${ariaSort('responsable')}">Quién <span class="sort-icon">${si('responsable')}</span></th>`;
+  h += `<th onclick="sortBy('vencimiento')" aria-sort="${ariaSort('vencimiento')}">Vto <span class="sort-icon">${si('vencimiento')}</span></th>`;
+  h += `<th onclick="sortBy('semana')" aria-sort="${ariaSort('semana')}">Sem <span class="sort-icon">${si('semana')}</span></th>`;
   h += `<th>Estado</th><th>Acciones</th>`;
   h += `</tr></thead><tbody>`;
 
@@ -218,17 +240,17 @@ export function renderList() {
     if (isFin) {
       h += `<td><span class="fin-tag">✅ Finalizada ${formatDateFull(t.fechaFinalizacion)}</span></td>`;
       h += `<td><div class="status-checks">`;
-      if (isAdmin()) h += `<button class="restore-btn" onclick="restoreTask(${t.taskId})" title="Restaurar">↩</button>`;
+      if (isAdmin()) h += `<button class="restore-btn" onclick="restoreTask(${t.taskId})" title="Restaurar" aria-label="Restaurar tarea">↩</button>`;
       h += historyBtnHtml(t.taskId);
-      if (isAdmin()) h += `<button class="check-btn" onclick="deleteTask(${t.taskId})" title="Eliminar tarea" style="color:var(--danger);border-color:var(--danger-border)">🗑</button>`;
+      if (isAdmin()) h += `<button class="check-btn" onclick="deleteTask(${t.taskId})" title="Eliminar tarea" aria-label="Eliminar tarea" style="color:var(--danger);border-color:var(--danger-border)">🗑</button>`;
       h += `</div></td>`;
     } else {
       h += `<td><span class="estado-badge estado-${estado}">${getEstadoIcon(estado)} ${getEstadoLabel(estado)}</span></td>`;
       h += `<td><div class="status-checks">`;
       if (isAdmin()) {
-        h += `<button class="check-btn ${t.completado?'active':''}" onclick="toggleStatus(${t.taskId},'completado')" title="Completado">✔</button>`;
-        h += `<button class="check-btn ${t.enviado?'active':''}" onclick="toggleStatus(${t.taskId},'enviado')" title="Enviado">📩</button>`;
-        h += `<button class="check-btn finalize-btn" onclick="finalizeTask(${t.taskId})" title="Finalizar tarea">✅</button>`;
+        h += `<button class="check-btn ${t.completado?'active':''}" onclick="toggleStatus(${t.taskId},'completado')" title="Completado" aria-label="Marcar completado">✔</button>`;
+        h += `<button class="check-btn ${t.enviado?'active':''}" onclick="toggleStatus(${t.taskId},'enviado')" title="Enviado" aria-label="Marcar enviado">📩</button>`;
+        h += `<button class="check-btn finalize-btn" onclick="finalizeTask(${t.taskId})" title="Finalizar tarea" aria-label="Finalizar tarea">✅</button>`;
       } else {
         // Non-admin workflow buttons — only for tasks assigned to current user
         if (isMyTask(t)) {
@@ -248,6 +270,30 @@ export function renderList() {
 
   h += `</tbody></table>`;
   document.getElementById('viewList').innerHTML = h;
+}
+
+export function clearAllFilters() {
+  document.getElementById('filterMes').value = '';
+  document.getElementById('filterCliente').value = '';
+  document.getElementById('filterTarea').value = '';
+  document.getElementById('filterResponsable').value = '';
+  document.getElementById('filterEstado').value = '';
+  document.getElementById('searchInput').value = '';
+  // Reset navigation date to today
+  state.currentDate = new Date();
+  populateFilters();
+  render();
+}
+
+export function hasActiveFilters() {
+  return (
+    !!document.getElementById('filterMes').value ||
+    !!document.getElementById('filterCliente').value ||
+    !!document.getElementById('filterTarea').value ||
+    !!document.getElementById('filterResponsable').value ||
+    !!document.getElementById('filterEstado').value ||
+    !!document.getElementById('searchInput').value
+  );
 }
 
 export function onFilterMesChange() {

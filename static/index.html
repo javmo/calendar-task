@@ -151,6 +151,7 @@
           <option value="devuelta">Devueltas</option>
           <option value="finalized">Finalizadas</option>
         </select>
+        <button class="btn btn-clear-filters" id="btnClearFilters" onclick="clearAllFilters()" style="display:none" title="Limpiar todos los filtros">✕ Limpiar filtros</button>
       </div>
       <div class="search-wrapper">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -238,7 +239,7 @@
     <div class="client-detail">
       <div class="cd-header">
         <h2 id="cdTitle">👤 Cliente</h2>
-        <button class="cd-close" onclick="closeClientDetail()">✕</button>
+        <button class="cd-close" onclick="closeClientDetail()" aria-label="Cerrar">✕</button>
       </div>
       <div class="cd-body" id="cdBody"></div>
       <div class="cd-actions">

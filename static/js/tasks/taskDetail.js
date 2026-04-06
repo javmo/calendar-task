@@ -6,10 +6,29 @@ import { api } from '../api.js';
 import { formatCommentWithMentions, formatTimeAgo } from '../utils/format.js';
 import { showToast } from '../ui/toast.js';
 
+function updateHistoryScrollFade(body) {
+  const wrapper = body.closest('.tdp-history');
+  if (!wrapper) return;
+  const atBottom = body.scrollHeight - body.scrollTop - body.clientHeight < 4;
+  wrapper.classList.toggle('at-bottom', atBottom);
+}
+
+function attachHistoryScrollFade(body) {
+  // Replace node to drop any previous scroll listeners, then re-attach
+  const fresh = body.cloneNode(true);
+  body.parentNode.replaceChild(fresh, body);
+  updateHistoryScrollFade(fresh);
+  fresh.addEventListener('scroll', () => updateHistoryScrollFade(fresh));
+  return fresh;
+}
+
 export async function loadTdpHistory(taskId) {
   try {
     const entries = await api('GET', `/api/tasks/${taskId}/history`);
     renderTdpHistoryEntries(entries);
+    // Wire up fade after content is set
+    const body = document.getElementById('tdpHistoryBody');
+    attachHistoryScrollFade(body);
     // Mark as read
     await api('PUT', `/api/tasks/${taskId}/mark-read`);
     delete state.unreadCounts[String(taskId)];

@@ -53,8 +53,8 @@ export async function renderReview() {
 
     h += `<div class="review-card-actions">`;
     h += `<button class="btn-workflow btn-approve" onclick="approveTask(${t.taskId})">✅ Aprobar</button>`;
-    h += `<button class="btn-workflow btn-return" onclick="returnTask(${t.taskId})">↩️ Devolver</button>`;
-    h += `<button class="btn-workflow" style="background:var(--surface);color:var(--text-secondary);border-color:var(--border)" onclick="openHistory(${t.taskId})">📋 Historial</button>`;
+    h += `<button class="btn-workflow btn-return" onclick="returnTask(${t.taskId})">↩ Devolver</button>`;
+    h += `<button class="btn-workflow btn-neutral" onclick="openHistory(${t.taskId})">📋 Historial</button>`;
     h += `</div>`;
     h += `</div>`;
   });

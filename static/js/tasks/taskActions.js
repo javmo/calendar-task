@@ -8,20 +8,40 @@ import { showConfirm, showPromptDialog } from '../ui/dialogs.js';
 import { render } from '../router.js';
 import { populateFilters } from '../views/list.js';
 
+// =================== BUTTON LOADING HELPER ===================
+function setLoading(btn, loading, loadingText) {
+  if (!btn) return;
+  if (loading) {
+    btn.disabled = true;
+    btn._origText = btn.innerHTML;
+    btn.innerHTML = `<span class="btn-spinner"></span>${loadingText || 'Cargando…'}`;
+  } else {
+    btn.disabled = false;
+    if (btn._origText !== undefined) btn.innerHTML = btn._origText;
+  }
+}
+
 // =================== TASK ACTIONS ===================
 export function isAdmin() { return state.currentUser && state.currentUser.role === 'admin'; }
 
 export async function toggleStatus(id, field) {
   if (!isAdmin() && field !== 'completado') { showToast('Solo admin puede modificar ese campo', 'error'); return; }
+  const btn = document.activeElement;
+  setLoading(btn, true, '…');
   try {
     const updated = await api('PUT', `/api/tasks/${id}/status`, { field });
     const idx = state.tasks.findIndex(t => t.taskId === id);
     if (idx >= 0) state.tasks[idx] = updated;
     render();
-  } catch (e) { showToast('Error: ' + e.message, 'error'); }
+  } catch (e) {
+    setLoading(btn, false);
+    showToast('Error: ' + e.message, 'error');
+  }
 }
 
 export async function finalizeTask(id) {
+  const btn = document.activeElement;
+  setLoading(btn, true, 'Finalizando…');
   try {
     const updated = await api('PUT', `/api/tasks/${id}/finalize`);
     const idx = state.tasks.findIndex(t => t.taskId === id);
@@ -29,7 +49,10 @@ export async function finalizeTask(id) {
     const task = state.tasks[idx];
     render();
     showToast(`"${task.cliente} — ${task.tarea}" finalizada`, 'success');
-  } catch (e) { showToast('Error: ' + e.message, 'error'); }
+  } catch (e) {
+    setLoading(btn, false);
+    showToast('Error: ' + e.message, 'error');
+  }
 }
 
 export async function deleteTask(id) {
@@ -82,24 +105,35 @@ export async function submitForReview(id) {
     icon: '📤', placeholder: 'Comentario opcional...', confirmText: 'Enviar', cancelText: 'Cancelar'
   });
   if (comment === null) return;
+  // Find the submit button for this task in the rendered list
+  const btn = document.querySelector(`.btn-submit-review[onclick*="${id}"]`) || document.activeElement;
+  setLoading(btn, true, 'Enviando…');
   try {
     const updated = await api('PUT', `/api/tasks/${id}/submit-review`, { comment: comment || '' });
     const idx = state.tasks.findIndex(t => t.taskId === id);
     if (idx >= 0) state.tasks[idx] = updated;
     render();
     showToast('Tarea enviada a revisión', 'success');
-  } catch (e) { showToast('Error: ' + e.message, 'error'); }
+  } catch (e) {
+    setLoading(btn, false);
+    showToast('Error: ' + e.message, 'error');
+  }
 }
 
 export async function undoSubmitReview(id) {
   if (!await showConfirm('Deshacer envío', '¿Querés retirar la tarea de revisión?', { icon: '↩️', confirmText: 'Deshacer' })) return;
+  const btn = document.querySelector(`.btn-undo-submit[onclick*="${id}"]`) || document.activeElement;
+  setLoading(btn, true, 'Deshaciendo…');
   try {
     const updated = await api('PUT', `/api/tasks/${id}/undo-submit`);
     const idx = state.tasks.findIndex(t => t.taskId === id);
     if (idx >= 0) state.tasks[idx] = updated;
     render();
     showToast('Revisión deshecha', 'success');
-  } catch (e) { showToast('Error: ' + e.message, 'error'); }
+  } catch (e) {
+    setLoading(btn, false);
+    showToast('Error: ' + e.message, 'error');
+  }
 }
 
 export async function approveTask(id) {
@@ -107,6 +141,8 @@ export async function approveTask(id) {
     icon: '✅', placeholder: 'Comentario opcional...', confirmText: 'Aprobar', cancelText: 'Cancelar'
   });
   if (comment === null) return;
+  const btn = document.querySelector(`[onclick*="approveTask(${id})"]`) || document.activeElement;
+  setLoading(btn, true, 'Aprobando…');
   try {
     const result = await api('PUT', `/api/tasks/${id}/approve`, { comment: comment || '' });
     const idx = state.tasks.findIndex(t => t.taskId === id);
@@ -114,7 +150,10 @@ export async function approveTask(id) {
     render();
     const emailMsg = result.emailSent ? ' (email enviado)' : '';
     showToast(`Tarea aprobada y finalizada${emailMsg}`, 'success');
-  } catch (e) { showToast('Error: ' + e.message, 'error'); }
+  } catch (e) {
+    setLoading(btn, false);
+    showToast('Error: ' + e.message, 'error');
+  }
 }
 
 export async function returnTask(id) {
@@ -125,11 +164,16 @@ export async function returnTask(id) {
     if (comment !== null) showToast('Debés indicar el motivo de devolución', 'error');
     return;
   }
+  const btn = document.querySelector(`[onclick*="returnTask(${id})"]`) || document.activeElement;
+  setLoading(btn, true, 'Devolviendo…');
   try {
     const updated = await api('PUT', `/api/tasks/${id}/return`, { comment: comment.trim() });
     const idx = state.tasks.findIndex(t => t.taskId === id);
     if (idx >= 0) state.tasks[idx] = updated;
     render();
     showToast('Tarea devuelta con observaciones', 'success');
-  } catch (e) { showToast('Error: ' + e.message, 'error'); }
+  } catch (e) {
+    setLoading(btn, false);
+    showToast('Error: ' + e.message, 'error');
+  }
 }

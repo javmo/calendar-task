@@ -86,6 +86,8 @@ Object.assign(window, {
   updateStats: list.updateStats,
   renderList: list.renderList,
   onFilterMesChange: list.onFilterMesChange,
+  clearAllFilters: list.clearAllFilters,
+  hasActiveFilters: list.hasActiveFilters,
   sortBy: list.sortBy,
   toggleTaskSelect: list.toggleTaskSelect,
   toggleSelectAll: list.toggleSelectAll,

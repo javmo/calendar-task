@@ -131,7 +131,7 @@ export function renderMyCalendar() {
     dayTasks.forEach(t => {
       const isFin = t.finalizada;
       let card = `<div class="my-sched-card ${isFin?'finalized':''}" data-type="${t.tarea}" data-taskid="${t.taskId}" data-date="${ds}" draggable="${!isFin}" ${!isFin?`ondragstart="onDragStart(event, ${t.taskId})" ondragend="onDragEnd(event)"`:''} ondragover="onCardDragOver(event, ${t.taskId}, '${ds}')" ondragleave="onCardDragLeave(event)" onclick="onSchedCardClick(event, ${t.taskId})">`;
-      card += `<button class="sc-remove" onclick="event.stopPropagation();removeSchedule(${t.taskId})" title="Quitar">✕</button>`;
+      card += `<button class="sc-remove" onclick="event.stopPropagation();removeSchedule(${t.taskId})" title="Quitar" aria-label="Quitar tarea del calendario">✕</button>`;
       card += `<div class="sc-client">${t.cliente}</div>`;
       card += `<div class="sc-type">${t.tarea}</div>`;
       card += `<div class="sc-meta"><span class="sc-vto">Vto: ${formatDateShort(t.vencimiento)}</span>`;

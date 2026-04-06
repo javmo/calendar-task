@@ -1,3 +1,8 @@
+/* =================== BUTTON SPINNER =================== */
+.btn-spinner{display:inline-block;width:12px;height:12px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:btn-spin .6s linear infinite;flex-shrink:0}
+@keyframes btn-spin{to{transform:rotate(360deg)}}
+.btn:disabled{opacity:.7;cursor:not-allowed;pointer-events:none}
+
 /* =================== BUTTONS =================== */
 .btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);cursor:pointer;font-size:13px;font-weight:500;font-family:inherit;transition:all .15s;white-space:nowrap}
 .btn:hover{background:var(--surface-hover);border-color:var(--accent);color:var(--accent);box-shadow:var(--shadow-sm)}
@@ -32,6 +37,9 @@
 .tdp-status-item.inactive{border-color:var(--border);background:var(--surface2);color:var(--text-muted)}
 .tdp-actions{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
 .tdp-history-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.tdp-history{position:relative}
+.tdp-history::after{content:'';position:absolute;bottom:40px;left:0;right:0;height:40px;background:linear-gradient(to bottom,transparent,var(--surface2));pointer-events:none;border-radius:0 0 var(--radius-sm) var(--radius-sm);transition:opacity .2s}
+.tdp-history.at-bottom::after{opacity:0}
 .tdp-history-body{max-height:250px;overflow-y:auto;border:1px solid var(--border-light);border-radius:var(--radius-sm);padding:8px;margin-bottom:8px;background:var(--surface2)}
 .tdp-history-body .history-entry{padding:6px 0;border-bottom:1px solid var(--border-light)}
 .tdp-history-body .history-entry:last-child{border-bottom:none}
@@ -45,6 +53,9 @@
 .tdp-comment-form input{flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-family:inherit}
 .tdp-comment-form input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-bg)}
 .form-group.readonly select,.form-group.readonly input{pointer-events:none;opacity:.7;background:var(--surface2)}
+/* Inline field validation */
+.form-group select.field-error,.form-group input.field-error{border-color:var(--danger);box-shadow:0 0 0 3px var(--danger-bg)}
+.field-error-msg{display:block;font-size:11px;color:var(--danger);margin-top:4px;font-weight:500}
 /* Client category checkboxes */
 .cc-cats{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
 .cc-cat-tag{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;white-space:nowrap}
@@ -117,6 +128,8 @@
 .btn-workflow.btn-approve:hover{background:#bbf7d0;border-color:#4ade80}
 .btn-workflow.btn-return{background:#fef3c7;color:#b45309;border-color:#fcd34d}
 .btn-workflow.btn-return:hover{background:#fde68a;border-color:#f59e0b}
+.btn-workflow.btn-neutral{background:var(--surface);color:var(--text-secondary);border-color:var(--border)}
+.btn-workflow.btn-neutral:hover{background:var(--surface-hover);border-color:var(--accent);color:var(--accent)}
 
 /* =================== TASK HISTORY MODAL =================== */
 .history-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:300;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
