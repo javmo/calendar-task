@@ -210,6 +210,11 @@ class ScheduleIn(BaseModel):
     notes: Optional[str] = ""
 
 
+class ScheduleReorder(BaseModel):
+    scheduledDate: str
+    taskIds: list[int]
+
+
 class ClienteIn(BaseModel):
     nombre: str
     cuit: Optional[str] = ""
@@ -796,6 +801,8 @@ async def get_schedule(user=Depends(get_current_user)):
     entries = await db.schedules.find(
         {"userEmail": user["email"]}, {"_id": 0}
     ).to_list(5000)
+    # Sort by sortOrder ascending; entries without the field sort first (treated as 0)
+    entries.sort(key=lambda e: e.get("sortOrder", 0))
     return entries
 
 
@@ -804,19 +811,54 @@ async def upsert_schedule(entry: ScheduleIn, user=Depends(get_current_user)):
     existing = await db.schedules.find_one(
         {"userEmail": user["email"], "taskId": entry.taskId}
     )
+
+    # Compute the next sortOrder for the target date (append to end of day)
+    async def next_sort_order_for_date(date: str) -> int:
+        pipeline = [
+            {"$match": {"userEmail": user["email"], "scheduledDate": date}},
+            {"$group": {"_id": None, "maxOrder": {"$max": "$sortOrder"}}},
+        ]
+        result = await db.schedules.aggregate(pipeline).to_list(1)
+        if result and result[0].get("maxOrder") is not None:
+            return result[0]["maxOrder"] + 1
+        return 0
+
     if existing:
+        update_fields = {
+            "scheduledDate": entry.scheduledDate,
+            "notes": entry.notes,
+        }
+        # If the task is being moved to a different date, recalculate sortOrder
+        if existing.get("scheduledDate") != entry.scheduledDate:
+            update_fields["sortOrder"] = await next_sort_order_for_date(entry.scheduledDate)
         await db.schedules.update_one(
             {"userEmail": user["email"], "taskId": entry.taskId},
-            {"$set": {
-                "scheduledDate": entry.scheduledDate,
-                "notes": entry.notes,
-            }},
+            {"$set": update_fields},
         )
     else:
         doc = entry.model_dump()
         doc["userEmail"] = user["email"]
         doc["createdAt"] = datetime.utcnow().isoformat()
+        doc["sortOrder"] = await next_sort_order_for_date(entry.scheduledDate)
         await db.schedules.insert_one(doc)
+    return {"ok": True}
+
+
+@app.put("/api/schedule/reorder")
+async def reorder_schedule(body: ScheduleReorder, user=Depends(get_current_user)):
+    """
+    Set sortOrder for each taskId in the list to match its index position.
+    Only updates entries belonging to the current user.
+    """
+    for index, task_id in enumerate(body.taskIds):
+        await db.schedules.update_one(
+            {
+                "userEmail": user["email"],
+                "taskId": task_id,
+                "scheduledDate": body.scheduledDate,
+            },
+            {"$set": {"sortOrder": index}},
+        )
     return {"ok": True}
 
 
