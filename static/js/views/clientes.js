@@ -187,7 +187,7 @@ export function updateCeGenerateSection() {
 
 export function addClient() {
   state.editingClientId = null;
-  document.getElementById('clientEditTitle').innerHTML = '➕ Nuevo Cliente <button class="modal-close" onclick="closeClientEdit()">✕</button>';
+  document.getElementById('clientEditTitle').innerHTML = '➕ Nuevo Cliente <button class="modal-close" onclick="closeClientEdit()" aria-label="Cerrar">✕</button>';
   document.getElementById('ceNombre').value = '';
   document.getElementById('ceCuit').value = '';
   document.getElementById('ceEmail').value = '';
@@ -207,7 +207,7 @@ export function editClientFromDetail() {
   if (!c) return;
   closeClientDetail();
 
-  document.getElementById('clientEditTitle').innerHTML = '✏️ Editar Cliente <button class="modal-close" onclick="closeClientEdit()">✕</button>';
+  document.getElementById('clientEditTitle').innerHTML = '✏️ Editar Cliente <button class="modal-close" onclick="closeClientEdit()" aria-label="Cerrar">✕</button>';
   document.getElementById('ceNombre').value = c.nombre;
   document.getElementById('ceCuit').value = c.cuit || '';
   document.getElementById('ceEmail').value = c.email || '';

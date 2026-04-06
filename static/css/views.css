@@ -1,6 +1,6 @@
 /* =================== CALENDAR GRID =================== */
 .calendar-container{padding:20px 28px;overflow-x:auto}
-.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--border);border-radius:var(--radius);overflow:hidden;min-width:900px;box-shadow:var(--shadow)}
+.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
 .day-header{background:var(--surface2);padding:10px;text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-muted)}
 .day-header.weekend{color:var(--danger)}
 .day-cell{background:var(--surface);min-height:120px;padding:8px;position:relative;transition:background .15s}
@@ -44,7 +44,7 @@
 .list-table .fin-tag{font-size:10px;padding:2px 8px}
 
 /* =================== WEEK VIEW =================== */
-.week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--border);border-radius:var(--radius);overflow:hidden;min-width:900px;box-shadow:var(--shadow)}
+.week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
 .week-day-col{background:var(--surface);min-height:60vh;display:flex;flex-direction:column}
 .week-day-col.today{background:var(--accent-bg)}
 .week-day-header{padding:14px 12px;text-align:center;border-bottom:1px solid var(--border);background:var(--surface2)}
@@ -77,6 +77,12 @@
 
 /* =================== LIST VIEW =================== */
 .list-container{padding:20px 28px}
+.btn-clear-filters{font-size:11px;padding:4px 10px;color:var(--danger);border-color:var(--danger-border);background:var(--danger-bg);gap:4px}
+.btn-clear-filters:hover{background:var(--danger);color:white;border-color:var(--danger)}
+.list-empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;color:var(--text-muted);text-align:center}
+.list-empty-icon{font-size:40px;margin-bottom:12px;opacity:.5}
+.list-empty-title{font-size:16px;font-weight:600;color:var(--text);margin-bottom:6px}
+.list-empty-hint{font-size:13px;color:var(--text-muted)}
 .list-bulk-toolbar{display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--accent-bg);border:1px solid var(--accent);border-radius:var(--radius-sm);margin-bottom:12px;animation:fadeIn .15s ease}
 .list-bulk-toolbar .bulk-count{font-size:13px;font-weight:600;color:var(--accent);flex:1}
 .list-table tbody tr.selected-row{background:#ede9fe !important}
@@ -390,6 +396,30 @@
 .assign-group-header .group-count{font-size:10px;padding:1px 8px;border-radius:10px;background:var(--accent-bg);color:var(--accent);font-weight:700}
 .btn-success{background:var(--success);border-color:var(--success);color:white}
 .btn-success:hover{background:#047857;border-color:#047857;color:white}
+
+/* =================== MOBILE RESPONSIVE =================== */
+@media (max-width: 767px) {
+  /* Month view: collapse 7-col grid into a vertical day list */
+  .calendar-container{padding:10px 12px;overflow-x:unset}
+  .calendar-grid{display:flex;flex-direction:column;gap:0;background:transparent;border-radius:var(--radius);overflow:visible;box-shadow:none}
+  .day-header{display:none}
+  .day-cell{min-height:unset;border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:6px;padding:8px 10px}
+  .day-cell.other-month{display:none}
+  .task-cards{max-height:unset}
+
+  /* Week view: stack days vertically */
+  .week-grid{display:flex;flex-direction:column;gap:8px;background:transparent;border-radius:0;box-shadow:none}
+  .week-day-col{min-height:unset;border:1px solid var(--border);border-radius:var(--radius-sm)}
+  .week-day-body{overflow-y:visible}
+
+  /* List view: tighter padding */
+  .list-container{padding:10px 12px}
+
+  /* Mi Calendario: single-column layout */
+  .my-cal-layout{grid-template-columns:1fr;min-height:unset}
+  .my-cal-sidebar{max-height:220px}
+  .my-cal-grid-container{max-height:unset}
+}
 
 /* =================== ADMIN REVIEW DASHBOARD =================== */
 .review-container{padding:20px 28px}

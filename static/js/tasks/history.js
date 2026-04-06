@@ -118,7 +118,7 @@ export function getUnreadCount(taskId) {
 export function historyBtnHtml(taskId, cssClass = 'check-btn', extraStyle = '') {
   const uc = getUnreadCount(taskId);
   const badge = uc > 0 ? ` has-unread" data-unread="${uc}` : '';
-  return `<button class="${cssClass}${badge}" onclick="openHistory(${taskId})" title="Historial${uc > 0 ? ` (${uc} sin leer)` : ''}" style="${extraStyle}">📋</button>`;
+  return `<button class="${cssClass}${badge}" onclick="openHistory(${taskId})" title="Historial${uc > 0 ? ` (${uc} sin leer)` : ''}" aria-label="Historial${uc > 0 ? ` (${uc} sin leer)` : ''}" style="${extraStyle}">📋</button>`;
 }
 
 export function unreadDotHtml(taskId) {

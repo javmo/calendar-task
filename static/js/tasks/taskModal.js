@@ -13,11 +13,95 @@ import { isAdmin } from './taskActions.js';
 import { getUnreadCount } from './history.js';
 import { loadTdpHistory } from './taskDetail.js';
 
+// =================== INLINE FORM VALIDATION ===================
+function setFieldError(fieldEl, message) {
+  const group = fieldEl.closest('.form-group');
+  if (!group) return;
+  fieldEl.classList.add('field-error');
+  let errEl = group.querySelector('.field-error-msg');
+  if (!errEl) {
+    errEl = document.createElement('span');
+    errEl.className = 'field-error-msg';
+    group.appendChild(errEl);
+  }
+  errEl.textContent = message;
+
+  // Clear error when user changes the field
+  const clearErr = () => {
+    fieldEl.classList.remove('field-error');
+    const msg = group.querySelector('.field-error-msg');
+    if (msg) msg.remove();
+    fieldEl.removeEventListener('change', clearErr);
+    fieldEl.removeEventListener('input', clearErr);
+  };
+  fieldEl.addEventListener('change', clearErr);
+  fieldEl.addEventListener('input', clearErr);
+}
+
+function clearAllFieldErrors() {
+  document.querySelectorAll('#modalOverlay .field-error').forEach(el => el.classList.remove('field-error'));
+  document.querySelectorAll('#modalOverlay .field-error-msg').forEach(el => el.remove());
+}
+
+function validateTaskForm(tarea, vencimiento) {
+  let valid = true;
+  if (!tarea) {
+    setFieldError(document.getElementById('formTarea'), 'El tipo de tarea es obligatorio.');
+    valid = false;
+  }
+  if (!vencimiento) {
+    setFieldError(document.getElementById('formVencimiento'), 'La fecha de vencimiento es obligatoria.');
+    valid = false;
+  }
+  return valid;
+}
+
+// =================== UNSAVED CHANGES TRACKING ===================
+let _originalFormValues = null;
+
+function captureFormValues() {
+  _originalFormValues = {
+    cliente: document.getElementById('formCliente').value,
+    tarea: document.getElementById('formTarea').value,
+    responsable: document.getElementById('formResponsable').value,
+    vencimiento: document.getElementById('formVencimiento').value,
+    semana: document.getElementById('formSemana').value,
+  };
+}
+
+function isFormDirty() {
+  if (!_originalFormValues) return false;
+  return (
+    document.getElementById('formCliente').value !== _originalFormValues.cliente ||
+    document.getElementById('formTarea').value !== _originalFormValues.tarea ||
+    document.getElementById('formResponsable').value !== _originalFormValues.responsable ||
+    document.getElementById('formVencimiento').value !== _originalFormValues.vencimiento ||
+    document.getElementById('formSemana').value !== _originalFormValues.semana
+  );
+}
+
+function clearFormTracking() {
+  _originalFormValues = null;
+}
+
+// =================== BUTTON LOADING HELPER ===================
+function setLoading(btn, loading, loadingText) {
+  if (!btn) return;
+  if (loading) {
+    btn.disabled = true;
+    btn._origText = btn.innerHTML;
+    btn.innerHTML = `<span class="btn-spinner"></span>${loadingText || 'Cargando…'}`;
+  } else {
+    btn.disabled = false;
+    if (btn._origText !== undefined) btn.innerHTML = btn._origText;
+  }
+}
+
 // =================== TASK CRUD ===================
 export function addTask() {
   if (!isAdmin()) { showToast('Solo admin puede crear tareas', 'error'); return; }
   state.editingId = null;
-  document.getElementById('modalTitle').innerHTML = '📝 Nueva Tarea <button class="modal-close" onclick="closeModal()">✕</button>';
+  document.getElementById('modalTitle').innerHTML = '📝 Nueva Tarea <button class="modal-close" onclick="closeModal()" aria-label="Cerrar">✕</button>';
   document.getElementById('formCliente').value = '';
   document.getElementById('formTarea').value = state.tasks.length > 0 ? [...new Set(state.tasks.map(t => t.tarea))].sort()[0] : '';
   document.getElementById('formResponsable').value = state.currentUser?.responsableName || 'PERSONA';
@@ -26,10 +110,12 @@ export function addTask() {
   document.getElementById('btnDelete').style.display = 'none';
   document.getElementById('btnSave').style.display = '';
   // Reset: show form, hide detail panel, remove readonly
+  clearAllFieldErrors();
   document.getElementById('taskDetailPanel').style.display = 'none';
   document.querySelector('#modalOverlay .modal').classList.remove('with-detail');
   document.querySelectorAll('#modalOverlay .form-group').forEach(fg => fg.classList.remove('readonly'));
   document.getElementById('modalOverlay').classList.add('active');
+  captureFormValues();
 }
 
 export function editTask(id) {
@@ -42,7 +128,7 @@ export function editTask(id) {
   const estado = t.estado || 'pendiente';
 
   // Title
-  document.getElementById('modalTitle').innerHTML = `${admin ? '✏️ Editar' : '📋'} Tarea <button class="modal-close" onclick="closeModal()">✕</button>`;
+  document.getElementById('modalTitle').innerHTML = `${admin ? '✏️ Editar' : '📋'} Tarea <button class="modal-close" onclick="closeModal()" aria-label="Cerrar">✕</button>`;
 
   // Populate form
   document.getElementById('formCliente').value = t.cliente;
@@ -51,6 +137,7 @@ export function editTask(id) {
   document.getElementById('formVencimiento').value = t.vencimiento;
   document.getElementById('formSemana').value = t.semana;
 
+  clearAllFieldErrors();
   // Form editability
   const formGroups = document.querySelectorAll('#modalOverlay .form-group');
   formGroups.forEach(fg => fg.classList.toggle('readonly', !admin));
@@ -101,10 +188,13 @@ export function editTask(id) {
   loadTdpHistory(id);
 
   document.getElementById('modalOverlay').classList.add('active');
+  captureFormValues();
 }
 
 export async function finalizeFromModal() {
   if (state.editingId === null) return;
+  const btn = document.activeElement;
+  setLoading(btn, true, 'Finalizando…');
   try {
     const updated = await api('PUT', `/api/tasks/${state.editingId}/finalize`);
     const idx = state.tasks.findIndex(t => t.taskId === state.editingId);
@@ -112,12 +202,17 @@ export async function finalizeFromModal() {
     editTask(state.editingId);
     render();
     showToast(`Tarea finalizada`, 'success');
-  } catch (e) { showToast('Error: ' + e.message, 'error'); }
+  } catch (e) {
+    setLoading(btn, false);
+    showToast('Error: ' + e.message, 'error');
+  }
 }
 
 // Modal action helpers that refresh the detail panel
 export async function toggleStatusFromModal(field) {
   if (!state.editingId) return;
+  const btn = document.activeElement;
+  setLoading(btn, true, 'Guardando…');
   try {
     const updated = await api('PUT', `/api/tasks/${state.editingId}/status`, { field });
     const idx = state.tasks.findIndex(t => t.taskId === state.editingId);
@@ -125,7 +220,10 @@ export async function toggleStatusFromModal(field) {
     // Re-open to refresh UI
     editTask(state.editingId);
     render();
-  } catch (e) { showToast('Error: ' + e.message, 'error'); }
+  } catch (e) {
+    setLoading(btn, false);
+    showToast('Error: ' + e.message, 'error');
+  }
 }
 
 export async function submitForReviewFromModal() {
@@ -134,6 +232,8 @@ export async function submitForReviewFromModal() {
     icon: '📤', placeholder: 'Comentario opcional...', confirmText: 'Enviar', cancelText: 'Cancelar'
   });
   if (comment === null) return;
+  const btn = document.querySelector('#tdpActions .btn-submit-review');
+  setLoading(btn, true, 'Enviando…');
   try {
     const updated = await api('PUT', `/api/tasks/${state.editingId}/submit-review`, { comment: comment || '' });
     const idx = state.tasks.findIndex(t => t.taskId === state.editingId);
@@ -141,11 +241,16 @@ export async function submitForReviewFromModal() {
     editTask(state.editingId);
     render();
     showToast('Tarea enviada a revisión', 'success');
-  } catch (e) { showToast('Error: ' + e.message, 'error'); }
+  } catch (e) {
+    setLoading(btn, false);
+    showToast('Error: ' + e.message, 'error');
+  }
 }
 
 export async function undoSubmitFromModal() {
   if (!state.editingId) return;
+  const btn = document.activeElement;
+  setLoading(btn, true, 'Deshaciendo…');
   try {
     const updated = await api('PUT', `/api/tasks/${state.editingId}/undo-submit`);
     const idx = state.tasks.findIndex(t => t.taskId === state.editingId);
@@ -153,11 +258,16 @@ export async function undoSubmitFromModal() {
     editTask(state.editingId);
     render();
     showToast('Envío deshecho', 'success');
-  } catch (e) { showToast('Error: ' + e.message, 'error'); }
+  } catch (e) {
+    setLoading(btn, false);
+    showToast('Error: ' + e.message, 'error');
+  }
 }
 
 export async function restoreFromModal() {
   if (!state.editingId) return;
+  const btn = document.activeElement;
+  setLoading(btn, true, 'Restaurando…');
   try {
     const updated = await api('PUT', `/api/tasks/${state.editingId}/restore`);
     const idx = state.tasks.findIndex(t => t.taskId === state.editingId);
@@ -165,28 +275,41 @@ export async function restoreFromModal() {
     editTask(state.editingId);
     render();
     showToast('Tarea restaurada', 'success');
-  } catch (e) { showToast('Error: ' + e.message, 'error'); }
+  } catch (e) {
+    setLoading(btn, false);
+    showToast('Error: ' + e.message, 'error');
+  }
 }
 
 export async function saveTask() {
+  clearAllFieldErrors();
+
   const sel = document.getElementById('formCliente');
   let cliente = sel.value;
-  if (!cliente) {
-    cliente = await showPromptDialog('Nuevo cliente', 'Ingresa el nombre del cliente', { icon: '👤', placeholder: 'Nombre del cliente...' });
-    if (!cliente || !cliente.trim()) return;
-    cliente = cliente.trim();
-  }
   const tarea = document.getElementById('formTarea').value;
   const responsable = document.getElementById('formResponsable').value;
   const vencimiento = document.getElementById('formVencimiento').value;
   const semana = document.getElementById('formSemana').value;
 
-  if (!tarea || !vencimiento) { showToast('Completá todos los campos obligatorios', 'error'); return; }
+  // Inline validation — validate tarea and vencimiento before the async new-client prompt
+  if (!validateTaskForm(tarea, vencimiento)) return;
+
+  // If "new client" placeholder selected, prompt for name
+  if (!cliente) {
+    cliente = await showPromptDialog('Nuevo cliente', 'Ingresa el nombre del cliente', { icon: '👤', placeholder: 'Nombre del cliente...' });
+    if (!cliente || !cliente.trim()) {
+      setFieldError(document.getElementById('formCliente'), 'Seleccioná un cliente o ingresá uno nuevo.');
+      return;
+    }
+    cliente = cliente.trim();
+  }
 
   // Find assignedTo email based on responsable name
   const matchUser = state.users.find(u => u.responsableName === responsable);
   const assignedTo = matchUser ? matchUser.email : null;
 
+  const btn = document.getElementById('btnSave');
+  setLoading(btn, true, state.editingId !== null ? 'Guardando…' : 'Creando…');
   try {
     if (state.editingId !== null) {
       const updated = await api('PUT', `/api/tasks/${state.editingId}`, { cliente, tarea, responsable, assignedTo, vencimiento, semana });
@@ -200,31 +323,57 @@ export async function saveTask() {
     }
     populateFilters();
     populateFormSelects();
+    clearFormTracking(); // mark as clean so closeModal skips dirty check
     closeModal();
     render();
-  } catch (e) { showToast('Error: ' + e.message, 'error'); }
+  } catch (e) {
+    setLoading(btn, false);
+    showToast('Error: ' + e.message, 'error');
+  }
 }
 
 export async function deleteFromModal() {
   if (state.editingId === null) return;
   if (!await showConfirm('Eliminar tarea', 'Esta accion no se puede deshacer.', { icon: '🗑️', confirmText: 'Eliminar', danger: true })) return;
+  const btn = document.getElementById('btnDelete');
+  setLoading(btn, true, 'Eliminando…');
   try {
     await api('DELETE', `/api/tasks/${state.editingId}`);
     state.tasks = state.tasks.filter(t => t.taskId !== state.editingId);
     state.selectedTasks.delete(state.editingId);
     populateFilters();
+    clearFormTracking();
     closeModal();
     render();
     showToast('Tarea eliminada', 'success');
-  } catch (e) { showToast('Error: ' + e.message, 'error'); }
+  } catch (e) {
+    setLoading(btn, false);
+    showToast('Error: ' + e.message, 'error');
+  }
 }
 
-export function closeModal() {
+function _doCloseModal() {
   document.getElementById('modalOverlay').classList.remove('active');
   document.getElementById('taskDetailPanel').style.display = 'none';
   document.querySelector('#modalOverlay .modal').classList.remove('with-detail');
   document.querySelectorAll('#modalOverlay .form-group').forEach(fg => fg.classList.remove('readonly'));
   // Dynamic lookup to avoid circular with ui/mentions.js (which imports taskDetail.js).
   window.closeTdpMentionDropdown && window.closeTdpMentionDropdown();
+  clearFormTracking();
   state.editingId = null;
+}
+
+export async function closeModal() {
+  // Only warn if admin form is visible and has been edited
+  const btnSave = document.getElementById('btnSave');
+  const formVisible = btnSave && btnSave.style.display !== 'none';
+  if (formVisible && isFormDirty()) {
+    const ok = await showConfirm(
+      'Descartar cambios',
+      '¿Seguro que querés cerrar? Los cambios no guardados se perderán.',
+      { icon: '⚠️', confirmText: 'Descartar', cancelText: 'Seguir editando' }
+    );
+    if (!ok) return;
+  }
+  _doCloseModal();
 }
