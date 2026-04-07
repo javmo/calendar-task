@@ -188,12 +188,24 @@ export function editTask(id) {
   // Show client info (ficha) in task detail panel
   const clienteInfo = document.getElementById('tdpClientInfo');
   const clienteData = state.clientes.find(c => c.nombre === t.cliente);
-  if (clienteData && clienteData.notas && clienteData.notas.trim()) {
-    clienteInfo.innerHTML = `<div class="tdp-client-info-box"><div class="tdp-client-info-label">Ficha del cliente</div><div class="tdp-client-info-text">${clienteData.notas.replace(/\n/g, '<br>')}</div></div>`;
-    clienteInfo.style.display = '';
-  } else {
-    clienteInfo.innerHTML = '';
-    clienteInfo.style.display = 'none';
+  if (clienteData) {
+    const notaEspecifica = clienteData.notasPorTarea && clienteData.notasPorTarea[t.tarea];
+    const notaGeneral = clienteData.notas && clienteData.notas.trim() ? clienteData.notas : null;
+    if (notaEspecifica || notaGeneral) {
+      let infoHtml = '<div class="tdp-client-info-box">';
+      if (notaEspecifica) {
+        infoHtml += `<div class="tdp-client-nota-especifica"><div class="tdp-client-nota-tag">${t.tarea}</div><div class="tdp-client-info-text">${notaEspecifica.replace(/\n/g, '<br>')}</div></div>`;
+      }
+      if (notaGeneral) {
+        infoHtml += `<div class="${notaEspecifica ? 'tdp-client-nota-general' : ''}"><div class="tdp-client-info-label">Ficha del cliente</div><div class="tdp-client-info-text">${notaGeneral.replace(/\n/g, '<br>')}</div></div>`;
+      }
+      infoHtml += '</div>';
+      clienteInfo.innerHTML = infoHtml;
+      clienteInfo.style.display = '';
+    } else {
+      clienteInfo.innerHTML = '';
+      clienteInfo.style.display = 'none';
+    }
   }
 
   loadTdpHistory(id);
