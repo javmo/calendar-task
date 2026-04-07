@@ -116,6 +116,22 @@ export function showClientDetail(clienteId) {
   h += `<div class="cd-info-item"><label>Otra Clave</label>${maskVal(c.otraClave)}</div>`;
   h += `</div>`;
 
+  if (c.notas && c.notas.trim()) {
+    h += `<div class="cd-notas-section"><div class="cd-notas-label">Notas generales del Cliente</div><div class="cd-notas-text">${c.notas.replace(/\n/g, '<br>')}</div></div>`;
+  }
+
+  if (c.notasPorTarea && Object.keys(c.notasPorTarea).length > 0) {
+    h += `<div class="cd-notas-section cd-notas-por-tarea-section"><div class="cd-notas-label">Notas por Tipo de Tarea</div>`;
+    Object.entries(c.notasPorTarea).forEach(([cat, nota]) => {
+      const co = TASK_COLORS[cat] || '#64748b';
+      h += `<div class="cd-nota-tarea-item" style="border-left:3px solid ${co};padding-left:10px;margin-bottom:8px">`;
+      h += `<div style="font-size:11px;font-weight:700;color:${co};margin-bottom:3px">${cat}</div>`;
+      h += `<div class="cd-notas-text">${nota.replace(/\n/g, '<br>')}</div>`;
+      h += `</div>`;
+    });
+    h += `</div>`;
+  }
+
   if (c.categorias && c.categorias.length > 0) {
     h += `<div style="margin-bottom:16px"><label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Categorías de tareas</label>`;
     h += `<div class="ce-categorias">`;
@@ -180,9 +196,45 @@ export function getSelectedCategorias() {
   return [...document.querySelectorAll('#ceCategorias input:checked')].map(cb => cb.value);
 }
 
+function renderCeNotasPorTarea(selected = [], notasPorTarea = {}) {
+  const section = document.getElementById('ceNotasPorTareaSection');
+  const container = document.getElementById('ceNotasPorTarea');
+  if (!section || !container) return;
+  if (!selected || selected.length === 0) {
+    section.style.display = 'none';
+    container.innerHTML = '';
+    return;
+  }
+  section.style.display = '';
+  let h = '';
+  selected.forEach(cat => {
+    const co = TASK_COLORS[cat] || '#64748b';
+    const nota = notasPorTarea[cat] || '';
+    h += `<div style="margin-bottom:10px">`;
+    h += `<label style="font-size:11px;font-weight:700;color:${co};display:flex;align-items:center;gap:5px;margin-bottom:4px">`;
+    h += `<span style="width:8px;height:8px;border-radius:50%;background:${co};display:inline-block;flex-shrink:0"></span>${cat}</label>`;
+    h += `<textarea data-cat="${cat}" rows="2" placeholder="Nota para tareas de ${cat}..." style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-size:12px;font-family:inherit;resize:vertical;line-height:1.4;box-sizing:border-box">${nota}</textarea>`;
+    h += `</div>`;
+  });
+  container.innerHTML = h;
+}
+
+function getNotasPorTarea() {
+  const result = {};
+  document.querySelectorAll('#ceNotasPorTarea textarea[data-cat]').forEach(ta => {
+    const cat = ta.dataset.cat;
+    const val = ta.value.trim();
+    if (val) result[cat] = val;
+  });
+  return result;
+}
+
 export function updateCeGenerateSection() {
   const cats = getSelectedCategorias();
   document.getElementById('ceGenerateSection').style.display = (cats.length > 0 && state.editingClientId !== null) ? '' : 'none';
+  // Preserve existing nota values when re-rendering after category toggle
+  const existing = getNotasPorTarea();
+  renderCeNotasPorTarea(cats, existing);
 }
 
 export function addClient() {
@@ -195,9 +247,11 @@ export function addClient() {
   document.getElementById('ceClaveAgip').value = '';
   document.getElementById('ceClaveArba').value = '';
   document.getElementById('ceOtraClave').value = '';
+  document.getElementById('ceNotas').value = '';
   document.getElementById('ceFormaPago').value = '';
   document.getElementById('ceDeleteBtn').style.display = 'none';
   renderCeCategorias([]);
+  renderCeNotasPorTarea([], {});
   document.getElementById('ceGenerateSection').style.display = 'none';
   document.getElementById('clientEditOverlay').classList.add('active');
 }
@@ -215,9 +269,11 @@ export function editClientFromDetail() {
   document.getElementById('ceClaveAgip').value = c.claveAgip || '';
   document.getElementById('ceClaveArba').value = c.claveArba || '';
   document.getElementById('ceOtraClave').value = c.otraClave || '';
+  document.getElementById('ceNotas').value = c.notas || '';
   document.getElementById('ceFormaPago').value = c.formaPago || '';
   document.getElementById('ceDeleteBtn').style.display = '';
   renderCeCategorias(c.categorias || []);
+  renderCeNotasPorTarea(c.categorias || [], c.notasPorTarea || {});
   // Default generate range: current month to December
   const now = new Date();
   document.getElementById('ceGenFrom').value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
@@ -263,6 +319,8 @@ export async function saveClientEdit() {
     claveAgip: document.getElementById('ceClaveAgip').value.trim(),
     claveArba: document.getElementById('ceClaveArba').value.trim(),
     otraClave: document.getElementById('ceOtraClave').value.trim(),
+    notas: document.getElementById('ceNotas').value.trim(),
+    notasPorTarea: getNotasPorTarea(),
     formaPago: document.getElementById('ceFormaPago').value,
     categorias: getSelectedCategorias(),
   };

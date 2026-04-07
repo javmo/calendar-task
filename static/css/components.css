@@ -256,3 +256,24 @@
   .btn{min-height:42px}
 }
 
+/* =================== CLIENT NOTES / FICHA =================== */
+/* In client detail view */
+.cd-notas-section{background:var(--accent-bg);border:1px solid var(--accent);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:16px}
+.cd-notas-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--accent);margin-bottom:6px}
+.cd-notas-text{font-size:13px;color:var(--text);line-height:1.6;white-space:pre-wrap}
+
+/* In client detail view — per-task notes */
+.cd-notas-por-tarea-section{background:var(--surface2);border-color:var(--border)}
+.cd-nota-tarea-item:last-child{margin-bottom:0}
+
+/* In task detail panel */
+.tdp-client-info-box{background:linear-gradient(135deg,#fef3c7,#fffbeb);border:1px solid #f59e0b;border-left:4px solid #f59e0b;border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:14px}
+.tdp-client-info-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#b45309;margin-bottom:6px;display:flex;align-items:center;gap:4px}
+.tdp-client-info-label::before{content:'📋'}
+.tdp-client-info-text{font-size:12px;color:#78350f;line-height:1.6}
+/* Task-specific note (appears first, more prominent) */
+.tdp-client-nota-especifica{background:rgba(255,255,255,.6);border-radius:6px;padding:8px 10px;margin-bottom:8px}
+.tdp-client-nota-tag{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#92400e;background:#fde68a;border-radius:4px;padding:2px 7px;margin-bottom:5px}
+/* General notes separator when both exist */
+.tdp-client-nota-general{border-top:1px solid #fcd34d;padding-top:8px;margin-top:2px}
+
