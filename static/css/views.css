@@ -412,13 +412,63 @@
   .week-day-col{min-height:unset;border:1px solid var(--border);border-radius:var(--radius-sm)}
   .week-day-body{overflow-y:visible}
 
-  /* List view: tighter padding */
-  .list-container{padding:10px 12px}
+  /* List view */
+  .list-container{padding:10px 12px;overflow-x:auto}
+  .list-table{min-width:640px}
+  .list-bulk-toolbar{flex-wrap:wrap;gap:8px}
+
+  /* Finalized panel */
+  .finalized-panel{margin:10px 12px}
+  .finalized-body{overflow-x:auto}
+  .finalized-table{min-width:560px}
 
   /* Mi Calendario: single-column layout */
   .my-cal-layout{grid-template-columns:1fr;min-height:unset}
   .my-cal-sidebar{max-height:220px}
-  .my-cal-grid-container{max-height:unset}
+  .my-cal-grid-container{max-height:unset;overflow-x:auto}
+  .my-cal-week-grid{min-width:600px}
+  .my-cal-sticky-header{min-width:600px}
+
+  /* VTO table */
+  .vtos-container{padding:10px 12px}
+  .vtos-header{gap:10px;margin-bottom:14px}
+  .vtos-header h2{font-size:16px}
+  .vtos-actions{margin-left:0;width:100%;justify-content:flex-start}
+
+  /* Users table */
+  .users-container{padding:10px 12px;overflow-x:auto}
+  .users-table{min-width:480px}
+
+  /* Clients */
+  .clients-container{padding:10px 12px}
+  .clients-grid{grid-template-columns:1fr}
+
+  /* Assign view */
+  .assign-container{padding:10px 12px}
+  .assign-layout{grid-template-columns:1fr}
+  .assign-sidebar{max-height:280px}
+  .assign-task-list{max-height:50vh}
+
+  /* Client detail modal */
+  .client-detail{border-radius:14px}
+  .cd-header{padding:16px 18px 12px}
+  .cd-body{padding:14px 18px}
+  .cd-info-grid{grid-template-columns:1fr}
+  .cd-actions{padding:12px 18px;flex-wrap:wrap}
+  .cd-actions .btn{flex:1;justify-content:center;min-height:42px}
+
+  /* Review view */
+  .review-container{padding:10px 12px}
+  .review-cards{grid-template-columns:1fr}
+}
+
+@media(max-width:480px){
+  .vtos-table tbody td input[type=date]{width:110px;font-size:11px}
+  .week-day-header .wday-num{font-size:18px}
+  .list-table tbody td{padding:8px 10px;font-size:12px}
+  .list-table thead th{padding:10px 10px;font-size:9px}
+  .clients-grid{gap:10px}
+  .client-card{padding:14px}
 }
 
 /* =================== ADMIN REVIEW DASHBOARD =================== */
