@@ -121,6 +121,8 @@ Object.assign(window, {
   renderCeCategorias: clientes.renderCeCategorias,
   getSelectedCategorias: clientes.getSelectedCategorias,
   updateCeGenerateSection: clientes.updateCeGenerateSection,
+  renderCeBitacora: clientes.renderCeBitacora,
+  toggleCeBitacora: clientes.toggleCeBitacora,
   addClient: clientes.addClient,
   editClientFromDetail: clientes.editClientFromDetail,
   generateClientTasks: clientes.generateClientTasks,
