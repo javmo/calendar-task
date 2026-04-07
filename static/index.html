@@ -218,6 +218,7 @@
       </div>
       <!-- Task detail panel: status + actions + history (shown when editing) -->
       <div id="taskDetailPanel" style="display:none">
+        <div id="tdpClientInfo" style="display:none"></div>
         <div class="tdp-status" id="tdpStatus"></div>
         <div class="tdp-actions" id="tdpActions"></div>
         <div class="tdp-history">
@@ -260,6 +261,7 @@
       <div class="form-group"><label>Clave AGIP</label><input type="text" id="ceClaveAgip"></div>
       <div class="form-group"><label>Clave ARBA</label><input type="text" id="ceClaveArba"></div>
       <div class="form-group"><label>Otra Clave</label><input type="text" id="ceOtraClave"></div>
+      <div class="form-group"><label>Notas / Ficha del Cliente</label><textarea id="ceNotas" rows="4" placeholder="Escribí aquí información importante del cliente (datos específicos, instrucciones, aclaraciones...)" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-size:13px;font-family:inherit;resize:vertical;line-height:1.5;transition:border-color .15s" onfocus="this.style.outline='none';this.style.borderColor='var(--accent)';this.style.boxShadow='0 0 0 3px var(--accent-bg)'" onblur="this.style.borderColor='';this.style.boxShadow=''"></textarea></div>
       <div class="form-group"><label>Forma de Pago</label>
         <select id="ceFormaPago">
           <option value="">Sin especificar</option>

@@ -256,3 +256,15 @@
   .btn{min-height:42px}
 }
 
+/* =================== CLIENT NOTES / FICHA =================== */
+/* In client detail view */
+.cd-notas-section{background:var(--accent-bg);border:1px solid var(--accent);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:16px}
+.cd-notas-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--accent);margin-bottom:6px}
+.cd-notas-text{font-size:13px;color:var(--text);line-height:1.6;white-space:pre-wrap}
+
+/* In task detail panel */
+.tdp-client-info-box{background:linear-gradient(135deg,#fef3c7,#fffbeb);border:1px solid #f59e0b;border-left:4px solid #f59e0b;border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:14px}
+.tdp-client-info-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#b45309;margin-bottom:6px;display:flex;align-items:center;gap:4px}
+.tdp-client-info-label::before{content:'📋'}
+.tdp-client-info-text{font-size:12px;color:#78350f;line-height:1.6}
+

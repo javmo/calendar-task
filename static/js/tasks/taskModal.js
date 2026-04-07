@@ -185,6 +185,17 @@ export function editTask(id) {
   document.getElementById('tdpHistoryBody').innerHTML = '<div class="history-empty">Cargando...</div>';
   document.getElementById('tdpCommentInput').value = '';
 
+  // Show client info (ficha) in task detail panel
+  const clienteInfo = document.getElementById('tdpClientInfo');
+  const clienteData = state.clientes.find(c => c.nombre === t.cliente);
+  if (clienteData && clienteData.notas && clienteData.notas.trim()) {
+    clienteInfo.innerHTML = `<div class="tdp-client-info-box"><div class="tdp-client-info-label">Ficha del cliente</div><div class="tdp-client-info-text">${clienteData.notas.replace(/\n/g, '<br>')}</div></div>`;
+    clienteInfo.style.display = '';
+  } else {
+    clienteInfo.innerHTML = '';
+    clienteInfo.style.display = 'none';
+  }
+
   loadTdpHistory(id);
 
   document.getElementById('modalOverlay').classList.add('active');

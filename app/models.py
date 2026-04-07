@@ -45,6 +45,7 @@ class ClienteIn(BaseModel):
     otraClave: Optional[str] = ""
     formaPago: Optional[str] = ""
     categorias: Optional[List[str]] = []  # task types: ["IIBB CM", "IVA", ...]
+    notas: Optional[str] = ""
 
 
 class ClienteUpdate(BaseModel):
@@ -57,6 +58,7 @@ class ClienteUpdate(BaseModel):
     otraClave: Optional[str] = None
     formaPago: Optional[str] = None
     categorias: Optional[List[str]] = None
+    notas: Optional[str] = None
 
 
 class UserUpdate(BaseModel):

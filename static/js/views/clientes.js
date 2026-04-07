@@ -116,6 +116,10 @@ export function showClientDetail(clienteId) {
   h += `<div class="cd-info-item"><label>Otra Clave</label>${maskVal(c.otraClave)}</div>`;
   h += `</div>`;
 
+  if (c.notas && c.notas.trim()) {
+    h += `<div class="cd-notas-section"><div class="cd-notas-label">Notas del Cliente</div><div class="cd-notas-text">${c.notas.replace(/\n/g, '<br>')}</div></div>`;
+  }
+
   if (c.categorias && c.categorias.length > 0) {
     h += `<div style="margin-bottom:16px"><label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Categorías de tareas</label>`;
     h += `<div class="ce-categorias">`;
@@ -195,6 +199,7 @@ export function addClient() {
   document.getElementById('ceClaveAgip').value = '';
   document.getElementById('ceClaveArba').value = '';
   document.getElementById('ceOtraClave').value = '';
+  document.getElementById('ceNotas').value = '';
   document.getElementById('ceFormaPago').value = '';
   document.getElementById('ceDeleteBtn').style.display = 'none';
   renderCeCategorias([]);
@@ -215,6 +220,7 @@ export function editClientFromDetail() {
   document.getElementById('ceClaveAgip').value = c.claveAgip || '';
   document.getElementById('ceClaveArba').value = c.claveArba || '';
   document.getElementById('ceOtraClave').value = c.otraClave || '';
+  document.getElementById('ceNotas').value = c.notas || '';
   document.getElementById('ceFormaPago').value = c.formaPago || '';
   document.getElementById('ceDeleteBtn').style.display = '';
   renderCeCategorias(c.categorias || []);
@@ -263,6 +269,7 @@ export async function saveClientEdit() {
     claveAgip: document.getElementById('ceClaveAgip').value.trim(),
     claveArba: document.getElementById('ceClaveArba').value.trim(),
     otraClave: document.getElementById('ceOtraClave').value.trim(),
+    notas: document.getElementById('ceNotas').value.trim(),
     formaPago: document.getElementById('ceFormaPago').value,
     categorias: getSelectedCategorias(),
   };
