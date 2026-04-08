@@ -30,6 +30,7 @@ import * as taskModal from './tasks/taskModal.js';
 import * as taskDetail from './tasks/taskDetail.js';
 import * as history from './tasks/history.js';
 import * as io from './tasks/io.js';
+import { refreshData } from './dataRefresh.js';
 
 Object.assign(window, {
   // state + api
@@ -209,4 +210,7 @@ Object.assign(window, {
   // import/export
   exportJSON: io.exportJSON,
   importJSON: io.importJSON,
+
+  // data refresh
+  refreshData,
 });

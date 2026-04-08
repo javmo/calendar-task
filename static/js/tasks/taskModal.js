@@ -109,6 +109,9 @@ export function addTask() {
   document.getElementById('formSemana').value = '1ER SEMANA';
   document.getElementById('btnDelete').style.display = 'none';
   document.getElementById('btnSave').style.display = '';
+  // Reset any stuck loading state from a previous save
+  setLoading(document.getElementById('btnSave'), false);
+  setLoading(document.getElementById('btnDelete'), false);
   // Reset: show form, hide detail panel, remove readonly
   clearAllFieldErrors();
   document.getElementById('taskDetailPanel').style.display = 'none';
@@ -121,6 +124,10 @@ export function addTask() {
 export function editTask(id) {
   const t = state.tasks.find(x => x.taskId === id);
   if (!t) return;
+
+  // Reset any stuck loading state from a previous operation
+  setLoading(document.getElementById('btnSave'), false);
+  setLoading(document.getElementById('btnDelete'), false);
 
   state.editingId = id;
   const admin = isAdmin();
@@ -376,6 +383,12 @@ export async function deleteFromModal() {
 }
 
 function _doCloseModal() {
+  // Reset loading state on save/delete buttons so they don't stay stuck as spinners
+  const btnSave = document.getElementById('btnSave');
+  const btnDelete = document.getElementById('btnDelete');
+  setLoading(btnSave, false);
+  setLoading(btnDelete, false);
+
   document.getElementById('modalOverlay').classList.remove('active');
   document.getElementById('taskDetailPanel').style.display = 'none';
   document.querySelector('#modalOverlay .modal').classList.remove('with-detail');
