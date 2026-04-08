@@ -8,6 +8,7 @@ import { showToast, removeToast } from './ui/toast.js';
 import { showPromptDialog } from './ui/dialogs.js';
 import { hideLoading, showSetup, showLogin, showLoginError, showApp, render } from './router.js';
 import { populateFilters, populateFormSelects, renderLegend } from './views/list.js';
+import { startDataRefresh, stopDataRefresh } from './dataRefresh.js';
 
 export async function loadAllData() {
   const loadingToast = showToast('Cargando datos...', 'loading', 0);
@@ -70,6 +71,7 @@ export async function checkDevMode() {
     hideLoading();
     await loadAllData();
     showApp();
+    startDataRefresh();
   } catch (e) {
     // Backend requires auth, show setup screen
     hideLoading();
@@ -88,15 +90,18 @@ export async function handleAuthState(firebaseUser) {
       if (!state.currentUser.responsableName) {
         await loadAllData();
         showProfileSetup();
+        startDataRefresh();
       } else {
         await loadAllData();
         showApp();
+        startDataRefresh();
       }
     } catch (e) {
       showLoginError('Error al iniciar sesión: ' + e.message);
       showLogin();
     }
   } else {
+    stopDataRefresh();
     state.firebaseUser = null;
     state.currentUser = null;
     authTokenRef.value = null;
@@ -113,6 +118,7 @@ export function login() {
 
 export function logout() {
   closeUserMenu();
+  stopDataRefresh();
   if (state.devMode) {
     showSetup();
     document.getElementById('app').style.display = 'none';
