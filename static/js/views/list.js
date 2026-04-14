@@ -17,6 +17,7 @@ export function getFilteredTasks() {
   const fT = document.getElementById('filterTarea').value;
   const fR = document.getElementById('filterResponsable').value;
   const fE = document.getElementById('filterEstado').value;
+  const fV = document.getElementById('filterVencidas').value;
   const search = document.getElementById('searchInput').value.toLowerCase();
 
   return state.tasks.filter(t => {
@@ -31,13 +32,12 @@ export function getFilteredTasks() {
       if (fE === 'pending') {
         if (t.finalizada) return false;
         if (t.estado === 'en_revision' || t.estado === 'devuelta') return false;
-        const st = getTaskStatus(t);
-        if (st === 'overdue') return false;
       }
-      if (fE === 'overdue') {
-        if (t.finalizada) return false;
-        if (getTaskStatus(t) !== 'overdue') return false;
-      }
+    }
+    if (fV) {
+      const st = getTaskStatus(t);
+      if (fV === 'overdue' && st !== 'overdue') return false;
+      if (fV === 'not_overdue' && st === 'overdue') return false;
     }
     if (search && !t.cliente.toLowerCase().includes(search) && !t.tarea.toLowerCase().includes(search) && !(t.responsable||'').toLowerCase().includes(search)) return false;
     return true;
@@ -134,6 +134,7 @@ export function renderList() {
   const fT = document.getElementById('filterTarea').value;
   const fR = document.getElementById('filterResponsable').value;
   const fE = document.getElementById('filterEstado').value;
+  const fV = document.getElementById('filterVencidas').value;
   const search = document.getElementById('searchInput').value.toLowerCase();
 
   const mesEl = document.getElementById('filterMes');
@@ -167,8 +168,12 @@ export function renderList() {
       if (fE === 'finalized' && !t.finalizada) return false;
       if (fE === 'en_revision' && t.estado !== 'en_revision') return false;
       if (fE === 'devuelta' && t.estado !== 'devuelta') return false;
-      if (fE === 'pending') { if (t.finalizada || t.estado === 'en_revision' || t.estado === 'devuelta' || getTaskStatus(t) === 'overdue') return false; }
-      if (fE === 'overdue') { if (t.finalizada || getTaskStatus(t) !== 'overdue') return false; }
+      if (fE === 'pending') { if (t.finalizada || t.estado === 'en_revision' || t.estado === 'devuelta') return false; }
+    }
+    if (fV) {
+      const st = getTaskStatus(t);
+      if (fV === 'overdue' && st !== 'overdue') return false;
+      if (fV === 'not_overdue' && st === 'overdue') return false;
     }
     if (search && !t.cliente.toLowerCase().includes(search) && !t.tarea.toLowerCase().includes(search) && !(t.responsable||'').toLowerCase().includes(search)) return false;
     return true;
@@ -278,6 +283,7 @@ export function clearAllFilters() {
   document.getElementById('filterTarea').value = '';
   document.getElementById('filterResponsable').value = '';
   document.getElementById('filterEstado').value = '';
+  document.getElementById('filterVencidas').value = '';
   document.getElementById('searchInput').value = '';
   // Reset navigation date to today
   state.currentDate = new Date();
@@ -292,6 +298,7 @@ export function hasActiveFilters() {
     !!document.getElementById('filterTarea').value ||
     !!document.getElementById('filterResponsable').value ||
     !!document.getElementById('filterEstado').value ||
+    !!document.getElementById('filterVencidas').value ||
     !!document.getElementById('searchInput').value
   );
 }
