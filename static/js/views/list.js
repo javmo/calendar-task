@@ -17,7 +17,7 @@ export function getFilteredTasks() {
   const fT = document.getElementById('filterTarea').value;
   const fR = document.getElementById('filterResponsable').value;
   const fE = document.getElementById('filterEstado').value;
-  const fV = document.getElementById('filterVencidas').value;
+  const fV = document.getElementById('filterVencidas')?.value || '';
   const search = document.getElementById('searchInput').value.toLowerCase();
 
   return state.tasks.filter(t => {
@@ -134,7 +134,7 @@ export function renderList() {
   const fT = document.getElementById('filterTarea').value;
   const fR = document.getElementById('filterResponsable').value;
   const fE = document.getElementById('filterEstado').value;
-  const fV = document.getElementById('filterVencidas').value;
+  const fV = document.getElementById('filterVencidas')?.value || '';
   const search = document.getElementById('searchInput').value.toLowerCase();
 
   const mesEl = document.getElementById('filterMes');
@@ -283,7 +283,8 @@ export function clearAllFilters() {
   document.getElementById('filterTarea').value = '';
   document.getElementById('filterResponsable').value = '';
   document.getElementById('filterEstado').value = '';
-  document.getElementById('filterVencidas').value = '';
+  const fV = document.getElementById('filterVencidas');
+  if (fV) fV.value = '';
   document.getElementById('searchInput').value = '';
   // Reset navigation date to today
   state.currentDate = new Date();
@@ -298,7 +299,7 @@ export function hasActiveFilters() {
     !!document.getElementById('filterTarea').value ||
     !!document.getElementById('filterResponsable').value ||
     !!document.getElementById('filterEstado').value ||
-    !!document.getElementById('filterVencidas').value ||
+    !!(document.getElementById('filterVencidas')?.value) ||
     !!document.getElementById('searchInput').value
   );
 }
