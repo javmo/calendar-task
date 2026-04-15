@@ -259,8 +259,12 @@ body{font-family:'Inter','Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;
       <select class="filter-select" id="filterEstado" onchange="render()">
         <option value="">Todos los estados</option>
         <option value="pending">Pendientes</option>
-        <option value="overdue">Vencidas</option>
         <option value="finalized">Finalizadas</option>
+      </select>
+      <select class="filter-select" id="filterVencidas" onchange="render()">
+        <option value="">Todas</option>
+        <option value="overdue">Vencidas</option>
+        <option value="not_overdue">No vencidas</option>
       </select>
     </div>
     <div class="search-wrapper">

@@ -184,7 +184,7 @@ export function renderSummaryPanel() {
       h += `</div>`;
     });
     if (overdueTasks.length > 8) {
-      h += `<div class="summary-item" onclick="setView('list');document.getElementById('filterEstado').value='overdue';render();closeSummaryPanel()"><div class="si-info"><div class="si-client" style="color:var(--danger)">Ver todas (${overdueTasks.length})...</div></div></div>`;
+      h += `<div class="summary-item" onclick="setView('list');document.getElementById('filterEstado').value='';document.getElementById('filterVencidas').value='overdue';render();closeSummaryPanel()"><div class="si-info"><div class="si-client" style="color:var(--danger)">Ver todas (${overdueTasks.length})...</div></div></div>`;
     }
     h += `</div>`;
   }
