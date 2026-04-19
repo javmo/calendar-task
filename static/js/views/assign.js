@@ -1,7 +1,7 @@
 // Admin bulk assignment view.
 // Extracted literally from legacy-inline.js.
 
-import { TASK_COLORS } from '../constants.js';
+import { getTaskColor } from '../taskTypes.js';
 import { state } from '../state.js';
 import { api } from '../api.js';
 import { formatDateShort } from '../utils/dates.js';
@@ -176,7 +176,7 @@ export function renderAssign() {
 }
 
 export function buildAssignRow(t) {
-  const co = TASK_COLORS[t.tarea] || '#64748b';
+  const co = getTaskColor(t.tarea);
   const checked = state.assignSelectedTasks.has(t.taskId);
   const assignedUser = state.users.find(u => u.email === t.assignedTo);
   const assignedName = assignedUser ? (assignedUser.responsableName || assignedUser.displayName) : (t.responsable || '');

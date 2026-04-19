@@ -14,6 +14,7 @@ import { renderAssign } from './views/assign.js';
 import { renderReview } from './views/review.js';
 import { renderFiscal } from './views/fiscal.js';
 import { updateSummaryBadges } from './views/summary.js';
+import { renderTaskTypes } from './views/taskTypes.js';
 import { updateUserMenu } from './auth.js';
 
 // =================== SCREEN MANAGEMENT ===================
@@ -62,15 +63,15 @@ export function setView(v) {
   if (v !== 'list') state.selectedTasks.clear();
   document.querySelectorAll('.view-toggle .btn').forEach(b => b.classList.toggle('active', b.dataset.view === v));
 
-const views = { month: 'viewMonth', week: 'viewWeek', list: 'viewList', mycal: 'viewMyCal', users: 'viewUsers', clientes: 'viewClientes', vtos: 'viewVtos', assign: 'viewAssign', review: 'viewReview', fiscal: 'viewFiscal' };
+const views = { month: 'viewMonth', week: 'viewWeek', list: 'viewList', mycal: 'viewMyCal', users: 'viewUsers', clientes: 'viewClientes', vtos: 'viewVtos', assign: 'viewAssign', review: 'viewReview', fiscal: 'viewFiscal', taskTypes: 'viewTaskTypes' };
     for (const [key, id] of Object.entries(views)) {
       document.getElementById(id).style.display = key === v ? '' : 'none';
     }
 
     // Show/hide filters for special views
-    const hideFilter = ['users','clientes','vtos','assign','review','fiscal'];
-    const hideLegend = ['users','mycal','clientes','vtos','assign','review','fiscal'];
-    const hideSearch = ['clientes','users','vtos','assign','review','fiscal'];
+    const hideFilter = ['users','clientes','vtos','assign','review','fiscal','taskTypes'];
+    const hideLegend = ['users','mycal','clientes','vtos','assign','review','fiscal','taskTypes'];
+    const hideSearch = ['clientes','users','vtos','assign','review','fiscal','taskTypes'];
     document.getElementById('filterGroup').style.display = hideFilter.includes(v) ? 'none' : '';
     document.getElementById('legend').style.display = hideLegend.includes(v) ? 'none' : '';
     document.querySelector('.toolbar .search-wrapper').style.display = hideSearch.includes(v) ? 'none' : '';
@@ -91,6 +92,7 @@ export function render() {
   else if (state.currentView === 'assign') renderAssign();
   else if (state.currentView === 'review') renderReview();
   else if (state.currentView === 'fiscal') renderFiscal();
+  else if (state.currentView === 'taskTypes') renderTaskTypes();
   renderFinalized();
   updateSummaryBadges();
 }

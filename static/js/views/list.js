@@ -1,7 +1,8 @@
 // List view + filters + stats + finalized panel + legend.
 // Extracted literally from legacy-inline.js.
 
-import { MONTHS_ES, TASK_COLORS } from '../constants.js';
+import { MONTHS_ES } from '../constants.js';
+import { getTaskColor, getActiveTaskTypes } from '../taskTypes.js';
 import { state } from '../state.js';
 import { formatDateShort, formatDateFull } from '../utils/dates.js';
 import { getTaskStatus, getEstadoLabel, getEstadoIcon } from '../utils/format.js';
@@ -78,8 +79,8 @@ export function populateFormSelects() {
     `<option value="">-- Nuevo cliente --</option>` +
     [...clienteNames].sort().map(c => `<option value="${c}">${c}</option>`).join('');
 
-  // Task types: all from TASK_COLORS + any in existing tasks
-  const allTypes = new Set(Object.keys(TASK_COLORS));
+  // Task types: active types from registry + any in existing tasks (covers historical)
+  const allTypes = new Set(getActiveTaskTypes().map(tt => tt.name));
   state.tasks.forEach(t => allTypes.add(t.tarea));
   document.getElementById('formTarea').innerHTML =
     [...allTypes].sort().map(t => `<option value="${t}">${t}</option>`).join('');
@@ -98,8 +99,10 @@ export function renderLegend() {
   const activeTipos = [...new Set(tasks.map(t => t.tarea))];
   document.getElementById('legend').innerHTML =
     activeTipos
-      .filter(n => TASK_COLORS[n])
-      .map(n => `<div class="legend-item"><div class="legend-dot" style="background:${TASK_COLORS[n]}"></div>${n}</div>`)
+      .map(n => {
+        const co = getTaskColor(n);
+        return `<div class="legend-item"><div class="legend-dot" style="background:${co}"></div>${n}</div>`;
+      })
       .join('');
 }
 
@@ -228,7 +231,7 @@ export function renderList() {
 
   tasks.forEach(t => {
     const st = getTaskStatus(t);
-    const co = TASK_COLORS[t.tarea] || '#64748b';
+    const co = getTaskColor(t.tarea);
     const vb = st === 'overdue' ? 'overdue' : 'upcoming';
     const isFin = t.finalizada;
     const estado = t.estado || 'pendiente';
@@ -365,7 +368,7 @@ export function renderFinalized() {
   const count = document.getElementById('finCount');
 
   if (finalized.length === 0) { panel.style.display = 'none'; return; }
-  if (state.currentView === 'users' || state.currentView === 'mycal' || state.currentView === 'clientes' || state.currentView === 'vtos' || state.currentView === 'assign' || state.currentView === 'review') { panel.style.display = 'none'; return; }
+  if (state.currentView === 'users' || state.currentView === 'mycal' || state.currentView === 'clientes' || state.currentView === 'vtos' || state.currentView === 'assign' || state.currentView === 'review' || state.currentView === 'taskTypes') { panel.style.display = 'none'; return; }
 
   panel.style.display = '';
   count.textContent = finalized.length;
@@ -373,7 +376,7 @@ export function renderFinalized() {
   const sorted = [...finalized].sort((a, b) => (b.fechaFinalizacion || '').localeCompare(a.fechaFinalizacion || ''));
   let h = `<table class="finalized-table"><thead><tr><th>Cliente</th><th>Tarea</th><th>Quién</th><th>Vencía</th><th>Finalizada</th><th></th></tr></thead><tbody>`;
   sorted.forEach(t => {
-    const co = TASK_COLORS[t.tarea] || '#64748b';
+    const co = getTaskColor(t.tarea);
     h += `<tr>`;
     h += `<td>${t.cliente}</td>`;
     h += `<td><span class="type-badge" style="background:${co}15;color:${co}">${t.tarea}</span></td>`;

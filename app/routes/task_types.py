@@ -36,8 +36,10 @@ router = APIRouter(prefix="/api")
 # --------------- helpers ---------------
 
 def _serialize(doc: dict) -> dict:
-    """Remove _id and nameLower from a task_type document for API output."""
-    doc.pop("_id", None)
+    """Expose _id as 'id' (hex string) and strip internal fields from API output."""
+    oid = doc.pop("_id", None)
+    if oid is not None:
+        doc["id"] = str(oid)
     doc.pop("nameLower", None)
     return doc
 

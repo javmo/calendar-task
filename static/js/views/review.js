@@ -1,7 +1,7 @@
 // Admin review dashboard.
 // Extracted literally from legacy-inline.js.
 
-import { TASK_COLORS } from '../constants.js';
+import { getTaskColor } from '../taskTypes.js';
 import { state } from '../state.js';
 import { formatDateFull } from '../utils/dates.js';
 import { getDeadlineClass } from '../utils/format.js';
@@ -28,7 +28,7 @@ export async function renderReview() {
 
   h += `<div class="review-cards">`;
   reviewTasks.forEach(t => {
-    const co = TASK_COLORS[t.tarea] || '#64748b';
+    const co = getTaskColor(t.tarea);
     const dlClass = getDeadlineClass(t.vencimiento);
     const assignedUser = state.users.find(u => u.email === t.assignedTo);
     const assignedName = assignedUser ? (assignedUser.responsableName || assignedUser.displayName) : (t.responsable || 'Sin asignar');

@@ -24,6 +24,7 @@ import * as fiscal from './views/fiscal.js';
 import * as assign from './views/assign.js';
 import * as review from './views/review.js';
 import * as summary from './views/summary.js';
+import * as taskTypesView from './views/taskTypes.js';
 
 import * as taskActions from './tasks/taskActions.js';
 import * as taskModal from './tasks/taskModal.js';
@@ -213,4 +214,22 @@ Object.assign(window, {
 
   // data refresh
   refreshData,
+
+  // task types admin view
+  renderTaskTypes: taskTypesView.renderTaskTypes,
+  onTtSearch: taskTypesView.onTtSearch,
+  onTtCatFilter: taskTypesView.onTtCatFilter,
+  onTtShowInactive: taskTypesView.onTtShowInactive,
+  openTtCreateModal: taskTypesView.openTtCreateModal,
+  openTtEditModal: taskTypesView.openTtEditModal,
+  closeTtEditModal: taskTypesView.closeTtEditModal,
+  saveTtEdit: taskTypesView.saveTtEdit,
+  openTtRenameModal: taskTypesView.openTtRenameModal,
+  closeTtRenameModal: taskTypesView.closeTtRenameModal,
+  saveTtRename: taskTypesView.saveTtRename,
+  openTtMergeModal: taskTypesView.openTtMergeModal,
+  closeTtMergeModal: taskTypesView.closeTtMergeModal,
+  saveTtMerge: taskTypesView.saveTtMerge,
+  toggleTtActivo: taskTypesView.toggleTtActivo,
+  deleteTt: taskTypesView.deleteTt,
 });
