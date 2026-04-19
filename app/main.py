@@ -15,6 +15,7 @@ from fastapi.staticfiles import StaticFiles
 from app.auth import init_firebase
 from app.config import DB_NAME, ESTADO_PENDIENTE, MONGO_URI
 from app.database import close_db, db, init_db
+from app.seed import seed_task_types_if_empty
 from app.routes.clientes import router as clientes_router
 from app.routes.schedule import router as schedule_router
 from app.routes.task_types import router as task_types_router
@@ -60,6 +61,11 @@ async def lifespan(app: FastAPI):
         {"estado": {"$exists": False}},
         {"$set": {"estado": ESTADO_PENDIENTE}},
     )
+
+    # --- Auto-seed task_types on first boot (no-op if collection has data) ---
+    inserted = await seed_task_types_if_empty(_db_module.db)
+    if inserted:
+        print(f"Seeded {inserted} task types on empty collection")
 
     # --- Firebase ---
     init_firebase()
