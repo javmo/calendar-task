@@ -56,12 +56,18 @@ export async function loadTaskTypes({ force = false } = {}) {
 
   try {
     const types = await api('GET', '/api/task-types?incluirInactivos=true');
+    if (!Array.isArray(types) || types.length === 0) {
+      // Empty collection (seed never ran) — fall back so views don't go blank.
+      console.warn('taskTypes: API returned empty list, falling back to TASK_COLORS. Run scripts/seed_task_types.py to populate the collection.');
+      _buildFallbackRegistries();
+      return;
+    }
     _buildRegistries(types);
   } catch (e) {
     // Non-admins get a 403; network errors get a generic error.
     // Either way, fall back to the legacy hardcoded list so views still work.
     console.warn('taskTypes: could not load from API, falling back to TASK_COLORS:', e.message);
-    if (state.taskTypes.length === 0) {
+    if (!state.taskTypes || state.taskTypes.length === 0) {
       _buildFallbackRegistries();
     }
   }
