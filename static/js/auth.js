@@ -9,6 +9,7 @@ import { showPromptDialog } from './ui/dialogs.js';
 import { hideLoading, showSetup, showLogin, showLoginError, showApp, render } from './router.js';
 import { populateFilters, populateFormSelects, renderLegend } from './views/list.js';
 import { startDataRefresh, stopDataRefresh } from './dataRefresh.js';
+import { loadTaskTypes } from './taskTypes.js';
 
 export async function loadAllData() {
   const loadingToast = showToast('Cargando datos...', 'loading', 0);
@@ -70,6 +71,7 @@ export async function checkDevMode() {
     state.currentUser = me;
     hideLoading();
     await loadAllData();
+    await loadTaskTypes();
     showApp();
     startDataRefresh();
   } catch (e) {
@@ -89,10 +91,12 @@ export async function handleAuthState(firebaseUser) {
 
       if (!state.currentUser.responsableName) {
         await loadAllData();
+        await loadTaskTypes();
         showProfileSetup();
         startDataRefresh();
       } else {
         await loadAllData();
+        await loadTaskTypes();
         showApp();
         startDataRefresh();
       }
@@ -204,6 +208,7 @@ export function updateUserMenu() {
   document.getElementById('btnAssignTab').style.display = isAdmin ? '' : 'none';
   document.getElementById('btnReviewTab').style.display = isAdmin ? '' : 'none';
   document.getElementById('btnFiscalTab').style.display = isAdmin ? '' : 'none';
+  document.getElementById('btnTaskTypesTab').style.display = isAdmin ? '' : 'none';
 }
 
 export function toggleUserMenu() {

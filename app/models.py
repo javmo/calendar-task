@@ -98,3 +98,53 @@ class GenerateFiscalPeriodBody(BaseModel):
     clienteIds: Optional[List[int]] = None  # None = all clients with categorias
     responsable: Optional[str] = ""
     semana: Optional[str] = "1ER SEMANA"
+
+
+# --------------- Task Types ---------------
+
+class TaskTypeIn(BaseModel):
+    name: str
+    color: str                          # hex "#rrggbb"
+    icon: Optional[str] = None          # emoji, optional
+    descripcion: Optional[str] = None
+    categoria: str                      # "fiscal" | "general" | "operativa"
+    tieneVencimiento: bool = False
+    activo: bool = True
+    orden: Optional[int] = None         # if None, auto-assigned as max+1
+
+
+class TaskTypeUpdate(BaseModel):
+    name: Optional[str] = None
+    color: Optional[str] = None
+    icon: Optional[str] = None
+    descripcion: Optional[str] = None
+    categoria: Optional[str] = None
+    tieneVencimiento: Optional[bool] = None
+    activo: Optional[bool] = None
+    orden: Optional[int] = None
+
+
+class TaskTypeOut(BaseModel):
+    taskTypeId: int
+    name: str
+    color: str
+    icon: Optional[str] = None
+    descripcion: Optional[str] = None
+    categoria: str
+    tieneVencimiento: bool
+    activo: bool
+    orden: int
+    createdAt: str
+    updatedAt: str
+    # Computed on demand (populated when ?conUso=true)
+    usageClientes: Optional[int] = None
+    usageTasks: Optional[int] = None
+
+
+class TaskTypeRenameBody(BaseModel):
+    nuevoNombre: str
+
+
+class TaskTypeMergeBody(BaseModel):
+    origenId: str
+    destinoId: str

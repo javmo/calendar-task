@@ -17,6 +17,7 @@ from app.config import DB_NAME, ESTADO_PENDIENTE, MONGO_URI
 from app.database import close_db, db, init_db
 from app.routes.clientes import router as clientes_router
 from app.routes.schedule import router as schedule_router
+from app.routes.task_types import router as task_types_router
 from app.routes.tasks import router as tasks_router
 from app.routes.users import router as users_router
 from app.routes.vencimientos import router as vencimientos_router
@@ -51,6 +52,8 @@ async def lifespan(app: FastAPI):
     await safe_index(_db_module.db.task_history, "mentions")
     await safe_index(_db_module.db.task_reads, [("userEmail", 1), ("taskId", 1)], unique=True)
     await safe_index(_db_module.db.tasks, [("cliente", 1), ("tarea", 1), ("mes", 1)])
+    await safe_index(_db_module.db.task_types, "taskTypeId", unique=True)
+    await safe_index(_db_module.db.task_types, "nameLower", unique=True)
 
     # --- Migration: add estado field to existing tasks if missing ---
     await _db_module.db.tasks.update_many(
@@ -73,6 +76,7 @@ app.include_router(tasks_router)
 app.include_router(schedule_router)
 app.include_router(clientes_router)
 app.include_router(vencimientos_router)
+app.include_router(task_types_router)
 
 # --------------- Serve Frontend ---------------
 static_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static")

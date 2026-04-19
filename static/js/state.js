@@ -24,6 +24,10 @@ export const state = {
   selectedTasks: new Set(),
   unreadCounts: {},
   mentions: [],
+  // Task types registry (populated by taskTypes.js loadTaskTypes())
+  taskTypes: [],           // Array<TaskType>, sorted by orden then name
+  taskTypesById: {},       // { [id: string]: TaskType } — keyed by MongoDB ObjectId hex
+  taskTypesByName: {},     // { [nameLower: string]: TaskType } — lowercased for case-tolerant lookup
 };
 
 // Mutable auth token holder. Legacy code treats this as a simple `let`;

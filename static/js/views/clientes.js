@@ -1,7 +1,7 @@
 // Clientes view + client detail/edit modals.
 // Extracted literally from legacy-inline.js.
 
-import { TASK_COLORS } from '../constants.js';
+import { getTaskColor, getActiveTaskTypes } from '../taskTypes.js';
 import { state } from '../state.js';
 import { api } from '../api.js';
 import { formatDateShort } from '../utils/dates.js';
@@ -59,7 +59,7 @@ export function renderClientes() {
     if (c.categorias && c.categorias.length > 0) {
       h += `<div class="cc-cats">`;
       c.categorias.forEach(cat => {
-        const co = TASK_COLORS[cat] || '#64748b';
+        const co = getTaskColor(cat);
         h += `<span class="cc-cat-tag" style="background:${co}20;color:${co};border:1px solid ${co}40">${cat}</span>`;
       });
       h += `</div>`;
@@ -123,7 +123,7 @@ export function showClientDetail(clienteId) {
   if (c.notasPorTarea && Object.keys(c.notasPorTarea).length > 0) {
     h += `<div class="cd-notas-section cd-notas-por-tarea-section"><div class="cd-notas-label">Notas por Tipo de Tarea</div>`;
     Object.entries(c.notasPorTarea).forEach(([cat, nota]) => {
-      const co = TASK_COLORS[cat] || '#64748b';
+      const co = getTaskColor(cat);
       h += `<div class="cd-nota-tarea-item" style="border-left:3px solid ${co};padding-left:10px;margin-bottom:8px">`;
       h += `<div style="font-size:11px;font-weight:700;color:${co};margin-bottom:3px">${cat}</div>`;
       h += `<div class="cd-notas-text">${nota.replace(/\n/g, '<br>')}</div>`;
@@ -136,7 +136,7 @@ export function showClientDetail(clienteId) {
     h += `<div style="margin-bottom:16px"><label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Categorías de tareas</label>`;
     h += `<div class="ce-categorias">`;
     c.categorias.forEach(cat => {
-      const co = TASK_COLORS[cat] || '#64748b';
+      const co = getTaskColor(cat);
       h += `<span class="cc-cat-tag" style="background:${co}20;color:${co};border:1px solid ${co}40">${cat}</span>`;
     });
     h += `</div></div>`;
@@ -155,7 +155,7 @@ export function showClientDetail(clienteId) {
       if (!tasks) return;
       h += `<div style="font-size:11px;font-weight:700;color:var(--accent);margin:8px 0 4px;text-transform:uppercase;letter-spacing:.5px">${mes}</div>`;
       tasks.forEach(t => {
-        const co = TASK_COLORS[t.tarea] || '#64748b';
+        const co = getTaskColor(t.tarea);
         const st = getTaskStatus(t);
         const isFin = t.finalizada;
         h += `<div class="cd-task-row" style="border-color:${co}">`;
@@ -177,14 +177,16 @@ export function closeClientDetail() {
   document.getElementById('clientDetailOverlay').classList.remove('active');
 }
 
-const ALL_TASK_CATEGORIES = Object.keys(TASK_COLORS);
-
 export function renderCeCategorias(selected = []) {
   const container = document.getElementById('ceCategorias');
+  const activeTypes = getActiveTaskTypes();
+  // Also include any selected categories not in active types (historical data)
+  const extraCats = selected.filter(c => !activeTypes.some(tt => tt.name === c));
+  const allCats = [...activeTypes.map(tt => tt.name), ...extraCats];
   let h = '';
-  ALL_TASK_CATEGORIES.forEach(cat => {
+  allCats.forEach(cat => {
     const checked = selected.includes(cat);
-    const co = TASK_COLORS[cat] || '#64748b';
+    const co = getTaskColor(cat);
     h += `<label class="ce-cat-item ${checked ? 'checked' : ''}" onclick="this.classList.toggle('checked')">`;
     h += `<input type="checkbox" value="${cat}" ${checked ? 'checked' : ''} onchange="this.parentElement.classList.toggle('checked',this.checked);updateCeGenerateSection()">`;
     h += `<span class="ce-cat-dot" style="background:${co}"></span>${cat}</label>`;
@@ -209,9 +211,13 @@ function getNotasPorTarea() {
 export function renderCeBitacora(notasPorTarea = {}) {
   const container = document.getElementById('ceBitacora');
   if (!container) return;
+  const activeTypes = getActiveTaskTypes();
+  // Include any types that have existing notes but are no longer active
+  const extraCats = Object.keys(notasPorTarea).filter(c => !activeTypes.some(tt => tt.name === c));
+  const allCats = [...activeTypes.map(tt => tt.name), ...extraCats];
   let h = '';
-  ALL_TASK_CATEGORIES.forEach(cat => {
-    const co = TASK_COLORS[cat] || '#64748b';
+  allCats.forEach(cat => {
+    const co = getTaskColor(cat);
     const nota = notasPorTarea[cat] || '';
     const hasNota = !!nota;
     h += `<div class="ce-bit-row${hasNota ? ' expanded' : ''}" id="cebit-${CSS.escape(cat)}">`;

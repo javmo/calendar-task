@@ -15,7 +15,7 @@ from pymongo import UpdateOne
 
 import app.database as _db_module
 from app.auth import get_current_user
-from app.config import MES_MAP, TASK_TYPES_CON_VTO
+from app.config import MES_MAP, TASK_TYPES_CON_VTO  # TASK_TYPES_CON_VTO: seed default — runtime list comes from DB
 from app.models import VencimientosUpdate
 from app.sugerencias_vto import generar_sugerencias
 
@@ -34,8 +34,17 @@ async def list_vencimientos(user=Depends(get_current_user)):
 async def get_vencimientos(periodo: str, user=Depends(get_current_user)):
     doc = await _db_module.db.vencimientos.find_one({"periodo": periodo}, {"_id": 0})
     if not doc:
+        # Build the empty tabla from the DB-managed list; fall back to config constant
+        # if the collection is empty (e.g. before seeding).
+        db_types = await _db_module.db.task_types.find(
+            {"tieneVencimiento": True, "activo": True},
+            {"name": 1, "_id": 0},
+        ).sort("orden", 1).to_list(100)
+
+        types_list = [t["name"] for t in db_types] if db_types else TASK_TYPES_CON_VTO
+
         tabla = {}
-        for tipo in TASK_TYPES_CON_VTO:
+        for tipo in types_list:
             tabla[tipo] = {str(d): None for d in range(10)}
         return {"periodo": periodo, "tabla": tabla}
     return doc

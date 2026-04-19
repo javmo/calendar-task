@@ -493,3 +493,95 @@
 .review-empty .re-icon{font-size:48px;margin-bottom:16px;opacity:.5}
 .review-empty p{font-size:15px}
 
+/* =================== TASK TYPES ADMIN VIEW =================== */
+.tt-container{padding:20px 28px}
+.tt-loading{padding:40px;text-align:center;color:var(--text-muted);font-size:14px}
+
+/* Toolbar */
+.tt-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.tt-title{font-size:18px;font-weight:800;color:var(--text);margin:0;margin-right:8px}
+.tt-chk-label{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-secondary);cursor:pointer;white-space:nowrap}
+.tt-chk-label input{width:14px;height:14px;accent-color:var(--accent);cursor:pointer}
+
+/* Table */
+.tt-table-wrap{overflow-x:auto;border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--border)}
+.tt-table{width:100%;border-collapse:separate;border-spacing:0;background:var(--surface);border-radius:var(--radius);overflow:hidden}
+.tt-table thead th{background:var(--surface2);padding:10px 14px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);font-weight:700;border-bottom:2px solid var(--border)}
+.tt-table tbody tr{border-bottom:1px solid var(--border-light);transition:background .1s}
+.tt-table tbody tr:last-child{border-bottom:none}
+.tt-table tbody tr:hover{background:var(--surface2)}
+.tt-table tbody td{padding:9px 14px;font-size:13px;vertical-align:middle}
+.tt-row-inactive{opacity:.55}
+
+/* Color swatch */
+.tt-swatch{display:inline-block;width:16px;height:16px;border-radius:50%;border:1px solid rgba(0,0,0,.12);flex-shrink:0;vertical-align:middle}
+
+/* Name cell */
+.tt-name-cell strong{font-size:14px;color:var(--text)}
+.tt-icon{font-size:14px;margin-left:4px}
+.tt-descripcion{font-size:11px;color:var(--text-muted);margin-top:2px;max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Category badge */
+.tt-cat-badge{display:inline-flex;align-items:center;padding:2px 10px;border-radius:10px;font-size:10px;font-weight:700;letter-spacing:.3px;text-transform:uppercase}
+.tt-cat-fiscal{background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe}
+.tt-cat-general{background:#f1f5f9;color:#475569;border:1px solid #cbd5e1}
+.tt-cat-operativa{background:#fef3c7;color:#92400e;border:1px solid #fde68a}
+
+/* Check/dash indicators */
+.tt-check{color:var(--success);font-size:14px;font-weight:700}
+.tt-dash{color:var(--text-muted);font-size:14px}
+
+/* Active/inactive badges */
+.tt-badge-activo{display:inline-flex;align-items:center;padding:2px 10px;border-radius:10px;font-size:10px;font-weight:700;background:var(--success-bg);color:var(--success);border:1px solid var(--success-border)}
+.tt-badge-inactivo{display:inline-flex;align-items:center;padding:2px 10px;border-radius:10px;font-size:10px;font-weight:700;background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger-border)}
+
+/* Row action buttons */
+.tt-actions{display:flex;gap:4px;align-items:center}
+.tt-btn{width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text-secondary);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;transition:all .12s;flex-shrink:0}
+.tt-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-bg)}
+.tt-btn-danger:hover{border-color:var(--danger);color:var(--danger);background:var(--danger-bg)}
+
+/* Modal overlay */
+.tt-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:300;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.tt-modal-overlay.active{display:flex}
+.tt-modal{background:var(--surface);border-radius:16px;padding:28px;width:480px;max-width:95vw;max-height:88vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
+.tt-modal-sm{width:380px}
+.tt-modal h2{font-size:17px;font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:8px}
+.tt-modal-body{display:flex;flex-direction:column;gap:0}
+.tt-modal .form-group{margin-bottom:14px}
+.tt-modal textarea{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-size:13px;font-family:inherit;resize:vertical;line-height:1.5;transition:border-color .15s}
+.tt-modal textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-bg)}
+
+/* Color row in modal */
+.tt-color-row{display:flex;align-items:center;gap:8px}
+.tt-color-row input[type=color]{width:40px;height:36px;border:1px solid var(--border);border-radius:var(--radius-sm);padding:2px;cursor:pointer;background:var(--surface)}
+.tt-color-row input[type=text]{flex:1}
+
+/* Checkbox group in modal */
+.tt-checkbox-group label{display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;color:var(--text)}
+.tt-checkbox-group input[type=checkbox]{width:15px;height:15px;accent-color:var(--accent);cursor:pointer}
+
+/* Form hints & required */
+.tt-required{color:var(--danger);font-size:11px;margin-left:2px}
+.tt-hint{font-size:11px;color:var(--text-muted);font-weight:400}
+
+/* Inline error */
+.tt-field-error{padding:8px 12px;border-radius:var(--radius-sm);background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger-border);font-size:12px;margin-top:4px}
+
+/* Rename modal hint */
+.tt-rename-hint{font-size:13px;color:var(--text-secondary);margin-bottom:12px;padding:10px 14px;background:var(--warning-bg, #fffbeb);border:1px solid var(--warning-border, #fde68a);border-radius:var(--radius-sm);line-height:1.5}
+.tt-rename-hint strong{color:var(--text)}
+
+/* Merge modal warning */
+.tt-merge-warning{padding:10px 14px;background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger-border);border-radius:var(--radius-sm);font-size:13px;margin-bottom:14px;line-height:1.5}
+.tt-merge-warning strong{color:var(--danger)}
+.tt-merge-usage{font-size:12px;color:var(--text-muted);margin-top:6px}
+
+/* Responsive */
+@media (max-width: 767px) {
+  .tt-container{padding:10px 12px}
+  .tt-toolbar{gap:8px}
+  .tt-table-wrap{overflow-x:auto}
+  .tt-table{min-width:640px}
+  .tt-modal{padding:20px}
+}

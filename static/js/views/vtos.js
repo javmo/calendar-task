@@ -2,14 +2,22 @@
 // Extracted literally from legacy-inline.js.
 
 import { MONTHS_ES } from '../constants.js';
+import { getVtoTaskTypes } from '../taskTypes.js';
 import { state } from '../state.js';
 import { api } from '../api.js';
 import { showToast } from '../ui/toast.js';
 
-const VTO_TASK_TYPES = [
-  'Casas Particulares', 'VEP Monotributo', 'VEP Autonomos',
-  'IIBB CM', 'IIBB ARBA', 'IIBB AGIP', 'IVA', 'Libro IVA Digital',
-];
+// VTO_TASK_TYPES is now dynamic: loaded from the API via getVtoTaskTypes().
+// Helper so every function can do: const VTO_TASK_TYPES = _vtoTypes();
+function _vtoTypes() {
+  const dynamic = getVtoTaskTypes();
+  if (dynamic.length > 0) return dynamic.map(tt => tt.name);
+  // Emergency fallback if taskTypes haven't loaded yet
+  return [
+    'Casas Particulares', 'VEP Monotributo', 'VEP Autonomos',
+    'IIBB CM', 'IIBB ARBA', 'IIBB AGIP', 'IVA', 'Libro IVA Digital',
+  ];
+}
 
 // Cache de sugerencias por período
 state.vtoSugerencias = {};
@@ -64,6 +72,8 @@ export function renderVencimientos() {
     h += `<button class="btn btn-sug-dismiss" onclick="descartarSugerencias()">Descartar</button>`;
     h += `</div></div></div>`;
   }
+
+  const VTO_TASK_TYPES = _vtoTypes();
 
   // Table
   h += `<div class="vtos-table-wrap"><table class="vtos-table"><thead><tr>`;
@@ -137,7 +147,7 @@ export function renderVencimientos() {
 
 export function countEmptyCells(tabla) {
   let count = 0;
-  VTO_TASK_TYPES.forEach(tipo => {
+  _vtoTypes().forEach(tipo => {
     for (let d = 0; d <= 9; d++) {
       if (!tabla || !tabla[tipo] || !tabla[tipo][String(d)]) count++;
     }
@@ -147,7 +157,7 @@ export function countEmptyCells(tabla) {
 
 export function countSugerenciasDisponibles(tabla, tablaSug) {
   let count = 0;
-  VTO_TASK_TYPES.forEach(tipo => {
+  _vtoTypes().forEach(tipo => {
     for (let d = 0; d <= 9; d++) {
       const sug = tablaSug && tablaSug[tipo] ? tablaSug[tipo][String(d)] : null;
       if (sug) count++;
@@ -192,7 +202,7 @@ export function aceptarTodasSugerencias() {
   const sug = state.vtoSugerencias[state.vtoPeriodo];
   if (!sug) return;
 
-  VTO_TASK_TYPES.forEach(tipo => {
+  _vtoTypes().forEach(tipo => {
     for (let d = 0; d <= 9; d++) {
       const val = sug.tabla[tipo] ? sug.tabla[tipo][String(d)] : null;
       if (val) {
@@ -223,7 +233,7 @@ export function aceptarSugerenciasVacias() {
   if (!sug) return;
 
   let count = 0;
-  VTO_TASK_TYPES.forEach(tipo => {
+  _vtoTypes().forEach(tipo => {
     for (let d = 0; d <= 9; d++) {
       const inputId = `vto_${tipo.replace(/\s/g,'_')}_${d}`;
       const input = document.getElementById(inputId);
@@ -282,7 +292,7 @@ export async function loadVtoPeriodo() {
 
 export function collectVtosFromForm() {
   const tabla = {};
-  VTO_TASK_TYPES.forEach(tipo => {
+  _vtoTypes().forEach(tipo => {
     tabla[tipo] = {};
     for (let d = 0; d <= 9; d++) {
       const input = document.getElementById(`vto_${tipo.replace(/\s/g,'_')}_${d}`);

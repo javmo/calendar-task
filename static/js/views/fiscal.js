@@ -1,7 +1,7 @@
 // Fiscal period generation view.
 // Extracted literally from legacy-inline.js.
 
-import { TASK_COLORS } from '../constants.js';
+import { getTaskColor } from '../taskTypes.js';
 import { state } from '../state.js';
 import { api } from '../api.js';
 import { showToast } from '../ui/toast.js';
@@ -74,7 +74,7 @@ export function renderFiscal() {
       h += `</div></label>`;
       h += `<div class="ce-categorias" style="justify-content:flex-end">`;
       c.categorias.forEach(cat => {
-        const co = TASK_COLORS[cat] || '#64748b';
+        const co = getTaskColor(cat);
         h += `<span class="cc-cat-tag" style="background:${co}20;color:${co};border:1px solid ${co}40">${cat}</span>`;
       });
       h += `</div></div>`;

@@ -1,7 +1,7 @@
 // Floating summary panel + isMyTask + navigateToTask + badge updater.
 // Extracted literally from legacy-inline.js.
 
-import { TASK_COLORS } from '../constants.js';
+import { getTaskColor } from '../taskTypes.js';
 import { state } from '../state.js';
 import { parseDate, formatDateShort } from '../utils/dates.js';
 import { getEstadoLabel, getEstadoIcon, formatTimeAgo } from '../utils/format.js';
@@ -36,7 +36,7 @@ export function renderSummaryPanel() {
       h += `<div class="summary-empty">Sin tareas para revisar</div>`;
     } else {
       reviewTasks.slice(0, 10).forEach(t => {
-        const co = TASK_COLORS[t.tarea] || '#64748b';
+        const co = getTaskColor(t.tarea);
         h += `<div class="summary-item">`;
         h += `<div class="si-dot" style="background:${co}"></div>`;
         h += `<div class="si-info">`;
@@ -62,7 +62,7 @@ export function renderSummaryPanel() {
       h += `<div class="summary-section">`;
       h += `<div class="summary-section-header">↩️ Devueltas con Ajustes <span class="ss-count orange">${returnedTasks.length}</span></div>`;
       returnedTasks.forEach(t => {
-        const co = TASK_COLORS[t.tarea] || '#64748b';
+        const co = getTaskColor(t.tarea);
         h += `<div class="summary-item">`;
         h += `<div class="si-dot" style="background:${co}"></div>`;
         h += `<div class="si-info">`;
@@ -84,7 +84,7 @@ export function renderSummaryPanel() {
       h += `<div class="summary-section">`;
       h += `<div class="summary-section-header">🔍 En Revisión <span class="ss-count">${myReviewTasks.length}</span></div>`;
       myReviewTasks.slice(0, 5).forEach(t => {
-        const co = TASK_COLORS[t.tarea] || '#64748b';
+        const co = getTaskColor(t.tarea);
         h += `<div class="summary-item">`;
         h += `<div class="si-dot" style="background:${co}"></div>`;
         h += `<div class="si-info">`;
@@ -108,7 +108,7 @@ export function renderSummaryPanel() {
     unreadMentions.slice(0, 8).forEach(m => {
       const task = state.tasks.find(t => t.taskId === m.taskId);
       const taskName = task ? `${task.cliente} — ${task.tarea}` : `Tarea #${m.taskId}`;
-      const co = task ? (TASK_COLORS[task.tarea] || '#64748b') : '#64748b';
+      const co = task ? (getTaskColor(task.tarea)) : '#64748b';
       h += `<div class="summary-item" onclick="openHistory(${m.taskId});closeSummaryPanel()">`;
       h += `<div class="si-dot" style="background:${co}"></div>`;
       h += `<div class="si-info">`;
@@ -136,7 +136,7 @@ export function renderSummaryPanel() {
     unreadTaskIds.forEach(([tid, count]) => {
       const task = state.tasks.find(t => t.taskId === parseInt(tid));
       if (!task) return;
-      const co = TASK_COLORS[task.tarea] || '#64748b';
+      const co = getTaskColor(task.tarea);
       h += `<div class="summary-item" onclick="openHistory(${task.taskId});closeSummaryPanel()">`;
       h += `<div class="si-dot" style="background:${co}"></div>`;
       h += `<div class="si-info">`;
@@ -172,7 +172,7 @@ export function renderSummaryPanel() {
     h += `<div class="summary-section">`;
     h += `<div class="summary-section-header">🔴 Vencidas <span class="ss-count red">${overdueTasks.length}</span></div>`;
     overdueTasks.slice(0, 8).forEach(t => {
-      const co = TASK_COLORS[t.tarea] || '#64748b';
+      const co = getTaskColor(t.tarea);
       const estado = t.estado || 'pendiente';
       h += `<div class="summary-item" onclick="navigateToTask(${t.taskId})">`;
       h += `<div class="si-dot" style="background:${co}"></div>`;
@@ -193,7 +193,7 @@ export function renderSummaryPanel() {
     h += `<div class="summary-section">`;
     h += `<div class="summary-section-header">⚡ Próximas a Vencer <span class="ss-count orange">${urgentTasks.length}</span></div>`;
     urgentTasks.slice(0, 8).forEach(t => {
-      const co = TASK_COLORS[t.tarea] || '#64748b';
+      const co = getTaskColor(t.tarea);
       const vto = parseDate(t.vencimiento);
       const diffDays = Math.ceil((vto - today) / 86400000);
       const dlLabel = diffDays === 0 ? 'Hoy' : diffDays === 1 ? 'Mañana' : `En ${diffDays}d`;
