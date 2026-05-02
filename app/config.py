@@ -14,6 +14,10 @@ DB_NAME: str = os.getenv("DB_NAME", "calendario")
 # --------------- Firebase ---------------
 FIREBASE_SA_PATH: str = os.getenv("FIREBASE_SA_PATH", "firebase-sa.json")
 
+# --------------- Google Cloud Storage (Backups) ---------------
+GCS_BUCKET_NAME: str = os.getenv("GCS_BUCKET_NAME", "calendario-backups")
+BACKUP_SECRET: str = os.getenv("BACKUP_SECRET", "")
+
 # --------------- SMTP ---------------
 SMTP_HOST: str = os.getenv("SMTP_HOST", "")
 SMTP_PORT: int = int(os.getenv("SMTP_PORT", "587"))

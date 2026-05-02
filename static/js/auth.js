@@ -209,6 +209,7 @@ export function updateUserMenu() {
   document.getElementById('btnReviewTab').style.display = isAdmin ? '' : 'none';
   document.getElementById('btnFiscalTab').style.display = isAdmin ? '' : 'none';
   document.getElementById('btnTaskTypesTab').style.display = isAdmin ? '' : 'none';
+  document.getElementById('btnBackupView').style.display = isAdmin ? '' : 'none';
 }
 
 export function toggleUserMenu() {

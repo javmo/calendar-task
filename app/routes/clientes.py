@@ -12,6 +12,7 @@ Endpoints:
   POST   /api/generate-fiscal-period                 (admin)
 """
 from datetime import date, datetime, timedelta, timezone
+from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
 
@@ -27,6 +28,91 @@ from app.models import (
 
 router = APIRouter(prefix="/api")
 
+
+# --------------- Recurrence helpers ---------------
+
+def _normalize_cat(cat) -> dict:
+    """Normalize a categoria entry (str or dict) to a uniform dict."""
+    if isinstance(cat, str):
+        return {"tarea": cat, "frecuencia_tipo": "mensual", "frecuencia_valor": 1}
+    # dict / TareaConfig
+    return {
+        "tarea": cat.get("tarea", cat) if isinstance(cat, dict) else str(cat),
+        "frecuencia_tipo": cat.get("frecuencia_tipo", "mensual") if isinstance(cat, dict) else "mensual",
+        "frecuencia_valor": cat.get("frecuencia_valor", 1) if isinstance(cat, dict) else 1,
+    }
+
+
+def _last_day(year: int, month: int) -> date:
+    if month == 12:
+        return date(year, 12, 31)
+    return date(year, month + 1, 1) - timedelta(days=1)
+
+
+def _calc_due_dates(year: int, month: int, tipo: str, valor: int) -> List[date]:
+    """Return the list of due dates for the given month and recurrence config."""
+    ld = _last_day(year, month)
+
+    # quincenal → mensual×2
+    if tipo == "quincenal":
+        tipo = "mensual"
+        valor = 2
+
+    if tipo == "mensual":
+        if valor <= 1:
+            return [ld]
+        if valor == 2:
+            d15 = date(year, month, 15)
+            return [d15, ld]
+        if valor == 3:
+            return [date(year, month, 10), date(year, month, 20), ld]
+        # valor >= 4: spread across the month
+        step = max(1, ld.day // valor)
+        dates = []
+        for i in range(valor - 1):
+            d = date(year, month, min(1 + step * i, ld.day))
+            dates.append(d)
+        dates.append(ld)
+        return dates
+
+    if tipo == "semanal":
+        # 4 weeks, `valor` instances per week, evenly spaced
+        weeks = [(1, 7), (8, 14), (15, 21), (22, ld.day)]
+        dates = []
+        for (wstart, wend) in weeks:
+            wend = min(wend, ld.day)
+            if wend < wstart:
+                continue
+            wlen = wend - wstart + 1
+            count = min(valor, wlen)
+            step = wlen / (count + 1)
+            for i in range(1, count + 1):
+                day = wstart + round(step * i) - 1
+                day = max(wstart, min(day, wend))
+                dates.append(date(year, month, day))
+        # deduplicate preserving order
+        seen = set()
+        unique = []
+        for d in dates:
+            if d not in seen:
+                seen.add(d)
+                unique.append(d)
+        return unique
+
+    if tipo == "diaria":
+        dates = []
+        d = date(year, month, 1)
+        while d <= ld:
+            if d.weekday() < 5:  # Mon–Fri
+                dates.append(d)
+            d += timedelta(days=1)
+        return dates
+
+    # fallback
+    return [ld]
+
+
+# --------------- Routes ---------------
 
 @router.get("/clientes")
 async def get_clientes(user=Depends(get_current_user)):
@@ -121,7 +207,7 @@ async def generate_client_tasks(
     if not cliente:
         raise HTTPException(404, "Cliente no encontrado")
 
-    categorias = cliente.get("categorias", [])
+    categorias = [_normalize_cat(c) for c in cliente.get("categorias", [])]
     if not categorias:
         raise HTTPException(400, "El cliente no tiene categorías asignadas")
 
@@ -137,43 +223,43 @@ async def generate_client_tasks(
     docs_to_insert = []
 
     while current <= end:
-        periodo = f"{current.year}-{current.month:02d}"
         mes_nombre = MES_NOMBRES[current.month - 1]
 
-        for tarea in categorias:
-            existing = await _db_module.db.tasks.find_one({
-                "cliente": cliente["nombre"],
-                "tarea": tarea,
-                "mes": mes_nombre,
-                "vencimiento": {"$regex": f"^{periodo}"}
-            })
-            if existing:
-                continue
+        for cfg in categorias:
+            tarea = cfg["tarea"]
+            due_dates = _calc_due_dates(
+                current.year, current.month,
+                cfg["frecuencia_tipo"], cfg["frecuencia_valor"]
+            )
 
-            if current.month == 12:
-                last_day = date(current.year, 12, 31)
-            else:
-                last_day = date(current.year, current.month + 1, 1) - timedelta(days=1)
+            for due in due_dates:
+                existing = await _db_module.db.tasks.find_one({
+                    "cliente": cliente["nombre"],
+                    "tarea": tarea,
+                    "vencimiento": due.isoformat(),
+                })
+                if existing:
+                    continue
 
-            docs_to_insert.append({
-                "taskId": next_id,
-                "cliente": cliente["nombre"],
-                "tarea": tarea,
-                "responsable": body.responsable,
-                "assignedTo": None,
-                "semana": body.semana,
-                "vencimiento": last_day.isoformat(),
-                "mes": mes_nombre,
-                "completado": False,
-                "revisado": False,
-                "enviado": False,
-                "finalizada": False,
-                "fechaFinalizacion": None,
-                "estado": ESTADO_PENDIENTE,
-                "createdAt": datetime.now(timezone.utc).isoformat(),
-            })
-            next_id += 1
-            created += 1
+                docs_to_insert.append({
+                    "taskId": next_id,
+                    "cliente": cliente["nombre"],
+                    "tarea": tarea,
+                    "responsable": body.responsable,
+                    "assignedTo": None,
+                    "semana": body.semana,
+                    "vencimiento": due.isoformat(),
+                    "mes": mes_nombre,
+                    "completado": False,
+                    "revisado": False,
+                    "enviado": False,
+                    "finalizada": False,
+                    "fechaFinalizacion": None,
+                    "estado": ESTADO_PENDIENTE,
+                    "createdAt": datetime.now(timezone.utc).isoformat(),
+                })
+                next_id += 1
+                created += 1
 
         if current.month == 12:
             current = date(current.year + 1, 1, 1)
@@ -208,49 +294,49 @@ async def generate_fiscal_period(
     docs_to_insert = []
 
     for cliente in clientes:
-        categorias = cliente.get("categorias", [])
+        categorias = [_normalize_cat(c) for c in cliente.get("categorias", [])]
         if not categorias:
             continue
 
         clients_processed += 1
         for month in range(1, 13):
-            periodo = f"{year}-{month:02d}"
             mes_nombre = MES_NOMBRES[month - 1]
 
-            for tarea in categorias:
-                existing = await _db_module.db.tasks.find_one({
-                    "cliente": cliente["nombre"],
-                    "tarea": tarea,
-                    "mes": mes_nombre,
-                    "vencimiento": {"$regex": f"^{periodo}"}
-                })
-                if existing:
-                    continue
+            for cfg in categorias:
+                tarea = cfg["tarea"]
+                due_dates = _calc_due_dates(
+                    year, month,
+                    cfg["frecuencia_tipo"], cfg["frecuencia_valor"]
+                )
 
-                if month == 12:
-                    last_day = date(year, 12, 31)
-                else:
-                    last_day = date(year, month + 1, 1) - timedelta(days=1)
+                for due in due_dates:
+                    existing = await _db_module.db.tasks.find_one({
+                        "cliente": cliente["nombre"],
+                        "tarea": tarea,
+                        "vencimiento": due.isoformat(),
+                    })
+                    if existing:
+                        continue
 
-                docs_to_insert.append({
-                    "taskId": next_id,
-                    "cliente": cliente["nombre"],
-                    "tarea": tarea,
-                    "responsable": body.responsable,
-                    "assignedTo": None,
-                    "semana": body.semana,
-                    "vencimiento": last_day.isoformat(),
-                    "mes": mes_nombre,
-                    "completado": False,
-                    "revisado": False,
-                    "enviado": False,
-                    "finalizada": False,
-                    "fechaFinalizacion": None,
-                    "estado": ESTADO_PENDIENTE,
-                    "createdAt": datetime.now(timezone.utc).isoformat(),
-                })
-                next_id += 1
-                total_created += 1
+                    docs_to_insert.append({
+                        "taskId": next_id,
+                        "cliente": cliente["nombre"],
+                        "tarea": tarea,
+                        "responsable": body.responsable,
+                        "assignedTo": None,
+                        "semana": body.semana,
+                        "vencimiento": due.isoformat(),
+                        "mes": mes_nombre,
+                        "completado": False,
+                        "revisado": False,
+                        "enviado": False,
+                        "finalizada": False,
+                        "fechaFinalizacion": None,
+                        "estado": ESTADO_PENDIENTE,
+                        "createdAt": datetime.now(timezone.utc).isoformat(),
+                    })
+                    next_id += 1
+                    total_created += 1
 
     if docs_to_insert:
         await _db_module.db.tasks.insert_many(docs_to_insert)

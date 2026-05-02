@@ -124,6 +124,7 @@
           </div>
           <button class="user-dropdown-item" onclick="showProfileEdit()">⚙️ Mi perfil</button>
           <button class="user-dropdown-item" id="btnUsersView" onclick="setView('users')" style="display:none">👥 Gestionar usuarios</button>
+          <button class="user-dropdown-item" id="btnBackupView" onclick="setView('backup');closeUserMenu()" style="display:none">🗄️ Backup &amp; Restauración</button>
           <button class="user-dropdown-item danger" onclick="logout()">🚪 Cerrar sesión</button>
         </div>
       </div>
@@ -188,6 +189,7 @@
   <div id="viewReview" class="review-container" style="display:none"></div>
   <div id="viewFiscal" class="fiscal-container" style="display:none"></div>
   <div id="viewTaskTypes" class="tt-container" style="display:none"></div>
+  <div id="viewBackup" class="bk-view-container" style="display:none"></div>
 
   <div class="finalized-panel" id="finalizedPanel" style="display:none">
     <div class="finalized-header" id="finalizedHeader" onclick="toggleFinalized()">
@@ -213,9 +215,11 @@
           <option value="4TA SEMANA">4TA SEMANA</option>
         </select>
       </div>
+      <!-- Recurrence section: shown when creating tasks for a client with recurrence config -->
+      <div id="taskRecurSection" style="display:none"></div>
       <div class="modal-actions" id="modalFormActions">
         <button class="btn" onclick="closeModal()">Cancelar</button>
-        <button class="btn btn-primary" id="btnSave" onclick="saveTask()">Guardar</button>
+        <button class="btn btn-primary" id="btnSave" onclick="saveTask()">Guardar (1 tarea)</button>
         <button class="btn btn-danger" id="btnDelete" style="display:none" onclick="deleteFromModal()">🗑 Eliminar</button>
       </div>
       <!-- Task detail panel: status + actions + history (shown when editing) -->

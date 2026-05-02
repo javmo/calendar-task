@@ -40,6 +40,7 @@ from app.email import _approval_email_html, _return_email_html, send_email
 from app.history import add_history_entry
 from app.models import (
     BulkAssignBody,
+    BulkTasksBody,
     TaskCommentBody,
     TaskIn,
     TaskReviewBody,
@@ -89,6 +90,63 @@ async def create_task(task: TaskIn, user=Depends(get_current_user)):
     )
 
     return doc
+
+
+@router.post("/tasks/bulk")
+async def create_tasks_bulk(body: BulkTasksBody, user=Depends(get_current_user)):
+    """Create multiple task instances at once (recurrence bulk creation)."""
+    if not body.instances:
+        raise HTTPException(400, "No hay instancias")
+
+    last = await _db_module.db.tasks.find_one(sort=[("taskId", -1)], projection={"taskId": 1})
+    next_id = (last["taskId"] + 1) if last else 1
+
+    docs_to_insert = []
+    skipped = 0
+    for inst in body.instances:
+        existing = await _db_module.db.tasks.find_one({
+            "cliente": body.cliente,
+            "tarea": body.tarea,
+            "vencimiento": inst.vencimiento,
+        })
+        if existing:
+            skipped += 1
+            continue
+
+        try:
+            parts = inst.vencimiento.split("-")
+            mes = MES_NOMBRES[int(parts[1]) - 1]
+        except (IndexError, ValueError):
+            mes = ""
+
+        docs_to_insert.append({
+            "taskId": next_id,
+            "cliente": body.cliente,
+            "tarea": body.tarea,
+            "responsable": body.responsable,
+            "assignedTo": body.assignedTo,
+            "semana": inst.semana,
+            "vencimiento": inst.vencimiento,
+            "mes": mes,
+            "completado": False,
+            "revisado": False,
+            "enviado": False,
+            "finalizada": False,
+            "fechaFinalizacion": None,
+            "estado": ESTADO_PENDIENTE,
+            "createdAt": datetime.now(timezone.utc).isoformat(),
+        })
+        next_id += 1
+
+    if docs_to_insert:
+        await _db_module.db.tasks.insert_many(docs_to_insert)
+        for doc in docs_to_insert:
+            await add_history_entry(
+                doc["taskId"], "creada", user.get("email", ""),
+                user.get("name", ""), "Tarea creada (bulk)"
+            )
+
+    return {"ok": True, "created": len(docs_to_insert), "skipped": skipped}
 
 
 # NOTE: bulk-assign and pending-review MUST come before {task_id} routes so
