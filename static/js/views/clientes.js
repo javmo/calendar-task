@@ -11,6 +11,29 @@ import { showConfirm } from '../ui/dialogs.js';
 import { render } from '../router.js';
 import { populateFilters, populateFormSelects } from './list.js';
 
+// --------------- Recurrence helpers (mirrors backend _normalize_cat) ---------------
+
+export function normCat(cat) {
+  if (typeof cat === 'string') return { tarea: cat, frecuencia_tipo: 'mensual', frecuencia_valor: 1 };
+  return {
+    tarea: cat.tarea || cat,
+    frecuencia_tipo: cat.frecuencia_tipo || 'mensual',
+    frecuencia_valor: cat.frecuencia_valor || 1,
+  };
+}
+
+function catLabel(cat) {
+  const c = normCat(cat);
+  if (c.frecuencia_tipo === 'mensual' && c.frecuencia_valor === 1) return c.tarea;
+  const tipoLabel = { mensual: 'x/mes', quincenal: 'quincenal', semanal: 'x/sem', diaria: 'diaria' };
+  const suffix = (c.frecuencia_tipo === 'mensual' || c.frecuencia_tipo === 'semanal')
+    ? `${c.frecuencia_valor}${tipoLabel[c.frecuencia_tipo]}`
+    : tipoLabel[c.frecuencia_tipo];
+  return `${c.tarea} (${suffix})`;
+}
+
+function catTarea(cat) { return normCat(cat).tarea; }
+
 // =================== RENDER: CLIENTES ===================
 export function renderClientes() {
   document.getElementById('monthLabel').textContent = 'Base de Clientes';
@@ -59,8 +82,8 @@ export function renderClientes() {
     if (c.categorias && c.categorias.length > 0) {
       h += `<div class="cc-cats">`;
       c.categorias.forEach(cat => {
-        const co = getTaskColor(cat);
-        h += `<span class="cc-cat-tag" style="background:${co}20;color:${co};border:1px solid ${co}40">${cat}</span>`;
+        const co = getTaskColor(catTarea(cat));
+        h += `<span class="cc-cat-tag" style="background:${co}20;color:${co};border:1px solid ${co}40">${catLabel(cat)}</span>`;
       });
       h += `</div>`;
     }
@@ -136,8 +159,8 @@ export function showClientDetail(clienteId) {
     h += `<div style="margin-bottom:16px"><label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Categorías de tareas</label>`;
     h += `<div class="ce-categorias">`;
     c.categorias.forEach(cat => {
-      const co = getTaskColor(cat);
-      h += `<span class="cc-cat-tag" style="background:${co}20;color:${co};border:1px solid ${co}40">${cat}</span>`;
+      const co = getTaskColor(catTarea(cat));
+      h += `<span class="cc-cat-tag" style="background:${co}20;color:${co};border:1px solid ${co}40">${catLabel(cat)}</span>`;
     });
     h += `</div></div>`;
   }
@@ -180,22 +203,89 @@ export function closeClientDetail() {
 export function renderCeCategorias(selected = []) {
   const container = document.getElementById('ceCategorias');
   const activeTypes = getActiveTaskTypes();
-  // Also include any selected categories not in active types (historical data)
-  const extraCats = selected.filter(c => !activeTypes.some(tt => tt.name === c));
-  const allCats = [...activeTypes.map(tt => tt.name), ...extraCats];
+  // Normalize selected to TareaConfig objects
+  const selectedNorm = selected.map(normCat);
+  // Include categories not in active types (historical)
+  const extraCats = selectedNorm
+    .filter(cfg => !activeTypes.some(tt => tt.name === cfg.tarea))
+    .map(cfg => cfg.tarea);
+  const allCatNames = [...activeTypes.map(tt => tt.name), ...extraCats];
+
   let h = '';
-  allCats.forEach(cat => {
-    const checked = selected.includes(cat);
-    const co = getTaskColor(cat);
-    h += `<label class="ce-cat-item ${checked ? 'checked' : ''}" onclick="this.classList.toggle('checked')">`;
-    h += `<input type="checkbox" value="${cat}" ${checked ? 'checked' : ''} onchange="this.parentElement.classList.toggle('checked',this.checked);updateCeGenerateSection()">`;
-    h += `<span class="ce-cat-dot" style="background:${co}"></span>${cat}</label>`;
+  allCatNames.forEach(catName => {
+    const cfg = selectedNorm.find(c => c.tarea === catName) || { tarea: catName, frecuencia_tipo: 'mensual', frecuencia_valor: 1 };
+    const checked = selectedNorm.some(c => c.tarea === catName);
+    const co = getTaskColor(catName);
+    const safeId = `cecat_${catName.replace(/\W/g,'_')}`;
+    h += `<div class="ce-cat-row ${checked ? 'checked' : ''}" id="${safeId}">`;
+    h += `<label class="ce-cat-item">`;
+    h += `<input type="checkbox" data-cat="${catName}" ${checked ? 'checked' : ''} onchange="onCeCatChange('${catName.replace(/'/g,"\\'")}');updateCeGenerateSection()">`;
+    h += `<span class="ce-cat-dot" style="background:${co}"></span>${catName}`;
+    h += `</label>`;
+    h += `<div class="ce-cat-recur ${checked ? '' : 'hidden'}">`;
+    h += `<select class="ce-recur-tipo" data-cat="${catName}" onchange="onCeRecurChange('${catName.replace(/'/g,"\\'")}')">`;
+    ['mensual','quincenal','semanal','diaria'].forEach(t => {
+      h += `<option value="${t}" ${cfg.frecuencia_tipo === t ? 'selected' : ''}>${t}</option>`;
+    });
+    h += `</select>`;
+    const showValor = cfg.frecuencia_tipo === 'mensual' || cfg.frecuencia_tipo === 'semanal';
+    h += `<input type="number" class="ce-recur-valor" data-cat="${catName}" min="1" max="31" value="${cfg.frecuencia_valor}" ${showValor ? '' : 'style="display:none"'} onchange="onCeRecurChange('${catName.replace(/'/g,"\\'")}')">`;
+    h += `<span class="ce-recur-hint" data-cat="${catName}">${_recurHint(cfg)}</span>`;
+    h += `</div>`;
+    h += `</div>`;
   });
   container.innerHTML = h;
 }
 
+function _recurHint(cfg) {
+  if (cfg.frecuencia_tipo === 'mensual') {
+    if (cfg.frecuencia_valor === 1) return '1×/mes';
+    return `${cfg.frecuencia_valor}×/mes`;
+  }
+  if (cfg.frecuencia_tipo === 'quincenal') return 'días 15 y fin de mes';
+  if (cfg.frecuencia_tipo === 'semanal') return `${cfg.frecuencia_valor}×/sem (~${cfg.frecuencia_valor*4}/mes)`;
+  if (cfg.frecuencia_tipo === 'diaria') return 'lun–vie c/día';
+  return '';
+}
+
+export function onCeCatChange(catName) {
+  const safeId = `cecat_${catName.replace(/\W/g,'_')}`;
+  const row = document.getElementById(safeId);
+  if (!row) return;
+  const cb = row.querySelector(`input[type="checkbox"]`);
+  const recur = row.querySelector('.ce-cat-recur');
+  if (cb.checked) {
+    row.classList.add('checked');
+    recur.classList.remove('hidden');
+  } else {
+    row.classList.remove('checked');
+    recur.classList.add('hidden');
+  }
+}
+
+export function onCeRecurChange(catName) {
+  const safeId = `cecat_${catName.replace(/\W/g,'_')}`;
+  const row = document.getElementById(safeId);
+  if (!row) return;
+  const tipo = row.querySelector('.ce-recur-tipo').value;
+  const valorEl = row.querySelector('.ce-recur-valor');
+  const hint = row.querySelector('.ce-recur-hint');
+  const showValor = tipo === 'mensual' || tipo === 'semanal';
+  valorEl.style.display = showValor ? '' : 'none';
+  const valor = parseInt(valorEl.value) || 1;
+  hint.textContent = _recurHint({ frecuencia_tipo: tipo, frecuencia_valor: valor });
+}
+
 export function getSelectedCategorias() {
-  return [...document.querySelectorAll('#ceCategorias input:checked')].map(cb => cb.value);
+  const checked = [...document.querySelectorAll('#ceCategorias input[type="checkbox"]:checked')];
+  return checked.map(cb => {
+    const catName = cb.dataset.cat;
+    const safeId = `cecat_${catName.replace(/\W/g,'_')}`;
+    const row = document.getElementById(safeId);
+    const tipo = row ? (row.querySelector('.ce-recur-tipo')?.value || 'mensual') : 'mensual';
+    const valor = row ? (parseInt(row.querySelector('.ce-recur-valor')?.value) || 1) : 1;
+    return { tarea: catName, frecuencia_tipo: tipo, frecuencia_valor: valor };
+  });
 }
 
 function getNotasPorTarea() {
@@ -282,7 +372,7 @@ export function editClientFromDetail() {
   document.getElementById('ceNotas').value = c.notas || '';
   document.getElementById('ceFormaPago').value = c.formaPago || '';
   document.getElementById('ceDeleteBtn').style.display = '';
-  renderCeCategorias(c.categorias || []);
+  renderCeCategorias((c.categorias || []).map(normCat));
   renderCeBitacora(c.notasPorTarea || {});
   // Default generate range: current month to December
   const now = new Date();
@@ -297,7 +387,7 @@ export async function generateClientTasks() {
   const cats = getSelectedCategorias();
   if (!cats.length) { showToast('Seleccioná al menos una categoría', 'error'); return; }
 
-  // First save categories
+  // First save recurrence config
   await api('PUT', `/api/clientes/${state.editingClientId}`, { categorias: cats });
   const idx = state.clientes.findIndex(c => c.clienteId === state.editingClientId);
   if (idx >= 0) state.clientes[idx].categorias = cats;

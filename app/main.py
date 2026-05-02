@@ -16,6 +16,7 @@ from app.auth import init_firebase
 from app.config import DB_NAME, ESTADO_PENDIENTE, MONGO_URI
 from app.database import close_db, db, init_db
 from app.seed import seed_task_types_if_empty
+from app.routes.backup import router as backup_router
 from app.routes.clientes import router as clientes_router
 from app.routes.schedule import router as schedule_router
 from app.routes.task_types import router as task_types_router
@@ -83,6 +84,7 @@ app.include_router(schedule_router)
 app.include_router(clientes_router)
 app.include_router(vencimientos_router)
 app.include_router(task_types_router)
+app.include_router(backup_router)
 
 # --------------- Serve Frontend ---------------
 static_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static")

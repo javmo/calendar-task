@@ -1,9 +1,15 @@
 """
 Pydantic request/response models.
 """
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from pydantic import BaseModel
+
+
+class TareaConfig(BaseModel):
+    tarea: str
+    frecuencia_tipo: str = "mensual"   # mensual | quincenal | semanal | diaria
+    frecuencia_valor: int = 1          # veces por ciclo
 
 
 class TaskIn(BaseModel):
@@ -44,7 +50,7 @@ class ClienteIn(BaseModel):
     claveArba: Optional[str] = ""
     otraClave: Optional[str] = ""
     formaPago: Optional[str] = ""
-    categorias: Optional[List[str]] = []  # task types: ["IIBB CM", "IVA", ...]
+    categorias: Optional[List[Any]] = []  # List[str | TareaConfig]
     notas: Optional[str] = ""
     notasPorTarea: Optional[Dict[str, str]] = {}  # {tarea: nota}, e.g. {"IVA": "nota..."}
 
@@ -58,7 +64,7 @@ class ClienteUpdate(BaseModel):
     claveArba: Optional[str] = None
     otraClave: Optional[str] = None
     formaPago: Optional[str] = None
-    categorias: Optional[List[str]] = None
+    categorias: Optional[List[Any]] = None  # List[str | TareaConfig]
     notas: Optional[str] = None
     notasPorTarea: Optional[Dict[str, str]] = None
 
@@ -78,6 +84,19 @@ class TaskReviewBody(BaseModel):
 
 class TaskCommentBody(BaseModel):
     comment: str
+
+
+class BulkTaskInstance(BaseModel):
+    vencimiento: str   # "YYYY-MM-DD"
+    semana: str
+
+
+class BulkTasksBody(BaseModel):
+    cliente: str
+    tarea: str
+    responsable: str
+    assignedTo: Optional[str] = None
+    instances: List[BulkTaskInstance]
 
 
 class BulkAssignBody(BaseModel):

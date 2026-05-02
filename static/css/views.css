@@ -585,3 +585,83 @@
   .tt-table{min-width:640px}
   .tt-modal{padding:20px}
 }
+
+/* =================== BACKUP VIEW =================== */
+.bk-view-container{padding:24px 28px}
+.bk-loading{padding:60px;text-align:center;color:var(--text-muted)}
+.bk-error{padding:40px;text-align:center;color:var(--danger)}
+
+.bk-container{max-width:1100px;margin:0 auto}
+.bk-page-header{margin-bottom:24px}
+.bk-title{font-size:20px;font-weight:800;color:var(--text);margin-bottom:4px}
+.bk-subtitle{font-size:13px;color:var(--text-muted)}
+
+.bk-grid{display:grid;grid-template-columns:340px 1fr;gap:20px;align-items:start}
+
+.bk-card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:22px;box-shadow:var(--shadow-sm)}
+.bk-card-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:16px}
+
+.bk-last-status{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:var(--radius-sm);margin-bottom:18px;border:1px solid var(--border)}
+.bk-last-status.bk-status-ok{background:var(--success-bg);border-color:var(--success-border)}
+.bk-last-status.bk-status-error{background:var(--danger-bg);border-color:var(--danger-border)}
+.bk-last-status.bk-status-none{background:var(--surface2)}
+.bk-status-icon{font-size:20px;flex-shrink:0}
+.bk-status-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-muted);margin-bottom:2px}
+.bk-status-detail{font-size:13px;font-weight:500;color:var(--text)}
+
+.bk-hint{font-size:11px;color:var(--text-muted);margin-top:6px;line-height:1.6}
+.bk-hint code{background:var(--bg);padding:1px 5px;border-radius:4px;font-size:10.5px;color:var(--accent);border:1px solid var(--border)}
+.bk-input{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-size:14px;font-family:inherit;transition:border-color .15s}
+.bk-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-bg)}
+
+.bk-card-actions{display:flex;flex-direction:column;gap:8px;margin-top:20px}
+.bk-trigger-btn{justify-content:center;font-weight:600;border-color:var(--accent);color:var(--accent)}
+.bk-trigger-btn:hover{background:var(--accent-bg)}
+.bk-trigger-btn:disabled{opacity:.5;cursor:not-allowed}
+
+.bk-list-card{display:flex;flex-direction:column}
+.bk-list-header{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.bk-count{background:var(--accent-bg);color:var(--accent);padding:2px 10px;border-radius:12px;font-size:12px;font-weight:700}
+.bk-table-wrap{overflow-x:auto}
+.bk-table{width:100%;border-collapse:separate;border-spacing:0}
+.bk-table thead th{background:var(--surface2);padding:10px 12px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);font-weight:700;border-bottom:2px solid var(--border)}
+.bk-table tbody tr{border-bottom:1px solid var(--border-light);transition:background .1s}
+.bk-table tbody tr:last-child td{border-bottom:none}
+.bk-table tbody tr:hover{background:var(--surface2)}
+.bk-table tbody td{padding:10px 12px;font-size:13px;vertical-align:middle}
+.bk-date{font-weight:600;color:var(--text);font-size:13px}
+.bk-id-label{font-size:10px;color:var(--text-muted);margin-top:2px;font-family:monospace}
+.bk-size{background:var(--surface2);color:var(--text-secondary);padding:3px 8px;border-radius:6px;font-size:12px;font-weight:600;white-space:nowrap}
+.bk-row-actions{display:flex;gap:6px;justify-content:flex-end;white-space:nowrap}
+.bk-btn-restore{font-size:12px;padding:5px 12px;color:var(--accent);border-color:var(--accent);background:var(--accent-bg)}
+.bk-btn-restore:hover{background:var(--accent);color:white}
+.bk-btn-delete{font-size:12px;padding:5px 10px}
+.bk-empty-row td{padding:40px 20px;text-align:center}
+.bk-empty-inner{color:var(--text-muted);font-size:13px;line-height:1.8}
+.bk-empty-inner small{font-size:11px}
+
+@media (max-width:900px){
+  .bk-grid{grid-template-columns:1fr}
+  .bk-view-container{padding:14px 16px}
+}
+
+/* =================== RECURRENCE SECTION (task modal) =================== */
+#taskRecurSection{margin:0 0 14px;border:1px solid var(--accent);border-radius:var(--radius);background:var(--accent-bg);padding:12px 14px}
+.recur-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.recur-title{font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.5px}
+.recur-count{font-size:11px;color:var(--text-muted);background:var(--surface2);padding:2px 8px;border-radius:10px;font-weight:600}
+.recur-instances{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.recur-instance{display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:5px 8px}
+.recur-date{font-size:12px;font-weight:600;color:var(--text);min-width:72px}
+.recur-semana{font-size:11px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text);cursor:pointer}
+.recur-bulk-btn{width:100%;margin-top:2px;font-size:13px}
+
+/* =================== CATEGORIA RECURRENCE (client edit) =================== */
+.ce-cat-row{margin-bottom:6px;border:1px solid var(--border-light);border-radius:6px;padding:6px 10px;background:var(--surface);transition:border-color .15s}
+.ce-cat-row.checked{border-color:var(--accent);background:var(--accent-bg)}
+.ce-cat-row .ce-cat-item{display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;margin:0}
+.ce-cat-recur{display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:wrap}
+.ce-cat-recur.hidden{display:none}
+.ce-recur-tipo{font-size:12px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text);cursor:pointer}
+.ce-recur-valor{width:52px;font-size:12px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text);text-align:center}
+.ce-recur-hint{font-size:11px;color:var(--text-muted);font-style:italic}

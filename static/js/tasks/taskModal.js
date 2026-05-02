@@ -12,6 +12,168 @@ import { isMyTask } from '../views/summary.js';
 import { isAdmin } from './taskActions.js';
 import { getUnreadCount } from './history.js';
 import { loadTdpHistory } from './taskDetail.js';
+import { normCat } from '../views/clientes.js';
+
+// =================== RECURRENCE HELPERS ===================
+
+function _lastDay(year, month) {
+  return new Date(year, month, 0); // day 0 of next month = last day of current
+}
+
+function calcDueDates(year, month, tipo, valor) {
+  const ld = _lastDay(year, month);
+  const ldDay = ld.getDate();
+
+  if (tipo === 'quincenal') { tipo = 'mensual'; valor = 2; }
+
+  const iso = (y, m, d) => `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+
+  if (tipo === 'mensual') {
+    if (valor <= 1) return [iso(year, month, ldDay)];
+    if (valor === 2) return [iso(year, month, 15), iso(year, month, ldDay)];
+    if (valor === 3) return [iso(year, month, 10), iso(year, month, 20), iso(year, month, ldDay)];
+    const step = Math.max(1, Math.floor(ldDay / valor));
+    const dates = [];
+    for (let i = 0; i < valor - 1; i++) dates.push(iso(year, month, Math.min(1 + step * i, ldDay)));
+    dates.push(iso(year, month, ldDay));
+    return dates;
+  }
+
+  if (tipo === 'semanal') {
+    const weeks = [[1,7],[8,14],[15,21],[22,ldDay]];
+    const dates = [];
+    for (const [ws, we] of weeks) {
+      const wend = Math.min(we, ldDay);
+      if (wend < ws) continue;
+      const wlen = wend - ws + 1;
+      const count = Math.min(valor, wlen);
+      const step = wlen / (count + 1);
+      for (let i = 1; i <= count; i++) {
+        const day = Math.max(ws, Math.min(ws + Math.round(step * i) - 1, wend));
+        dates.push(iso(year, month, day));
+      }
+    }
+    // deduplicate
+    return [...new Set(dates)];
+  }
+
+  if (tipo === 'diaria') {
+    const dates = [];
+    for (let d = 1; d <= ldDay; d++) {
+      const dow = new Date(year, month - 1, d).getDay();
+      if (dow >= 1 && dow <= 5) dates.push(iso(year, month, d));
+    }
+    return dates;
+  }
+
+  return [iso(year, month, ldDay)];
+}
+
+function getRecurrenceConfig() {
+  const clienteNombre = document.getElementById('formCliente').value;
+  const tarea = document.getElementById('formTarea').value;
+  if (!clienteNombre || !tarea) return null;
+  const cliente = state.clientes.find(c => c.nombre === clienteNombre);
+  if (!cliente || !cliente.categorias) return null;
+  const catEntry = cliente.categorias.find(c => normCat(c).tarea === tarea);
+  if (!catEntry) return null;
+  const cfg = normCat(catEntry);
+  if (cfg.frecuencia_tipo === 'mensual' && cfg.frecuencia_valor === 1) return null; // no special recurrence
+  return cfg;
+}
+
+export function updateRecurrenceSection() {
+  const section = document.getElementById('taskRecurSection');
+  if (!section) return;
+  if (state.editingId !== null) { section.style.display = 'none'; return; }
+
+  const cfg = getRecurrenceConfig();
+  if (!cfg) { section.style.display = 'none'; return; }
+
+  // Determine target month from formVencimiento or current month
+  let year, month;
+  const vto = document.getElementById('formVencimiento').value;
+  if (vto && /^\d{4}-\d{2}/.test(vto)) {
+    [year, month] = vto.split('-').slice(0,2).map(Number);
+  } else {
+    const now = new Date();
+    year = now.getFullYear(); month = now.getMonth() + 1;
+  }
+
+  const dates = calcDueDates(year, month, cfg.frecuencia_tipo, cfg.frecuencia_valor);
+  const semana = document.getElementById('formSemana').value || '1ER SEMANA';
+  const semanas = ['1ER SEMANA','2DA SEMANA','3ER SEMANA','4TA SEMANA'];
+
+  const tipoLabel = { mensual: 'x/mes', quincenal: 'quincenal', semanal: 'x/sem', diaria: 'diaria' };
+  const suffix = (cfg.frecuencia_tipo === 'mensual' || cfg.frecuencia_tipo === 'semanal')
+    ? `${cfg.frecuencia_valor} ${tipoLabel[cfg.frecuencia_tipo]}`
+    : tipoLabel[cfg.frecuencia_tipo];
+
+  let h = `<div class="recur-header">`;
+  h += `<span class="recur-title">Periodicidad: ${cfg.tarea} (${suffix})</span>`;
+  h += `<span class="recur-count">${dates.length} instancia${dates.length!==1?'s':''}</span>`;
+  h += `</div>`;
+  h += `<div class="recur-instances">`;
+  dates.forEach((d, i) => {
+    const [dy, dm, dd] = d.split('-');
+    const label = `${dd}/${dm}/${dy}`;
+    h += `<div class="recur-instance">`;
+    h += `<span class="recur-date">${label}</span>`;
+    h += `<select class="recur-semana" data-idx="${i}">`;
+    semanas.forEach(s => h += `<option value="${s}" ${s === semana ? 'selected' : ''}>${s}</option>`);
+    h += `</select>`;
+    h += `</div>`;
+  });
+  h += `</div>`;
+  h += `<button type="button" class="btn btn-primary recur-bulk-btn" onclick="saveTaskBulk()">＋ Crear todas (${dates.length})</button>`;
+
+  // Store dates for saveTaskBulk
+  section._dates = dates;
+  section.innerHTML = h;
+  section.style.display = '';
+}
+
+export async function saveTaskBulk() {
+  const section = document.getElementById('taskRecurSection');
+  if (!section || !section._dates) return;
+
+  const clienteNombre = document.getElementById('formCliente').value;
+  const tarea = document.getElementById('formTarea').value;
+  const responsable = document.getElementById('formResponsable').value;
+  if (!clienteNombre || !tarea) { showToast('Seleccioná cliente y tarea', 'error'); return; }
+
+  const matchUser = state.users.find(u => u.responsableName === responsable);
+  const assignedTo = matchUser ? matchUser.email : null;
+
+  const semanas = [...section.querySelectorAll('.recur-semana')];
+  const instances = section._dates.map((d, i) => ({
+    vencimiento: d,
+    semana: semanas[i]?.value || document.getElementById('formSemana').value || '1ER SEMANA',
+  }));
+
+  const btn = section.querySelector('.recur-bulk-btn');
+  setLoading(btn, true, 'Creando…');
+  try {
+    const result = await api('POST', '/api/tasks/bulk', {
+      cliente: clienteNombre,
+      tarea,
+      responsable,
+      assignedTo,
+      instances,
+    });
+    // Reload tasks
+    state.tasks = await api('GET', '/api/tasks');
+    populateFilters();
+    populateFormSelects();
+    clearFormTracking();
+    closeModal();
+    render();
+    showToast(`${result.created} tarea${result.created!==1?'s':''} creada${result.created!==1?'s':''}${result.skipped?' ('+result.skipped+' ya existían)':''}`, 'success');
+  } catch (e) {
+    setLoading(btn, false);
+    showToast('Error: ' + e.message, 'error');
+  }
+}
 
 // =================== INLINE FORM VALIDATION ===================
 function setFieldError(fieldEl, message) {
@@ -117,8 +279,24 @@ export function addTask() {
   document.getElementById('taskDetailPanel').style.display = 'none';
   document.querySelector('#modalOverlay .modal').classList.remove('with-detail');
   document.querySelectorAll('#modalOverlay .form-group').forEach(fg => fg.classList.remove('readonly'));
+  // Wire change events for recurrence detection (only once per open)
+  _wireRecurrenceListeners();
   document.getElementById('modalOverlay').classList.add('active');
+  updateRecurrenceSection();
   captureFormValues();
+}
+
+let _recurListenersWired = false;
+function _wireRecurrenceListeners() {
+  if (_recurListenersWired) return;
+  _recurListenersWired = true;
+  ['formCliente','formTarea','formVencimiento','formSemana'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('change', () => updateRecurrenceSection());
+  });
+  // Also on input for vencimiento (text field)
+  const vtoEl = document.getElementById('formVencimiento');
+  if (vtoEl) vtoEl.addEventListener('input', () => updateRecurrenceSection());
 }
 
 export function editTask(id) {
@@ -216,6 +394,10 @@ export function editTask(id) {
   }
 
   loadTdpHistory(id);
+
+  // Hide recurrence section when editing
+  const recurSec = document.getElementById('taskRecurSection');
+  if (recurSec) recurSec.style.display = 'none';
 
   document.getElementById('modalOverlay').classList.add('active');
   captureFormValues();
