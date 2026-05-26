@@ -289,3 +289,19 @@
 /* General notes separator when both exist */
 .tdp-client-nota-general{border-top:1px solid #fcd34d;padding-top:8px;margin-top:2px}
 
+
+/* =================== IVA BADGE =================== */
+.iva-badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:700;border:1px solid;white-space:nowrap}
+.iva-badge.iva-RI{background:#dbeafe;color:#1d4ed8;border-color:#93c5fd}
+.iva-badge.iva-MT{background:#dcfce7;color:#15803d;border-color:#86efac}
+.iva-badge.iva-EX{background:#fef9c3;color:#a16207;border-color:#fde047}
+.iva-badge.iva-CF{background:#f3f4f6;color:#6b7280;border-color:#d1d5db}
+
+/* =================== ARCA SECTION (client detail) =================== */
+.arca-section{margin-top:16px;border:1px solid var(--border);border-radius:8px;padding:12px 16px;background:var(--surface2)}
+.arca-info-row{display:flex;align-items:center;gap:10px;padding:4px 0;font-size:13px}
+.arca-label{color:var(--text-muted,#888);font-size:11px;font-weight:600;text-transform:uppercase;min-width:110px}
+.arca-value{color:var(--text);font-size:13px}
+
+/* =================== ARCA form section title =================== */
+.form-section-title{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;padding:10px 0 4px;border-top:1px solid var(--border);margin-top:4px}

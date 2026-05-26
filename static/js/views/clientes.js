@@ -68,7 +68,10 @@ export function renderClientes() {
     ];
     h += `<div class="client-card" onclick="showClientDetail(${c.clienteId})">`;
     h += `<div class="cc-header">`;
-    h += `<div><div class="cc-name">${c.nombre}</div><div class="cc-cuit">CUIT: ${c.cuit || '-'}</div></div>`;
+    h += `<div><div class="cc-name">${c.nombre}</div>`;
+    h += `<div class="cc-cuit" style="display:flex;align-items:center;gap:6px">CUIT: ${c.cuit || '-'}`;
+    if (c.condicionIva) h += ` <span class="iva-badge iva-${c.condicionIva}">${c.condicionIva}</span>`;
+    h += `</div></div>`;
     h += `<span class="cc-tasks-count">${tc} tarea${tc!==1?'s':''}</span>`;
     h += `</div>`;
     h += `<div class="cc-claves">`;
@@ -164,6 +167,22 @@ export function showClientDetail(clienteId) {
     });
     h += `</div></div>`;
   }
+
+  // ARCA / Facturación section
+  const ivaLabels = { RI: 'Resp. Inscripto (RI)', MT: 'Monotributista (MT)', EX: 'Exento (EX)', CF: 'Cons. Final (CF)' };
+  h += `<div class="detail-section arca-section">`;
+  h += `<div class="section-title" style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">🏛️ ARCA / Facturación</div>`;
+  h += `<div class="arca-info-row"><span class="arca-label">Condición IVA</span>`;
+  if (c.condicionIva) {
+    h += `<span class="iva-badge iva-${c.condicionIva}">${ivaLabels[c.condicionIva] || c.condicionIva}</span>`;
+  } else {
+    h += `<span style="font-size:12px;color:var(--text-muted)">Sin datos</span>`;
+  }
+  h += `</div>`;
+  if (c.arcaNotas && c.arcaNotas.trim()) {
+    h += `<div class="arca-info-row"><span class="arca-label">Notas ARCA</span><span class="arca-value">${c.arcaNotas.replace(/\n/g, '<br>')}</span></div>`;
+  }
+  h += `</div>`;
 
   h += `<div class="cd-tasks-section">`;
   h += `<h3>📋 Tareas asignadas <span style="font-size:12px;color:var(--text-muted);font-weight:400">(${clientTasks.length})</span></h3>`;
@@ -349,6 +368,8 @@ export function addClient() {
   document.getElementById('ceOtraClave').value = '';
   document.getElementById('ceNotas').value = '';
   document.getElementById('ceFormaPago').value = '';
+  document.getElementById('ceCondicionIva').value = '';
+  document.getElementById('ceArcaNotas').value = '';
   document.getElementById('ceDeleteBtn').style.display = 'none';
   renderCeCategorias([]);
   renderCeBitacora({});
@@ -371,6 +392,8 @@ export function editClientFromDetail() {
   document.getElementById('ceOtraClave').value = c.otraClave || '';
   document.getElementById('ceNotas').value = c.notas || '';
   document.getElementById('ceFormaPago').value = c.formaPago || '';
+  document.getElementById('ceCondicionIva').value = c.condicionIva ?? '';
+  document.getElementById('ceArcaNotas').value = c.arcaNotas ?? '';
   document.getElementById('ceDeleteBtn').style.display = '';
   renderCeCategorias((c.categorias || []).map(normCat));
   renderCeBitacora(c.notasPorTarea || {});
@@ -423,6 +446,8 @@ export async function saveClientEdit() {
     notasPorTarea: getNotasPorTarea(),
     formaPago: document.getElementById('ceFormaPago').value,
     categorias: getSelectedCategorias(),
+    condicionIva: document.getElementById('ceCondicionIva').value || null,
+    arcaNotas: document.getElementById('ceArcaNotas').value.trim() || null,
   };
 
   try {

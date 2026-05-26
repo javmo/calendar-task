@@ -152,7 +152,11 @@ async def create_cliente(cliente: ClienteIn, user=Depends(get_current_user)):
 async def update_cliente(
     cliente_id: int, body: ClienteUpdate, user=Depends(get_current_user)
 ):
-    update_data = {k: v for k, v in body.model_dump().items() if v is not None}
+    # Only include fields that were explicitly sent in the request body.
+    # This allows callers to clear condicionIva/arcaNotas by sending null,
+    # without accidentally wiping other fields that weren't included.
+    update_data = {k: v for k, v in body.model_dump().items()
+                   if k in body.model_fields_set}
     if not update_data:
         raise HTTPException(400, "Nada que actualizar")
 

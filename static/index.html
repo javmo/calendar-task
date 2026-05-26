@@ -286,6 +286,21 @@
         <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">Hacé click en un tipo de tarea para agregar una nota. Aparecerá en cada tarea de ese tipo.</div>
         <div id="ceBitacora"></div>
       </div>
+      <div class="form-section-title">🏛️ ARCA / Facturación</div>
+      <div class="form-group">
+        <label>Condición IVA</label>
+        <select id="ceCondicionIva">
+          <option value="">Sin datos</option>
+          <option value="MT">Monotributista (MT)</option>
+          <option value="RI">Responsable Inscripto (RI)</option>
+          <option value="EX">Exento (EX)</option>
+          <option value="CF">Consumidor Final (CF)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Notas ARCA</label>
+        <textarea id="ceArcaNotas" rows="2" placeholder="Notas internas de facturación..." style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-size:13px;font-family:inherit;resize:vertical;line-height:1.5;transition:border-color .15s" onfocus="this.style.outline='none';this.style.borderColor='var(--accent)';this.style.boxShadow='0 0 0 3px var(--accent-bg)'" onblur="this.style.borderColor='';this.style.boxShadow=''"></textarea>
+      </div>
       <div class="ce-generate-section" id="ceGenerateSection" style="display:none">
         <label style="font-size:11px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:6px">Generar tareas automáticas</label>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">

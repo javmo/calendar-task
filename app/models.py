@@ -53,6 +53,8 @@ class ClienteIn(BaseModel):
     categorias: Optional[List[Any]] = []  # List[str | TareaConfig]
     notas: Optional[str] = ""
     notasPorTarea: Optional[Dict[str, str]] = {}  # {tarea: nota}, e.g. {"IVA": "nota..."}
+    condicionIva: Optional[str] = None   # "RI" | "MT" | "EX" | "CF"
+    arcaNotas: Optional[str] = None
 
 
 class ClienteUpdate(BaseModel):
@@ -67,6 +69,8 @@ class ClienteUpdate(BaseModel):
     categorias: Optional[List[Any]] = None  # List[str | TareaConfig]
     notas: Optional[str] = None
     notasPorTarea: Optional[Dict[str, str]] = None
+    condicionIva: Optional[str] = None   # "RI" | "MT" | "EX" | "CF"
+    arcaNotas: Optional[str] = None
 
 
 class UserUpdate(BaseModel):
