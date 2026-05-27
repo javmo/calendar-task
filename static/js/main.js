@@ -8,7 +8,7 @@ import './legacy-bridge.js';
 import { initFirebase, closeUserMenu } from './auth.js';
 import { closeModal } from './tasks/taskModal.js';
 import { closeHistory } from './tasks/history.js';
-import { closeClientDetail, closeClientEdit } from './views/clientes.js';
+import { closeClientDetail, closeClientEdit, closeBillingDetail } from './views/clientes.js';
 import { closeDialog } from './ui/dialogs.js';
 import { addTask } from './tasks/taskModal.js';
 import { changeMonth } from './views/month.js';
@@ -16,7 +16,7 @@ import { closeSummaryPanel } from './views/summary.js';
 
 // =================== KEYBOARD SHORTCUTS ===================
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeModal(); closeClientDetail(); closeClientEdit(); closeHistory(); closeDialog(false); }
+  if (e.key === 'Escape') { closeModal(); closeClientDetail(); closeBillingDetail(); closeClientEdit(); closeHistory(); closeDialog(false); }
   if (e.key === 'Enter' && document.getElementById('dialogOverlay').classList.contains('active')) {
     e.preventDefault();
     const confirmBtn = document.getElementById('dialogActions').querySelector('.btn-primary,.btn-danger');

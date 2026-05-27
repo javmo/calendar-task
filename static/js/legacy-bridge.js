@@ -120,6 +120,8 @@ Object.assign(window, {
   onClientSearch: clientes.onClientSearch,
   showClientDetail: clientes.showClientDetail,
   closeClientDetail: clientes.closeClientDetail,
+  showBillingDetail: clientes.showBillingDetail,
+  closeBillingDetail: clientes.closeBillingDetail,
   renderCeCategorias: clientes.renderCeCategorias,
   getSelectedCategorias: clientes.getSelectedCategorias,
   onCeCatChange: clientes.onCeCatChange,

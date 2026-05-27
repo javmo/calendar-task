@@ -126,44 +126,149 @@ function fmtFecha(s) {
   if (!s) return '—';
   const str = String(s);
   if (str.length === 8) return `${str.slice(6)}/${str.slice(4,6)}/${str.slice(0,4)}`;
-  // ISO date
   if (str.includes('-')) return str.split('T')[0].split('-').reverse().join('/');
   return s;
 }
 function fmtARS(n) {
   if (n == null || n === '') return '—';
-  return '$ ' + Math.round(Number(n)).toLocaleString('es-AR');
+  return '$ ' + Math.round(Number(n)).toLocaleString('es-AR');
 }
-function buildComprobantesHTML(data) {
+function getMesName(ym) {
+  if (!ym || ym.length < 6) return '?';
+  const year = ym.slice(0, 4);
+  const month = parseInt(ym.slice(4, 6), 10);
+  const MES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  return `${MES[month - 1] ?? '?'} ${year}`;
+}
+
+// Module-level state for the billing detail modal
+let _billingData = null;
+let _billingClientName = '';
+
+function buildBillingStatsHTML(data) {
   const list = data?.comprobantes ?? [];
   const total = data?.totalFacturado ?? 0;
   if (list.length === 0) {
     return `<div class="cd-comp-empty">Sin comprobantes registrados para este CUIT</div>`;
   }
-  let h = '';
-  h += `<div class="cd-comp-summary">`;
-  h += `<span class="cd-comp-summary-left">🧾 <span class="cd-comp-summary-count">${list.length} comprobante${list.length !== 1 ? 's' : ''}</span></span>`;
-  h += `<span class="cd-comp-summary-total">${fmtARS(total)}</span>`;
-  h += `</div>`;
+
+  // Group by YYYYMM
+  const byMonth = {};
+  list.forEach(c => {
+    const fecha = String(c.fechaCbte || '');
+    const ym = fecha.length >= 6 ? fecha.slice(0, 6) : 'unknown';
+    if (!byMonth[ym]) byMonth[ym] = { total: 0, count: 0 };
+    byMonth[ym].total += Number(c.importeTotal || 0);
+    byMonth[ym].count++;
+  });
+  const months = Object.entries(byMonth)
+    .filter(([ym]) => ym !== 'unknown')
+    .sort((a, b) => b[0].localeCompare(a[0]))
+    .slice(0, 12);
+  const maxMonthTotal = months.length > 0 ? Math.max(...months.map(([, v]) => v.total)) : 0;
+
+  // Type breakdown
+  const byTipo = {};
   list.forEach(c => {
     const tipo = c.tipoCbte ?? 0;
     const label = TIPO_LABEL[tipo] ?? `Cbte ${tipo}`;
-    const cls   = TIPO_CLASS[tipo] ?? 'fac-x';
-    const num   = `${String(c.ptoVta ?? 0).padStart(4,'0')}-${String(c.nroCbte ?? 0).padStart(8,'0')}`;
-    h += `<div class="cd-comp-row">`;
-    h += `<span class="cd-comp-badge ${cls}">${label}</span>`;
-    h += `<div class="cd-comp-info">`;
-    h += `<div class="cd-comp-num">${num}</div>`;
-    if (c.descripcion) h += `<div class="cd-comp-desc">${c.descripcion}</div>`;
-    h += `</div>`;
-    h += `<div class="cd-comp-right">`;
-    h += `<div class="cd-comp-importe">${fmtARS(c.importeTotal)}</div>`;
-    h += `<div class="cd-comp-fecha">${fmtFecha(c.fechaCbte)}</div>`;
-    if (c.cae) h += `<span class="cd-comp-cae">✓ CAE</span>`;
-    h += `</div>`;
-    h += `</div>`;
+    const cls = TIPO_CLASS[tipo] ?? 'fac-x';
+    if (!byTipo[label]) byTipo[label] = { cls, count: 0, total: 0 };
+    byTipo[label].count++;
+    byTipo[label].total += Number(c.importeTotal || 0);
   });
+
+  let h = '';
+
+  // Summary strip
+  h += `<div class="cd-bill-summary">`;
+  h += `<div class="cd-bill-total-block">`;
+  h += `<span class="cd-bill-total-label">Total facturado</span>`;
+  h += `<span class="cd-bill-total-val">${fmtARS(total)}</span>`;
+  h += `</div>`;
+  h += `<div class="cd-bill-meta">`;
+  h += `<span class="cd-bill-meta-count">${list.length} comprobante${list.length !== 1 ? 's' : ''}</span>`;
+  h += `<button class="cd-bill-detail-btn" onclick="showBillingDetail()">Ver detalle ›</button>`;
+  h += `</div>`;
+  h += `</div>`;
+
+  // Type chips
+  if (Object.keys(byTipo).length > 0) {
+    h += `<div class="cd-bill-types">`;
+    Object.entries(byTipo).forEach(([label, info]) => {
+      h += `<div class="cd-bill-type-chip">`;
+      h += `<span class="cd-comp-badge ${info.cls}">${label}</span>`;
+      h += `<span class="cd-bill-type-count">${info.count}</span>`;
+      h += `<span class="cd-bill-type-amt">${fmtARS(info.total)}</span>`;
+      h += `</div>`;
+    });
+    h += `</div>`;
+  }
+
+  // Monthly timeline bars
+  if (months.length > 0) {
+    h += `<div class="cd-bill-months">`;
+    months.forEach(([ym, mdata]) => {
+      const pct = maxMonthTotal > 0 ? Math.max(3, Math.round(mdata.total / maxMonthTotal * 100)) : 0;
+      h += `<div class="cd-bill-month-row">`;
+      h += `<span class="cd-bill-month-name">${getMesName(ym)}</span>`;
+      h += `<div class="cd-bill-month-bar-wrap"><div class="cd-bill-month-bar" style="width:${pct}%"></div></div>`;
+      h += `<span class="cd-bill-month-amt">${fmtARS(mdata.total)}</span>`;
+      h += `</div>`;
+    });
+    h += `</div>`;
+  }
+
   return h;
+}
+
+function buildBillingDetailHTML(data, clientName) {
+  const list = data?.comprobantes ?? [];
+  const total = data?.totalFacturado ?? 0;
+  let h = `<div class="bd-header">`;
+  h += `<div class="bd-header-info">`;
+  h += `<div class="bd-header-name">🧾 ${clientName}</div>`;
+  h += `<div class="bd-header-sub">${list.length} comprobante${list.length !== 1 ? 's' : ''} · ${fmtARS(total)}</div>`;
+  h += `</div>`;
+  h += `<button class="cd-dossier-close" onclick="closeBillingDetail()" aria-label="Cerrar">✕</button>`;
+  h += `</div>`;
+  h += `<div class="bd-body">`;
+  if (list.length === 0) {
+    h += `<div class="cd-comp-empty">Sin comprobantes</div>`;
+  } else {
+    list.forEach(c => {
+      const tipo = c.tipoCbte ?? 0;
+      const label = TIPO_LABEL[tipo] ?? `Cbte ${tipo}`;
+      const cls = TIPO_CLASS[tipo] ?? 'fac-x';
+      const num = `${String(c.ptoVta ?? 0).padStart(4, '0')}-${String(c.nroCbte ?? 0).padStart(8, '0')}`;
+      h += `<div class="bd-comp-row">`;
+      h += `<span class="cd-comp-badge ${cls}">${label}</span>`;
+      h += `<div class="bd-comp-info">`;
+      h += `<div class="bd-comp-num">${num}</div>`;
+      if (c.descripcion) h += `<div class="bd-comp-desc">${c.descripcion}</div>`;
+      h += `</div>`;
+      h += `<div class="bd-comp-right">`;
+      h += `<div class="bd-comp-importe">${fmtARS(c.importeTotal)}</div>`;
+      h += `<div class="bd-comp-fecha">${fmtFecha(c.fechaCbte)}</div>`;
+      if (c.cae) h += `<span class="bd-comp-cae">✓ CAE</span>`;
+      h += `</div>`;
+      h += `</div>`;
+    });
+  }
+  h += `</div>`;
+  return h;
+}
+
+export function showBillingDetail() {
+  if (!_billingData) return;
+  const panel = document.getElementById('billingDetailPanel');
+  if (!panel) return;
+  panel.innerHTML = buildBillingDetailHTML(_billingData, _billingClientName);
+  document.getElementById('billingDetailOverlay').classList.add('active');
+}
+
+export function closeBillingDetail() {
+  document.getElementById('billingDetailOverlay').classList.remove('active');
 }
 
 export async function showClientDetail(clienteId) {
@@ -323,13 +428,7 @@ export async function showClientDetail(clienteId) {
   // ════ RIGHT PANEL ════
   h += `<div class="cd-panel-right">`;
 
-  // ── Facturación (carga async tras render) ──
-  if (c.cuit && c.cuit.trim() && c.cuit !== '-') {
-    h += `<div class="cd-section-divider">🧾 Facturación</div>`;
-    h += `<div id="cd-comprobantes-section"><div class="cd-comp-loading">⏳ Cargando facturas...</div></div>`;
-  }
-
-  // ── Task section divider ──
+  // ── Tasks FIRST ──
   h += `<div class="cd-section-divider">📅 Tareas</div>`;
 
   // Task stats bar
@@ -377,6 +476,12 @@ export async function showClientDetail(clienteId) {
     });
   }
 
+  // ── Facturación stats AFTER tasks (async-loaded) ──
+  if (c.cuit && c.cuit.trim() && c.cuit !== '-') {
+    h += `<div class="cd-section-divider">🧾 Facturación</div>`;
+    h += `<div id="cd-comprobantes-section"><div class="cd-comp-loading">⏳ Cargando estadísticas...</div></div>`;
+  }
+
   h += `</div>`; // end cd-panel-right
   h += `</div>`; // end cd-dossier-body
 
@@ -389,15 +494,17 @@ export async function showClientDetail(clienteId) {
   document.getElementById('clientDetailPanel').innerHTML = h;
   document.getElementById('clientDetailOverlay').classList.add('active');
 
-  // Fetch comprobantes async and inject once loaded
+  // Fetch comprobantes async → inject billing stats
   if (c.cuit && c.cuit.trim() && c.cuit !== '-') {
     try {
       const data = await api('GET', `/api/clientes/${clienteId}/comprobantes`);
+      _billingData = data;
+      _billingClientName = c.nombre;
       const sec = document.getElementById('cd-comprobantes-section');
-      if (sec) sec.innerHTML = buildComprobantesHTML(data);
+      if (sec) sec.innerHTML = buildBillingStatsHTML(data);
     } catch {
       const sec = document.getElementById('cd-comprobantes-section');
-      if (sec) sec.innerHTML = `<div class="cd-comp-empty">No se pudieron cargar los comprobantes</div>`;
+      if (sec) sec.innerHTML = `<div class="cd-comp-empty">No se pudieron cargar las estadísticas</div>`;
     }
   }
 }
