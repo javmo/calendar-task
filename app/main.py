@@ -8,7 +8,7 @@ mounts static files, includes all routers, serves index.html.
 import os
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -77,6 +77,17 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Calendario de Tareas", lifespan=lifespan)
+
+
+@app.middleware("http")
+async def no_cache_js(request: Request, call_next):
+    """Prevent browsers from caching JS/HTML so deploys take effect immediately."""
+    response = await call_next(request)
+    path = request.url.path
+    if path.endswith((".js", ".html")) or path == "/":
+        response.headers["Cache-Control"] = "no-cache, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+    return response
 
 app.include_router(users_router)
 app.include_router(tasks_router)
