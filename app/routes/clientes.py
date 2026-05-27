@@ -189,6 +189,30 @@ async def delete_cliente(cliente_id: int, user=Depends(get_current_user)):
     return {"ok": True}
 
 
+@router.get("/clientes/{cliente_id}/comprobantes")
+async def get_cliente_comprobantes(cliente_id: int, user=Depends(get_current_user)):
+    """Devuelve los comprobantes emitidos para el CUIT del cliente (colección de arca-mcp)."""
+    cliente = await _db_module.db.clientes.find_one({"clienteId": cliente_id})
+    if not cliente:
+        raise HTTPException(404, "Cliente no encontrado")
+
+    cuit = (cliente.get("cuit") or "").strip()
+    if not cuit or cuit == "-":
+        return {"comprobantes": [], "totalFacturado": 0.0, "count": 0}
+
+    comprobantes = await _db_module.db.comprobantes.find(
+        {"cuit": cuit},
+        {"_id": 0},
+    ).sort("fechaCbte", -1).to_list(200)
+
+    total = sum(float(c.get("importeTotal") or 0) for c in comprobantes)
+    return {
+        "comprobantes": comprobantes,
+        "totalFacturado": round(total, 2),
+        "count": len(comprobantes),
+    }
+
+
 @router.get("/clientes/{cliente_id}/tasks")
 async def get_cliente_tasks(cliente_id: int, user=Depends(get_current_user)):
     cliente = await _db_module.db.clientes.find_one(

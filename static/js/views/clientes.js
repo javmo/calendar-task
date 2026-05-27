@@ -107,7 +107,66 @@ export function onClientSearch(val) {
   renderClientes();
 }
 
-export function showClientDetail(clienteId) {
+// ── Tipo de comprobante helpers ──
+const TIPO_LABEL = {
+  1:'Fac. A', 2:'ND A', 3:'NC A', 4:'Rec. A',
+  6:'Fac. B', 7:'ND B', 8:'NC B', 9:'Rec. B',
+  11:'Fac. C', 12:'ND C', 13:'NC C', 15:'Rec. C',
+  19:'Fac. E', 21:'ND E', 22:'NC E',
+  51:'Fac. M', 52:'ND M', 53:'NC M',
+};
+const TIPO_CLASS = {
+  1:'fac-a',2:'fac-a',3:'fac-a',4:'fac-a',
+  6:'fac-b',7:'fac-b',8:'fac-b',9:'fac-b',
+  11:'fac-c',12:'fac-c',13:'fac-c',15:'fac-c',
+  19:'fac-e',21:'fac-e',22:'fac-e',
+  51:'fac-a',52:'fac-a',53:'fac-a',
+};
+function fmtFecha(s) {
+  if (!s) return '—';
+  const str = String(s);
+  if (str.length === 8) return `${str.slice(6)}/${str.slice(4,6)}/${str.slice(0,4)}`;
+  // ISO date
+  if (str.includes('-')) return str.split('T')[0].split('-').reverse().join('/');
+  return s;
+}
+function fmtARS(n) {
+  if (n == null || n === '') return '—';
+  return '$ ' + Math.round(Number(n)).toLocaleString('es-AR');
+}
+function buildComprobantesHTML(data) {
+  const list = data?.comprobantes ?? [];
+  const total = data?.totalFacturado ?? 0;
+  if (list.length === 0) {
+    return `<div class="cd-comp-empty">Sin comprobantes registrados para este CUIT</div>`;
+  }
+  let h = '';
+  h += `<div class="cd-comp-summary">`;
+  h += `<span class="cd-comp-summary-left">🧾 <span class="cd-comp-summary-count">${list.length} comprobante${list.length !== 1 ? 's' : ''}</span></span>`;
+  h += `<span class="cd-comp-summary-total">${fmtARS(total)}</span>`;
+  h += `</div>`;
+  list.forEach(c => {
+    const tipo = c.tipoCbte ?? 0;
+    const label = TIPO_LABEL[tipo] ?? `Cbte ${tipo}`;
+    const cls   = TIPO_CLASS[tipo] ?? 'fac-x';
+    const num   = `${String(c.ptoVta ?? 0).padStart(4,'0')}-${String(c.nroCbte ?? 0).padStart(8,'0')}`;
+    h += `<div class="cd-comp-row">`;
+    h += `<span class="cd-comp-badge ${cls}">${label}</span>`;
+    h += `<div class="cd-comp-info">`;
+    h += `<div class="cd-comp-num">${num}</div>`;
+    if (c.descripcion) h += `<div class="cd-comp-desc">${c.descripcion}</div>`;
+    h += `</div>`;
+    h += `<div class="cd-comp-right">`;
+    h += `<div class="cd-comp-importe">${fmtARS(c.importeTotal)}</div>`;
+    h += `<div class="cd-comp-fecha">${fmtFecha(c.fechaCbte)}</div>`;
+    if (c.cae) h += `<span class="cd-comp-cae">✓ CAE</span>`;
+    h += `</div>`;
+    h += `</div>`;
+  });
+  return h;
+}
+
+export async function showClientDetail(clienteId) {
   const c = state.clientes.find(x => x.clienteId === clienteId);
   if (!c) return;
   state.editingClientId = clienteId;
@@ -264,6 +323,15 @@ export function showClientDetail(clienteId) {
   // ════ RIGHT PANEL ════
   h += `<div class="cd-panel-right">`;
 
+  // ── Facturación (carga async tras render) ──
+  if (c.cuit && c.cuit.trim() && c.cuit !== '-') {
+    h += `<div class="cd-section-divider">🧾 Facturación</div>`;
+    h += `<div id="cd-comprobantes-section"><div class="cd-comp-loading">⏳ Cargando facturas...</div></div>`;
+  }
+
+  // ── Task section divider ──
+  h += `<div class="cd-section-divider">📅 Tareas</div>`;
+
   // Task stats bar
   h += `<div class="cd-tasks-stats">`;
   h += `<div class="cd-task-stat"><span class="ts-val">${total}</span><span class="ts-lbl">Total</span></div>`;
@@ -320,6 +388,18 @@ export function showClientDetail(clienteId) {
 
   document.getElementById('clientDetailPanel').innerHTML = h;
   document.getElementById('clientDetailOverlay').classList.add('active');
+
+  // Fetch comprobantes async and inject once loaded
+  if (c.cuit && c.cuit.trim() && c.cuit !== '-') {
+    try {
+      const data = await api('GET', `/api/clientes/${clienteId}/comprobantes`);
+      const sec = document.getElementById('cd-comprobantes-section');
+      if (sec) sec.innerHTML = buildComprobantesHTML(data);
+    } catch {
+      const sec = document.getElementById('cd-comprobantes-section');
+      if (sec) sec.innerHTML = `<div class="cd-comp-empty">No se pudieron cargar los comprobantes</div>`;
+    }
+  }
 }
 
 export function closeClientDetail() {
