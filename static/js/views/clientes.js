@@ -112,106 +112,213 @@ export function showClientDetail(clienteId) {
   if (!c) return;
   state.editingClientId = clienteId;
 
-  document.getElementById('cdTitle').textContent = '👤 ' + c.nombre;
-
   const clientTasks = state.tasks.filter(t => t.cliente === c.nombre);
+  const today = new Date().toISOString().split('T')[0];
 
-  // Group tasks by mes
-  const byMes = {};
-  clientTasks.forEach(t => {
-    const m = t.mes || 'Sin mes';
-    if (!byMes[m]) byMes[m] = [];
-    byMes[m].push(t);
-  });
+  // ── Stats ──
+  const total = clientTasks.length;
+  const finalizadas = clientTasks.filter(t => t.finalizada).length;
+  const vencidas   = clientTasks.filter(t => !t.finalizada && t.vencimiento < today).length;
+  const pendientes = clientTasks.filter(t => !t.finalizada).length;
+  const pct = total > 0 ? Math.round(finalizadas / total * 100) : 0;
+  const nextVto = clientTasks
+    .filter(t => !t.finalizada && t.vencimiento >= today)
+    .sort((a, b) => a.vencimiento.localeCompare(b.vencimiento))[0];
 
-  const maskVal = (v) => {
-    if (!v || v === '-' || v === '') return '<span class="cd-val empty">—</span>';
-    return `<span class="cd-val masked" title="Click para ver" onclick="this.classList.toggle('masked')">${v}</span>`;
-  };
-  const plainVal = (v) => {
-    if (!v || v === '-' || v === '') return '<span class="cd-val empty">—</span>';
-    return `<span class="cd-val">${v}</span>`;
-  };
+  // ── IVA labels ──
+  const ivaFull  = { RI: 'Resp. Inscripto (RI)', MT: 'Monotributista (MT)', EX: 'Exento (EX)', CF: 'Cons. Final (CF)' };
 
-  let h = `<div class="cd-info-grid">`;
-  h += `<div class="cd-info-item"><label>CUIT</label>${plainVal(c.cuit)}</div>`;
-  h += `<div class="cd-info-item"><label>Forma de Pago</label>${plainVal(c.formaPago)}</div>`;
-  h += `<div class="cd-info-item"><label>Clave ARCA</label>${maskVal(c.claveArca)}</div>`;
-  h += `<div class="cd-info-item"><label>Clave AGIP</label>${maskVal(c.claveAgip)}</div>`;
-  h += `<div class="cd-info-item"><label>Clave ARBA</label>${maskVal(c.claveArba)}</div>`;
-  h += `<div class="cd-info-item"><label>Otra Clave</label>${maskVal(c.otraClave)}</div>`;
+  // ── Field helpers ──
+  const plain = v => (!v || v === '-' || v === '')
+    ? '<span class="dv empty">—</span>'
+    : `<span class="dv">${v}</span>`;
+
+  // ═══════════════ BUILD HTML ═══════════════
+  let h = '';
+
+  // ── HEADER ──
+  h += `<div class="cd-dossier-header">`;
+  h += `<button class="cd-dossier-close" onclick="closeClientDetail()" aria-label="Cerrar">✕</button>`;
+  h += `<div class="cd-dossier-name">👤 ${c.nombre}</div>`;
+  h += `<div class="cd-dossier-sub">`;
+  h += `<span class="cd-dossier-cuit">CUIT: ${c.cuit || '—'}</span>`;
+  if (c.condicionIva) {
+    h += `<span class="cd-dossier-iva iva-${c.condicionIva}">${ivaFull[c.condicionIva] || c.condicionIva}</span>`;
+  }
+  if (c.email && c.email !== '-' && c.email !== '') {
+    h += `<span class="cd-dossier-cuit">✉ ${c.email}</span>`;
+  }
+  h += `</div>`;
+  // Stats chips
+  h += `<div class="cd-stats-row">`;
+  h += `<span class="cd-stat-chip"><span class="sv">${total}</span>&nbsp;tarea${total !== 1 ? 's' : ''}</span>`;
+  if (vencidas > 0) h += `<span class="cd-stat-chip chip-danger"><span class="sv">${vencidas}</span>&nbsp;vencida${vencidas !== 1 ? 's' : ''}</span>`;
+  h += `<span class="cd-stat-chip"><span class="sv">${pendientes}</span>&nbsp;pendiente${pendientes !== 1 ? 's' : ''}</span>`;
+  h += `<span class="cd-stat-chip chip-success"><span class="sv">${pct}%</span>&nbsp;completado</span>`;
+  if (nextVto) h += `<span class="cd-stat-chip">📅&nbsp;próx. ${formatDateShort(nextVto.vencimiento)}</span>`;
+  h += `</div>`;
   h += `</div>`;
 
-  if (c.notas && c.notas.trim()) {
-    h += `<div class="cd-notas-section"><div class="cd-notas-label">Notas generales del Cliente</div><div class="cd-notas-text">${c.notas.replace(/\n/g, '<br>')}</div></div>`;
+  // ── BODY ──
+  h += `<div class="cd-dossier-body">`;
+
+  // ════ LEFT PANEL ════
+  h += `<div class="cd-panel-left">`;
+
+  // 1. Datos principales
+  h += `<div>`;
+  h += `<div class="cd-dsection-title">📋 Datos del cliente</div>`;
+  h += `<div class="cd-dcells">`;
+  h += `<div class="cd-dcell"><label>CUIT</label>${plain(c.cuit)}</div>`;
+  h += `<div class="cd-dcell"><label>Forma de pago</label>${plain(c.formaPago)}</div>`;
+  if (c.email && c.email !== '-' && c.email !== '') {
+    h += `<div class="cd-dcell span2"><label>Email</label>${plain(c.email)}</div>`;
+  }
+  h += `</div>`;
+  h += `</div>`;
+
+  // 2. Accesos
+  const accesos = [
+    { label: 'ARCA',  icon: '🏛️', val: c.claveArca },
+    { label: 'AGIP',  icon: '🏙️', val: c.claveAgip },
+    { label: 'ARBA',  icon: '🏠', val: c.claveArba },
+    { label: 'Otra',  icon: '🔑', val: c.otraClave },
+  ];
+  h += `<div>`;
+  h += `<div class="cd-dsection-title">🔐 Accesos</div>`;
+  h += `<div class="cd-access-grid">`;
+  accesos.forEach(acc => {
+    const has = acc.val && acc.val !== '-' && acc.val !== '';
+    h += `<div class="cd-access-card ${has ? 'has-key' : ''}">`;
+    h += `<span class="cd-access-icon">${acc.icon}</span>`;
+    h += `<div class="cd-access-info">`;
+    h += `<div class="cd-access-label">${acc.label}</div>`;
+    if (has) {
+      h += `<div class="cd-access-val masked" title="Click para revelar" onclick="this.classList.toggle('masked')">${acc.val}</div>`;
+    } else {
+      h += `<div class="cd-access-val empty">Sin clave</div>`;
+    }
+    h += `</div></div>`;
+  });
+  h += `</div>`;
+  h += `</div>`;
+
+  // 3. ARCA / Facturación
+  h += `<div>`;
+  h += `<div class="cd-dsection-title">🏛️ ARCA / Facturación</div>`;
+  h += `<div class="cd-arca-card">`;
+  h += `<div class="cd-arca-iva-row">`;
+  h += `<span class="cd-arca-iva-label">Condición IVA</span>`;
+  if (c.condicionIva) {
+    h += `<span class="iva-badge iva-${c.condicionIva}">${ivaFull[c.condicionIva] || c.condicionIva}</span>`;
+  } else {
+    h += `<span class="cd-arca-empty">Sin datos</span>`;
+  }
+  h += `</div>`;
+  if (c.arcaNotas && c.arcaNotas.trim()) {
+    h += `<div class="cd-arca-notas">${c.arcaNotas.replace(/\n/g, '<br>')}</div>`;
+  }
+  if (c.condicionIva || (c.arcaNotas && c.arcaNotas.trim())) {
+    h += `<div class="cd-arca-sync">🔄 Datos sincronizados vía ARCA MCP</div>`;
+  }
+  h += `</div>`;
+  h += `</div>`;
+
+  // 4. Categorías de tareas
+  if (c.categorias && c.categorias.length > 0) {
+    h += `<div>`;
+    h += `<div class="cd-dsection-title">🏷️ Categorías de tareas</div>`;
+    h += `<div class="cd-cats-wrap">`;
+    c.categorias.forEach(cat => {
+      const co = getTaskColor(catTarea(cat));
+      h += `<span class="cc-cat-tag" style="background:${co}20;color:${co};border:1px solid ${co}40">${catLabel(cat)}</span>`;
+    });
+    h += `</div>`;
+    h += `</div>`;
   }
 
+  // 5. Notas generales
+  if (c.notas && c.notas.trim()) {
+    h += `<div>`;
+    h += `<div class="cd-dsection-title">📝 Notas del cliente</div>`;
+    h += `<div class="cd-notas-box">${c.notas.replace(/\n/g, '<br>')}</div>`;
+    h += `</div>`;
+  }
+
+  // 6. Notas por tipo de tarea
   if (c.notasPorTarea && Object.keys(c.notasPorTarea).length > 0) {
-    h += `<div class="cd-notas-section cd-notas-por-tarea-section"><div class="cd-notas-label">Notas por Tipo de Tarea</div>`;
+    h += `<div>`;
+    h += `<div class="cd-dsection-title">📌 Notas por tipo de tarea</div>`;
     Object.entries(c.notasPorTarea).forEach(([cat, nota]) => {
       const co = getTaskColor(cat);
-      h += `<div class="cd-nota-tarea-item" style="border-left:3px solid ${co};padding-left:10px;margin-bottom:8px">`;
-      h += `<div style="font-size:11px;font-weight:700;color:${co};margin-bottom:3px">${cat}</div>`;
-      h += `<div class="cd-notas-text">${nota.replace(/\n/g, '<br>')}</div>`;
+      h += `<div class="cd-nota-task-item" style="border-left-color:${co}">`;
+      h += `<div class="cd-nota-task-tag" style="color:${co}">${cat}</div>`;
+      h += `<div style="font-size:11px;color:var(--text-secondary);line-height:1.5">${nota.replace(/\n/g, '<br>')}</div>`;
       h += `</div>`;
     });
     h += `</div>`;
   }
 
-  if (c.categorias && c.categorias.length > 0) {
-    h += `<div style="margin-bottom:16px"><label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Categorías de tareas</label>`;
-    h += `<div class="ce-categorias">`;
-    c.categorias.forEach(cat => {
-      const co = getTaskColor(catTarea(cat));
-      h += `<span class="cc-cat-tag" style="background:${co}20;color:${co};border:1px solid ${co}40">${catLabel(cat)}</span>`;
+  h += `</div>`; // end cd-panel-left
+
+  // ════ RIGHT PANEL ════
+  h += `<div class="cd-panel-right">`;
+
+  // Task stats bar
+  h += `<div class="cd-tasks-stats">`;
+  h += `<div class="cd-task-stat"><span class="ts-val">${total}</span><span class="ts-lbl">Total</span></div>`;
+  h += `<div class="cd-task-stat ts-pend"><span class="ts-val">${pendientes}</span><span class="ts-lbl">Pendientes</span></div>`;
+  h += `<div class="cd-task-stat ts-done"><span class="ts-val">${finalizadas}</span><span class="ts-lbl">Finalizadas</span></div>`;
+  h += `<div class="cd-task-stat ts-over"><span class="ts-val">${vencidas}</span><span class="ts-lbl">Vencidas</span></div>`;
+  h += `</div>`;
+
+  // Progress bar
+  h += `<div class="cd-progress-wrap"><div class="cd-progress-bar" style="width:${pct}%"></div></div>`;
+
+  // Tasks grouped by month
+  if (total === 0) {
+    h += `<div class="cd-empty-tasks"><div class="cd-empty-icon">📋</div><div class="cd-empty-txt">No tiene tareas asignadas</div></div>`;
+  } else {
+    const mesOrder = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    const byMes = {};
+    clientTasks.forEach(t => {
+      const m = t.mes || 'Sin mes';
+      if (!byMes[m]) byMes[m] = [];
+      byMes[m].push(t);
     });
-    h += `</div></div>`;
-  }
-
-  // ARCA / Facturación section
-  const ivaLabels = { RI: 'Resp. Inscripto (RI)', MT: 'Monotributista (MT)', EX: 'Exento (EX)', CF: 'Cons. Final (CF)' };
-  h += `<div class="detail-section arca-section">`;
-  h += `<div class="section-title" style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">🏛️ ARCA / Facturación</div>`;
-  h += `<div class="arca-info-row"><span class="arca-label">Condición IVA</span>`;
-  if (c.condicionIva) {
-    h += `<span class="iva-badge iva-${c.condicionIva}">${ivaLabels[c.condicionIva] || c.condicionIva}</span>`;
-  } else {
-    h += `<span style="font-size:12px;color:var(--text-muted)">Sin datos</span>`;
-  }
-  h += `</div>`;
-  if (c.arcaNotas && c.arcaNotas.trim()) {
-    h += `<div class="arca-info-row"><span class="arca-label">Notas ARCA</span><span class="arca-value">${c.arcaNotas.replace(/\n/g, '<br>')}</span></div>`;
-  }
-  h += `</div>`;
-
-  h += `<div class="cd-tasks-section">`;
-  h += `<h3>📋 Tareas asignadas <span style="font-size:12px;color:var(--text-muted);font-weight:400">(${clientTasks.length})</span></h3>`;
-  h += `<div class="cd-tasks-list">`;
-
-  if (clientTasks.length === 0) {
-    h += `<div style="padding:16px;text-align:center;color:var(--text-muted);font-size:13px">No tiene tareas asignadas</div>`;
-  } else {
-    const mesOrder = ['Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-    mesOrder.forEach(mes => {
-      const tasks = byMes[mes];
-      if (!tasks) return;
-      h += `<div style="font-size:11px;font-weight:700;color:var(--accent);margin:8px 0 4px;text-transform:uppercase;letter-spacing:.5px">${mes}</div>`;
+    const orderedMeses = [
+      ...mesOrder.filter(m => byMes[m]),
+      ...Object.keys(byMes).filter(m => !mesOrder.includes(m)),
+    ];
+    orderedMeses.forEach(mes => {
+      const tasks = [...byMes[mes]].sort((a, b) => a.vencimiento.localeCompare(b.vencimiento));
+      const mesFin = tasks.filter(t => t.finalizada).length;
+      h += `<div class="cd-month-group">`;
+      h += `<div class="cd-month-label">${mes}<span class="cd-month-count">${mesFin}/${tasks.length}</span></div>`;
       tasks.forEach(t => {
         const co = getTaskColor(t.tarea);
         const st = getTaskStatus(t);
-        const isFin = t.finalizada;
-        h += `<div class="cd-task-row" style="border-color:${co}">`;
+        const isOverdue = !t.finalizada && st === 'overdue';
+        h += `<div class="cd-task-row ${t.finalizada ? 'task-fin' : ''} ${isOverdue ? 'task-overdue' : ''}" style="border-left-color:${co}">`;
         h += `<span class="cdt-tarea">${t.tarea}</span>`;
         h += `<span class="cdt-vto">${formatDateShort(t.vencimiento)}</span>`;
-        h += `<span style="font-size:10px;color:var(--text-muted)">${t.semana}</span>`;
-        h += `<span class="cdt-status">${isFin?'✅':''}${st==='overdue'?'🔴':''}${st==='ready'?'✔️':''}${st==='pending'&&!isFin?'⏳':''}</span>`;
+        h += `<span class="cdt-status">${t.finalizada ? '✅' : isOverdue ? '🔴' : st === 'ready' ? '✔️' : '⏳'}</span>`;
         h += `</div>`;
       });
+      h += `</div>`;
     });
   }
-  h += `</div></div>`;
 
-  document.getElementById('cdBody').innerHTML = h;
+  h += `</div>`; // end cd-panel-right
+  h += `</div>`; // end cd-dossier-body
+
+  // ── FOOTER ──
+  h += `<div class="cd-dossier-footer">`;
+  h += `<button class="btn" onclick="closeClientDetail()">Cerrar</button>`;
+  h += `<button class="btn btn-primary" onclick="editClientFromDetail()">✏️ Editar cliente</button>`;
+  h += `</div>`;
+
+  document.getElementById('clientDetailPanel').innerHTML = h;
   document.getElementById('clientDetailOverlay').classList.add('active');
 }
 

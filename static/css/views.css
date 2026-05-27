@@ -316,31 +316,117 @@
 .fuente-item strong{color:var(--text-secondary);font-weight:600}
 .fuentes-disclaimer{margin-top:10px;font-size:11px;color:var(--text-muted);font-style:italic;margin-bottom:0}
 
-/* Client Detail Modal */
-.client-detail-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
-.client-detail-overlay.active{display:flex}
-.client-detail{background:var(--surface);border-radius:16px;width:600px;max-width:95vw;max-height:85vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
-.cd-header{padding:24px 28px 16px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between}
-.cd-header h2{font-size:20px;font-weight:800;display:flex;align-items:center;gap:10px}
-.cd-header .cd-close{background:none;border:none;color:var(--text-muted);font-size:18px;cursor:pointer;padding:4px 8px;border-radius:6px}
-.cd-header .cd-close:hover{background:var(--bg);color:var(--text)}
-.cd-body{padding:20px 28px}
-.cd-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
-.cd-info-item{padding:10px 14px;background:var(--surface2);border-radius:var(--radius-sm);border:1px solid var(--border-light)}
-.cd-info-item label{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--text-muted);font-weight:700;margin-bottom:4px}
-.cd-info-item .cd-val{font-size:13px;font-weight:600;color:var(--text);word-break:break-all}
-.cd-info-item .cd-val.masked{filter:blur(4px);transition:filter .2s;cursor:pointer}
-.cd-info-item .cd-val.masked:hover{filter:blur(0)}
-.cd-info-item .cd-val.empty{color:var(--text-muted);font-style:italic;font-weight:400}
-.cd-tasks-section{margin-top:16px}
-.cd-tasks-section h3{font-size:14px;font-weight:700;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:8px}
-.cd-tasks-list{display:flex;flex-direction:column;gap:6px;max-height:300px;overflow-y:auto}
-.cd-task-row{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface2);border-radius:var(--radius-sm);border-left:3px solid;font-size:13px}
+/* =================== CLIENT DOSSIER =================== */
+.client-detail-overlay{display:none;position:fixed;inset:0;background:rgba(15,15,30,.5);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(8px)}
+.client-detail-overlay.active{display:flex;animation:cdFadeIn .2s ease}
+@keyframes cdFadeIn{from{opacity:0}to{opacity:1}}
+.client-detail{background:var(--surface);border-radius:20px;width:92vw;max-width:1080px;height:88vh;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.2);overflow:hidden;animation:cdSlideUp .25s ease}
+@keyframes cdSlideUp{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+/* ── Gradient header ── */
+.cd-dossier-header{background:linear-gradient(135deg,#4338ca 0%,#6366f1 55%,#7c3aed 100%);padding:22px 28px 18px;flex-shrink:0;position:relative}
+.cd-dossier-close{position:absolute;top:14px;right:16px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:white;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;transition:background .15s}
+.cd-dossier-close:hover{background:rgba(255,255,255,.3)}
+.cd-dossier-name{font-size:21px;font-weight:800;color:white;line-height:1.2;margin-bottom:5px}
+.cd-dossier-sub{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.cd-dossier-cuit{font-size:12px;color:rgba(255,255,255,.7);font-weight:500}
+.cd-dossier-iva{display:inline-flex;align-items:center;padding:2px 9px;border-radius:10px;font-size:10px;font-weight:700;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.15);color:white}
+.cd-dossier-iva.iva-RI{background:#3b5bdb55;color:#bfdbfe;border-color:#93c5fd80}
+.cd-dossier-iva.iva-MT{background:#16703555;color:#bbf7d0;border-color:#86efac80}
+.cd-dossier-iva.iva-EX{background:#a1620755;color:#fef08a;border-color:#fde04780}
+.cd-dossier-iva.iva-CF{background:#6b728055;color:#e5e7eb;border-color:#d1d5db80}
+.cd-stats-row{display:flex;gap:8px;flex-wrap:wrap}
+.cd-stat-chip{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;background:rgba(255,255,255,.12);color:rgba(255,255,255,.88);font-size:11px;font-weight:500;border:1px solid rgba(255,255,255,.15)}
+.cd-stat-chip .sv{font-size:13px;font-weight:800;color:white}
+.cd-stat-chip.chip-danger{background:rgba(220,38,38,.3);border-color:rgba(248,113,113,.5)}
+.cd-stat-chip.chip-danger .sv{color:#fca5a5}
+.cd-stat-chip.chip-success{background:rgba(5,150,105,.3);border-color:rgba(52,211,153,.5)}
+.cd-stat-chip.chip-success .sv{color:#6ee7b7}
+
+/* ── 2-column body ── */
+.cd-dossier-body{display:grid;grid-template-columns:300px 1fr;flex:1;overflow:hidden}
+.cd-panel-left{border-right:1px solid var(--border);overflow-y:auto;padding:16px 14px;background:var(--surface2);display:flex;flex-direction:column;gap:14px}
+.cd-panel-right{overflow-y:auto;padding:18px 20px;display:flex;flex-direction:column;gap:12px}
+
+/* ── Footer ── */
+.cd-dossier-footer{border-top:1px solid var(--border);padding:10px 20px;display:flex;gap:8px;justify-content:flex-end;background:var(--surface);flex-shrink:0}
+
+/* ── Section wrapper ── */
+.cd-dsection-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text-muted);margin-bottom:8px;display:flex;align-items:center;gap:5px}
+
+/* ── Data cells ── */
+.cd-dcells{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.cd-dcell{background:var(--surface);border:1px solid var(--border-light);border-radius:8px;padding:8px 11px}
+.cd-dcell.span2{grid-column:1/-1}
+.cd-dcell label{display:block;font-size:9px;text-transform:uppercase;letter-spacing:.7px;color:var(--text-muted);font-weight:700;margin-bottom:3px}
+.cd-dcell .dv{font-size:12px;font-weight:600;color:var(--text);word-break:break-all;line-height:1.4}
+.cd-dcell .dv.masked{filter:blur(3.5px);cursor:pointer;transition:filter .18s;user-select:none}
+.cd-dcell .dv.masked:hover{filter:blur(0)}
+.cd-dcell .dv.empty{color:var(--text-muted);font-style:italic;font-weight:400;font-size:11px}
+
+/* ── Access key cards ── */
+.cd-access-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.cd-access-card{background:var(--surface);border:1px solid var(--border-light);border-radius:8px;padding:8px 10px;display:flex;align-items:center;gap:7px}
+.cd-access-card.has-key{border-color:#a7f3d0;background:#f0fdf4}
+.cd-access-icon{font-size:14px;flex-shrink:0}
+.cd-access-info{flex:1;min-width:0}
+.cd-access-label{font-size:9px;text-transform:uppercase;letter-spacing:.6px;color:var(--text-muted);font-weight:700}
+.cd-access-val{font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);line-height:1.4}
+.cd-access-val.masked{filter:blur(3px);cursor:pointer;transition:filter .15s;user-select:none}
+.cd-access-val.masked:hover{filter:blur(0)}
+.cd-access-val.empty{color:var(--text-muted);font-weight:400;font-style:italic}
+
+/* ── ARCA card ── */
+.cd-arca-card{background:linear-gradient(135deg,#eff6ff,#f5f3ff);border:1px solid #c7d2fe;border-radius:10px;padding:13px 14px}
+.cd-arca-iva-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.cd-arca-iva-label{font-size:11px;color:#4338ca;font-weight:600}
+.cd-arca-notas{font-size:12px;color:#3730a3;line-height:1.6;background:rgba(255,255,255,.6);border-radius:6px;padding:7px 10px;border:1px solid rgba(199,210,254,.5);margin-top:6px}
+.cd-arca-sync{display:flex;align-items:center;gap:5px;margin-top:8px;font-size:10px;color:#6366f1;opacity:.75;font-style:italic}
+.cd-arca-empty{font-size:11px;color:var(--text-muted);font-style:italic}
+
+/* ── Categories ── */
+.cd-cats-wrap{display:flex;flex-wrap:wrap;gap:5px}
+
+/* ── Notas box ── */
+.cd-notas-box{background:var(--surface);border:1px solid var(--border-light);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--text-secondary);line-height:1.6}
+
+/* ── Notes per task ── */
+.cd-nota-task-item{background:var(--surface);border-left:3px solid;border-radius:0 6px 6px 0;padding:7px 11px;margin-bottom:5px}
+.cd-nota-task-tag{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
+
+/* ── Right panel: task stats ── */
+.cd-tasks-stats{display:flex;gap:0;background:var(--surface);border:1px solid var(--border-light);border-radius:var(--radius-sm);overflow:hidden}
+.cd-task-stat{flex:1;text-align:center;padding:10px 8px;border-right:1px solid var(--border-light)}
+.cd-task-stat:last-child{border-right:none}
+.cd-task-stat .ts-val{font-size:20px;font-weight:800;color:var(--text);display:block;line-height:1}
+.cd-task-stat .ts-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:600;margin-top:3px;display:block}
+.cd-task-stat.ts-done .ts-val{color:var(--success)}
+.cd-task-stat.ts-over .ts-val{color:var(--danger)}
+.cd-task-stat.ts-pend .ts-val{color:var(--accent)}
+
+/* Progress bar */
+.cd-progress-wrap{height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+.cd-progress-bar{height:100%;background:linear-gradient(90deg,var(--success),#34d399);border-radius:3px;transition:width .5s ease}
+
+/* Task month groups */
+.cd-month-group{margin-bottom:10px}
+.cd-month-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--accent);padding:4px 0 6px;border-bottom:2px solid var(--accent-bg);margin-bottom:6px;display:flex;align-items:center;justify-content:space-between}
+.cd-month-count{font-size:9px;background:var(--accent-bg);color:var(--accent);padding:1px 7px;border-radius:10px;font-weight:700}
+
+/* Task rows */
+.cd-task-row{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--surface);border-radius:7px;border-left:3px solid;border-top:1px solid var(--border-light);border-right:1px solid var(--border-light);border-bottom:1px solid var(--border-light);font-size:12px;margin-bottom:3px;transition:background .1s}
+.cd-task-row:hover{background:var(--surface2)}
 .cd-task-row .cdt-tarea{font-weight:600;flex:1}
-.cd-task-row .cdt-vto{font-size:11px;color:var(--text-muted)}
-.cd-task-row .cdt-mes{font-size:10px;padding:2px 8px;background:var(--accent-bg);color:var(--accent);border-radius:10px;font-weight:600}
-.cd-task-row .cdt-status{font-size:11px}
-.cd-actions{padding:16px 28px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
+.cd-task-row .cdt-vto{font-size:10px;color:var(--text-muted);white-space:nowrap}
+.cd-task-row .cdt-status{font-size:11px;flex-shrink:0}
+.cd-task-row.task-fin{opacity:.45}
+.cd-task-row.task-fin .cdt-tarea{text-decoration:line-through}
+.cd-task-row.task-overdue .cdt-vto{color:var(--danger);font-weight:600}
+
+/* Empty tasks state */
+.cd-empty-tasks{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 20px;color:var(--text-muted);text-align:center;flex:1}
+.cd-empty-icon{font-size:36px;margin-bottom:10px;opacity:.4}
+.cd-empty-txt{font-size:13px}
 
 /* Edit client modal */
 .client-edit-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:250;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
@@ -449,13 +535,15 @@
   .assign-sidebar{max-height:280px}
   .assign-task-list{max-height:50vh}
 
-  /* Client detail modal */
-  .client-detail{border-radius:14px}
-  .cd-header{padding:16px 18px 12px}
-  .cd-body{padding:14px 18px}
-  .cd-info-grid{grid-template-columns:1fr}
-  .cd-actions{padding:12px 18px;flex-wrap:wrap}
-  .cd-actions .btn{flex:1;justify-content:center;min-height:42px}
+  /* Client dossier modal — mobile: bottom sheet, stacked columns */
+  .client-detail-overlay{align-items:flex-end}
+  .client-detail{width:100%;max-width:100%;height:92vh;border-radius:18px 18px 0 0}
+  .cd-dossier-body{grid-template-columns:1fr;grid-template-rows:auto 1fr}
+  .cd-panel-left{max-height:42vh;border-right:none;border-bottom:1px solid var(--border)}
+  .cd-dossier-header{padding:16px 18px 14px}
+  .cd-dossier-name{font-size:18px}
+  .cd-dossier-footer{padding:10px 16px}
+  .cd-dossier-footer .btn{flex:1;justify-content:center}
 
   /* Review view */
   .review-container{padding:10px 12px}
